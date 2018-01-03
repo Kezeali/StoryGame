@@ -14,7 +14,7 @@ public class PlanOptionSelectorUI : MonoBehaviour
 	private PlanOptionUI optionUIPrefab;
 
 	//private PlanOptionsLoadout loadout;
-	private List<GameObject> optionUIs;
+	private List<GameObject> optionUIs = new List<GameObject>();
 
 	public void Initialise(PlanOptionsLoadout loadout)
 	{
@@ -43,7 +43,7 @@ public class PlanOptionSelectorUI : MonoBehaviour
 	public void AddDeselectedOption(PlanOptionUI option)
 	{
 			option.Selected += SelectOption;
-			option.transform.SetParent(optionsContainer);
+			option.transform.SetParent(optionsContainer, false);
 	}
 
 	public void SelectOption(PlanOptionUI option)
