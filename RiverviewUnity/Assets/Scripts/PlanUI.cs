@@ -8,7 +8,7 @@ public class PlanUI : MonoBehaviour
 	private Transform[] optionsContainers;
 
 	public PlanOptionSelectorUI planOptionSelectorUI;
-	private List<GameObject> optionUIs;
+	private List<GameObject> optionUIs = new List<GameObject>();
 
 	public void Clear()
 	{
@@ -34,7 +34,7 @@ public class PlanUI : MonoBehaviour
 		if (optionsContainer != null)
 		{
 			option.Selected += SelectOption;
-			option.transform.SetParent(optionsContainer);
+			option.transform.SetParent(optionsContainer, false);
 		}
 	}
 

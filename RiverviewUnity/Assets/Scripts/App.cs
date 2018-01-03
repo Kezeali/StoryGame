@@ -1,5 +1,6 @@
 using UnityEngine;
 using NotABear;
+using System.Collections.Generic;
 
 public class App : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class App : MonoBehaviour
 	{
 		PlanOptionsLoadout loadout = new PlanOptionsLoadout();
 		loadout.name = "test";
+
+		loadout.planOptions = new List<PlanOption>(plannerData.items.Length);
 
 		for (int i = 0; i < plannerData.items.Length; ++i)
 		{
