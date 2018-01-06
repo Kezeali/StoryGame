@@ -50,6 +50,6 @@ public class PlanOptionSelectorUI : MonoBehaviour
 	{
 		optionUIs.Remove(option.gameObject);
 		option.Selected -= SelectOption;
-		planUI.AddSelectedOption(option);
+		//planUI.AddSelectedOption(option);
 	}
 }
