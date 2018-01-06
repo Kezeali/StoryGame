@@ -2,40 +2,45 @@ using UnityEngine;
 using NotABear;
 using System.Collections.Generic;
 
+namespace NotABear
+{
+
 public class PlanUI : MonoBehaviour
 {
 	[SerializeField]
-	private Transform[] optionsContainers;
+	private string planName;
 
-	public PlanOptionSelectorUI planOptionSelectorUI;
+	[SerializeField]
+	private PlanOptionSelectorUI planOptionSelectorUI;
+
+	private Plan plan;
+	private PlanSectionUI[] uiSections;
 	private List<GameObject> optionUIs = new List<GameObject>();
+
+	public void Awake()
+	{
+		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>();
+	}
+
+	public void Start()
+	{
+		plan = new Plan();
+		plan.name = planName;
+		plan.sections = new PlanSection[this.uiSections.Length];
+		for (int i = 0; i < plan.sections.Length; ++i)
+		{
+			var planSection = new PlanSection();
+			plan.sections[i] = planSection;
+		}
+	}
 
 	public void Clear()
 	{
-		for (int i = 0; i < optionUIs.Count; ++i)
+		for (int i = 0; i < this.optionUIs.Count; ++i)
 		{
-			Object.Destroy(optionUIs[i]);
+			Object.Destroy(this.optionUIs[i]);
 		}
-		optionUIs.Clear();
-	}
-
-	public void AddSelectedOption(PlanOptionUI option)
-	{
-		// Look for an empty slot (in a dumb way)
-		Transform optionsContainer = null;
-		for (int i = 0; i < optionsContainers.Length; ++i)
-		{
-			if (optionsContainers[i].childCount == 0)
-			{
-				optionsContainer = optionsContainers[i];
-				break;
-			}
-		}
-		if (optionsContainer != null)
-		{
-			option.Selected += SelectOption;
-			option.transform.SetParent(optionsContainer, false);
-		}
+		this.optionUIs.Clear();
 	}
 
 	public void SelectOption(PlanOptionUI option)
@@ -44,4 +49,6 @@ public class PlanUI : MonoBehaviour
 		option.Selected -= SelectOption;
 		planOptionSelectorUI.AddDeselectedOption(option);
 	}
+}
+
 }

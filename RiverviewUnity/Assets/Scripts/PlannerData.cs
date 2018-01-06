@@ -13,6 +13,7 @@ namespace NotABear
 	public class PlannerItemData
 	{
 		public string name;
+		public int timeUnits;
 	}
 
 }
