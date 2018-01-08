@@ -14,7 +14,7 @@ namespace NotABear
 	[System.Serializable]
 	public class PlanSection
 	{
-		public List<FilledPlanSlot> optionSlots = new List<FilledPlanSlot>();
+		public List<FilledPlanSlot> filledSlots = new List<FilledPlanSlot>();
 	}
 
 	[System.Serializable]

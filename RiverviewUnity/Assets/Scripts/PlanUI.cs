@@ -20,17 +20,26 @@ public class PlanUI : MonoBehaviour
 	public void Awake()
 	{
 		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>();
+		System.Array.Sort(uiSections, PlanSectionUI.Compare);
 	}
 
-	public void Start()
+	public void Initialise(Plan loadedPlan)
 	{
-		plan = new Plan();
-		plan.name = planName;
-		plan.sections = new PlanSection[this.uiSections.Length];
-		for (int i = 0; i < plan.sections.Length; ++i)
+		this.plan = new Plan();
+		this.plan.name = planName;
+		this.plan.sections = new PlanSection[this.uiSections.Length];
+		for (int newSectionIndex = 0; newSectionIndex < this.plan.sections.Length; ++newSectionIndex)
 		{
 			var planSection = new PlanSection();
-			plan.sections[i] = planSection;
+			this.plan.sections[newSectionIndex] = planSection;
+			if (loadedPlan != null && loadedPlan.sections.Length > newSectionIndex)
+			{
+				PlanSection loadedSection = loadedPlan.sections[newSectionIndex];
+				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.filledSlots.Count; ++loadedSlotIndex)
+				{
+					planSection.filledSlots.Add(loadedSection.filledSlots[loadedSlotIndex]);
+				}
+			}
 		}
 	}
 
