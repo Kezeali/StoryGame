@@ -10,7 +10,7 @@ namespace NotABear
 		public PlanSection[] sections;
 	}
 
-	// A closed section of the plan such as a day or week
+	// A section of the plan such as a day or week
 	[System.Serializable]
 	public class PlanSection
 	{
@@ -20,6 +20,7 @@ namespace NotABear
 	[System.Serializable]
 	public class FilledPlanSlot
 	{
+		public int unitIndex;
 		public PlanOption selectedOption;
 	}
 }

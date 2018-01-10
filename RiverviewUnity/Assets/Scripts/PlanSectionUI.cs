@@ -13,19 +13,18 @@ public class PlanSectionUI : MonoBehaviour
 		this.slots = this.GetComponentsInChildren<PlanSlotUI>();
 	}
 
-	public virtual int PlanSectionUnitIndex()
+	public virtual int SectionUnitIndex()
 	{
-		// TODO(elliot): however you determine the child index of a transform:
-		return 0;//this.transform.childIndex;
+		return this.transform.GetSiblingIndex();
 	}
 
 	public static int Compare(PlanSectionUI a, PlanSectionUI b)
 	{
-		if (a.PlanSectionUnitIndex() < b.PlanSectionUnitIndex())
+		if (a.SectionUnitIndex() < b.SectionUnitIndex())
 		{
 			return -1;
 		}
-		else if (a.PlanSectionUnitIndex() > b.PlanSectionUnitIndex())
+		else if (a.SectionUnitIndex() > b.SectionUnitIndex())
 		{
 			return 1;
 		}

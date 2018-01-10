@@ -12,7 +12,7 @@ public class WeeklyPlanSectionUI : PlanSectionUI
 {
 	public Weekday weekday;
 
-	public override int PlanSectionUnitIndex() { return (int)weekday; }
+	public override int SectionUnitIndex() { return (int)weekday; }
 }
 
 }
