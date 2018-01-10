@@ -14,6 +14,8 @@ namespace NotABear
 	{
 		public string name;
 		public int timeUnits;
+		public SlotType validSlots;
+		public PlanActivityData activity;
 	}
 
 }

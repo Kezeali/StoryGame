@@ -32,12 +32,25 @@ public class PlanUI : MonoBehaviour
 		{
 			var planSection = new PlanSection();
 			this.plan.sections[newSectionIndex] = planSection;
+
+			PlanSectionUI uiSection = uiSections[newSectionIndex];
+			//planSection.name = uiSeciton.name;
+
 			if (loadedPlan != null && loadedPlan.sections.Length > newSectionIndex)
 			{
 				PlanSection loadedSection = loadedPlan.sections[newSectionIndex];
+
+				SlotType fillingSlotType = SlotType.None;
+
 				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.filledSlots.Count; ++loadedSlotIndex)
 				{
-					planSection.filledSlots.Add(loadedSection.filledSlots[loadedSlotIndex]);
+					FilledPlanSlot loadedSlot = loadedSection.filledSlots[loadedSlotIndex];
+
+					if (fillingSlotType == SlotType.None)
+					{
+						fillingSlotType = uiSection.slots[loadedSlotIndex].slotType;
+					}
+					planSection.filledSlots.Add(loadedSlot);
 				}
 			}
 		}
