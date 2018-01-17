@@ -27,30 +27,44 @@ public class PlanUI : MonoBehaviour
 	{
 		this.plan = new Plan();
 		this.plan.name = planName;
-		this.plan.sections = new PlanSection[this.uiSections.Length];
-		for (int newSectionIndex = 0; newSectionIndex < this.plan.sections.Length; ++newSectionIndex)
+
+		int sectionsCount = this.uiSections.Length;
+
+		this.plan.sections = new PlanSection[sectionsCount];
+		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
 		{
 			var planSection = new PlanSection();
 			this.plan.sections[newSectionIndex] = planSection;
 
 			PlanSectionUI uiSection = uiSections[newSectionIndex];
-			//planSection.name = uiSeciton.name;
+			//planSection.name = uiSection.name;
 
+			int slotsCount = uiSection.slots.Length;
+
+			planSection.slots = new PlanSlot[slotsCount];
+			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
+			{
+				var newSlot = new PlanSlot();
+				planSection.slots[slotIndex] = newSlot;
+			}
+
+			// Upgrade the data
 			if (loadedPlan != null && loadedPlan.sections.Length > newSectionIndex)
 			{
 				PlanSection loadedSection = loadedPlan.sections[newSectionIndex];
 
 				SlotType fillingSlotType = SlotType.None;
+				int fillingSlotIndex = 0;
 
-				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.filledSlots.Count; ++loadedSlotIndex)
+				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.slots.Length; ++loadedSlotIndex)
 				{
-					FilledPlanSlot loadedSlot = loadedSection.filledSlots[loadedSlotIndex];
+					PlanSlot loadedSlot = loadedSection.slots[loadedSlotIndex];
 
 					if (fillingSlotType == SlotType.None)
 					{
 						fillingSlotType = uiSection.slots[loadedSlotIndex].slotType;
 					}
-					planSection.filledSlots.Add(loadedSlot);
+					planSection.slots[fillingSlotIndex] = loadedSlot;
 				}
 			}
 		}

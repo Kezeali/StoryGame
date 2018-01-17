@@ -14,13 +14,14 @@ namespace NotABear
 	[System.Serializable]
 	public class PlanSection
 	{
-		public List<FilledPlanSlot> filledSlots = new List<FilledPlanSlot>();
+		public PlanSlot[] slots;
 	}
 
 	[System.Serializable]
-	public class FilledPlanSlot
+	public class PlanSlot
 	{
 		public int unitIndex;
+		public SlotType slotType;
 		public PlanOption selectedOption;
 	}
 }
