@@ -64,6 +64,7 @@
      <Compile Include="Assets\Scripts\PlanUI.cs" />
      <Compile Include="Assets\Scripts\SequentialPlanSlotUI.cs" />
      <Compile Include="Assets\Scripts\SequentialPlanSlotUIGroup.cs" />
+     <Compile Include="Assets\Scripts\Serialisation.cs" />
      <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUI.cs" />
      <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUIGroup.cs" />
      <Compile Include="Assets\Scripts\WeeklyPlanSectionUI.cs" />
