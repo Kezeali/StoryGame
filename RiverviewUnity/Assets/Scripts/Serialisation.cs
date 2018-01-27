@@ -1,107 +1,254 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using UnityEngine;
 
 namespace NotABear
 {
 
-public static class Serialiser
+public class DataItemSource
 {
-	public struct WriteState
+	private Dictionary<string, DataItem> dataItems = new Dictionary<string, DataItem>();
+
+	public void AddDataItemRange<T>(T[] items)
+		where T : DataItem
 	{
-		public Token LastToken;
-		public int Indent;
+		for (int i = 0; i < items.Length; ++i)
+		{
+			AddDataItem(items[i].name, items[i]);
+		}
 	}
 
-	public struct ReadState
+	public void AddDataItem(string name, DataItem item)
 	{
-		public Token TokenAtCursor;
-		public int Cursor;
+		dataItems[name] = item;
 	}
+	
+	public DataItem GetItem(string name)
+	{
+		return dataItems[name];
+	}
+}
 
+public static partial class Serialiser
+{
 	public enum Token
 	{
 		None,
-		OpenHeading,
-		CloseHeading,
+		OpenArray,
+		CloseArray,
 		OpenScope,
 		CloseScope,
 		Separator,
-		Whitespace
+		DataItemTag,
+		Escape,
+		Whitespace,
+		String,
+		Number,
+	}
+
+	public enum ValueType
+	{
+		String,
+		Float32,
+		Float64,
+		Bool,
+		Int8,
+		Int16,
+		Int32,
+		Int64,
+		UInt8,
+		UInt16,
+		UInt32,
+		UInt64,
+		DateTime,
+		Array,
+		Map,
+		Struct,
+		Enum,
+		DataItem,
 	}
 
 	private static string TokenString(Token key)
 	{
-			return TokenStrings[(int)key];
+		return TokenStrings[(int)key].ToString();
 	}
 
-	private static readonly string[] TokenStrings = new string[]
+	private static readonly char[] TokenStrings = new char[]
 	{
-		"[",
-		"]",
-		"{",
-		"}",
-		",",
-		" "
+		'\0',
+		'[',
+		']',
+		'{',
+		'}',
+		',',
+		'^',
+		'\\'
 	};
 
-	private const string IndentChar = "\t";
-
-	public static WriteState Serialise<T>(WriteState state, T obj)
+	public class StructContract
 	{
-		StringBuilder sb = new StringBuilder();
+		public FieldContract[] fields = new FieldContract[0];
+	}
 
-		string className = typeof(T).Name;
+	public class FieldContract
+	{
+		public ValueType type;
+		public FieldInfo fieldInfo;
+		public StructContract structContract;
+		// Note: used for array & map fields
+		public FieldContract keyContract;
+		public FieldContract elementContract;
+	}
 
-		if (state.LastToken != Token.None)
+	private static StructContract AddStructContracts(System.Type type, Dictionary<System.Type, StructContract> contracts)
+	{
+		StructContract result = null;
+		if (!contracts.TryGetValue(type, out result))
 		{
-			sb.Append(TokenString(Token.Separator));
+			result = new StructContract();
+			contracts.Add(type, result);
+
+			List<FieldContract> fields = new List<FieldContract>();
+
+			FieldInfo[] fieldInfos = type.GetFields();
+			for (int fieldIndex = 0; fieldIndex < fieldInfos.Length; ++fieldIndex)
+			{
+				FieldInfo fieldInfo = fieldInfos[fieldIndex];
+				bool serialized = false;
+
+				serialized = !fieldInfo.IsStatic && !fieldInfo.IsLiteral && !fieldInfo.IsNotSerialized;
+
+				object[] customAttributes = fieldInfos[fieldIndex].GetCustomAttributes(true);
+				for (int attributeIndex = 0; attributeIndex < customAttributes.Length; ++attributeIndex)
+				{
+					var attr = customAttributes[attributeIndex];
+					if (attr.GetType() == typeof(System.NonSerializedAttribute))
+					{
+						serialized = false;
+					}
+					else if (attr.GetType() == typeof(SerializeField))
+					{
+						serialized = true;
+					}
+				}
+				if (serialized)
+				{
+					System.Type fieldType = fieldInfo.FieldType;
+
+					FieldContract fieldContract = BuildFieldContract(fieldType, contracts);
+					if (fieldContract != null)
+					{
+						fieldContract.fieldInfo = fieldInfo;
+						fields.Add(fieldContract);
+					}
+				}
+			}
+			result.fields = fields.ToArray();
+		}
+		else
+		{
+			if (result.fields == null)
+			{
+				Debug.LogError("Recursive types not supported yet");
+			}
+		}
+		return result;
+	}
+
+	private static FieldContract BuildFieldContract(System.Type fieldType, Dictionary<System.Type, StructContract> contracts)
+	{
+		FieldContract fieldContract = null;
+		if (fieldType.IsSubclassOf(typeof(DataItem)))
+		{
+			fieldContract = new FieldContract();
+			fieldContract.type = ValueType.DataItem;
+		}
+		else if (fieldType.IsArray)
+		{
+			fieldContract = new FieldContract();
+			fieldContract.type = ValueType.Array;
+			System.Type elementType = fieldType.GetElementType();
+			fieldContract.elementContract = BuildFieldContract(elementType, contracts);
+		}
+		else if (fieldType.IsEnum)
+		{
+			fieldContract = new FieldContract();
+			fieldContract.type = ValueType.Enum;
+		}
+		else if (fieldType == typeof(string))
+		{
+			fieldContract = new FieldContract();
+			fieldContract.type = ValueType.String;
+		}
+		else if (fieldType.IsPrimitive)
+		{
+			fieldContract = new FieldContract();
+			if (fieldType == typeof(bool))
+			{
+				fieldContract.type = ValueType.Bool;
+			}
+			else if (fieldType == typeof(System.Single))
+			{
+				fieldContract.type = ValueType.Float32;
+			}
+			else if (fieldType == typeof(System.Double))
+			{
+				fieldContract.type = ValueType.Float64;
+			}
+			else if (fieldType == typeof(sbyte))
+			{
+				fieldContract.type = ValueType.Int8;
+			}
+			else if (fieldType == typeof(System.Int16))
+			{
+				fieldContract.type = ValueType.Int16;
+			}
+			else if (fieldType == typeof(System.Int32))
+			{
+				fieldContract.type = ValueType.Int32;
+			}
+			else if (fieldType == typeof(System.Int64))
+			{
+				fieldContract.type = ValueType.Int64;
+			}
+			else if (fieldType == typeof(byte))
+			{
+				fieldContract.type = ValueType.UInt8;
+			}
+			else if (fieldType == typeof(System.UInt16))
+			{
+				fieldContract.type = ValueType.UInt16;
+			}
+			else if (fieldType == typeof(System.UInt32))
+			{
+				fieldContract.type = ValueType.UInt32;
+			}
+			else if (fieldType == typeof(System.UInt64))
+			{
+				fieldContract.type = ValueType.UInt64;
+			}
+			else
+			{
+				fieldContract = null;
+				Debug.Log("Unsupported primative type: " + fieldType.ToString());
+			}
+		}
+		else if (fieldType.IsClass && !fieldType.IsEnum)
+		{
+			if (fieldType.IsSerializable)
+			{
+				fieldContract = new FieldContract();
+				fieldContract.type = ValueType.Struct;
+				fieldContract.structContract = AddStructContracts(fieldType, contracts);
+			}
+		}
+		else
+		{
+			Debug.Log("Unsupported type: " + fieldType.ToString());
 		}
 
-		WriteIndented(sb, state.Indent, className);
-
-		WriteIndented(sb, state.Indent, TokenString(Token.OpenScope));
-		state.Indent += 1;
-		sb.AppendLine();
-
-		return state;
-	}
-
-	private static WriteState WriteToken(WriteState state, StringBuilder sb, Token token)
-	{
-		// if last char was newline, indent?
-		state.LastToken = token;
-		return state;
-	}
-
-	private static void WriteIndented(StringBuilder sb, int indent, string value)
-	{
-		for (int i = 0; i < indent; ++i)
-		{
-			sb.Append(IndentChar);
-		}
-		sb.Append(value);
-	}
-
-	private static void WriteField(StringBuilder sb)
-	{
-	}
-
-	public static ReadState Deserialise<T>(ReadState state, ref T loadInto, TypeFactory factory)
-	{
-		return state;
-	}
-}
-
-public class TypeFactory
-{
-	public TypeFactory()
-	{
-	}
-	
-	public object BuildType(string name)
-	{
-		return null;
+		return fieldContract;
 	}
 }
 
