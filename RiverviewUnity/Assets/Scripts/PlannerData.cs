@@ -3,6 +3,12 @@ using UnityEngine;
 namespace NotABear
 {
 
+	[System.Serializable]
+	public abstract class DataItem
+	{
+		public string name;
+	}
+
 	[CreateAssetMenu(fileName="PlannerData.asset", menuName="Riverview/Planner Data")]
 	public class PlannerData : ScriptableObject
 	{
@@ -10,9 +16,8 @@ namespace NotABear
 	}
 
 	[System.Serializable]
-	public class PlannerItemData
+	public class PlannerItemData : DataItem
 	{
-		public string name;
 		public int timeUnits;
 		public SlotType validSlots;
 		public PlanActivityData activity;
