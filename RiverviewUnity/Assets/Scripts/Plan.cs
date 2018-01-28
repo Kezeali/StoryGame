@@ -7,14 +7,14 @@ namespace NotABear
 	{
 		public string name;
 
-		public PlanSection[] sections;
+		public PlanSection[] sections = new PlanSection[0];
 	}
 
 	// A section of the plan such as a day or week
 	[System.Serializable]
 	public class PlanSection
 	{
-		public PlanSlot[] slots;
+		public PlanSlot[] slots = new PlanSlot[0];
 	}
 
 	[System.Serializable]

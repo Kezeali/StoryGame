@@ -31,12 +31,8 @@ public class App : MonoBehaviour
 		}
 
 		plan = new Plan();
+		plan.name = "WeekPlan";
 		Serialiser.Deserialise(ref plan, dataItemSource);
-
-		System.Text.StringBuilder sb = new System.Text.StringBuilder();
-		Serialiser.Serialise(sb, plan);
-
-		System.IO.File.WriteAllText("save.txt", sb.ToString());
 	}
 
 	public void Start()
@@ -52,7 +48,7 @@ public class App : MonoBehaviour
 		for (int i = 0; i < planObjects.Length; ++i)
 		{
 			var planUI = planObjects[i] as PlanUI;
-			planUI.Initialise(plan);
+			planUI.Initialise(plan, dataItemSource);
 		}
 	}
 }

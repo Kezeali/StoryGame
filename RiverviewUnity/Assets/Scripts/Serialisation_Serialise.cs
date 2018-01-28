@@ -15,15 +15,17 @@ public static partial class Serialiser
 		public int indent;
 		public bool useFormatting;
 		public Dictionary<System.Type, StructContract> contracts; 
+		public DataItemSource dataSource;
 	}
 
 	private const string IndentChar = "\t";
 
-	public static WriteState Serialise<T>(StringBuilder sb, T obj)
+	public static WriteState Serialise<T>(StringBuilder sb, T obj, DataItemSource dataSource)
 	{
 		WriteState state = new WriteState();
 		state.useFormatting = true;
 		state.contracts = new Dictionary<System.Type, StructContract>();
+		state.dataSource = dataSource;
 
 		System.Type type = typeof(T);
 		return Serialise(state, sb, obj, type);
@@ -51,23 +53,23 @@ public static partial class Serialiser
 
 	private static WriteState WriteStruct(WriteState state, StringBuilder sb, object obj, StructContract contract)
 	{
-		// TODO: pass type here as obj could be null
-		System.Type type = obj.GetType();
+		System.Type type = contract.type;
 		string className = type.Name;
 		state = WriteFormatted(state, sb, className);
 		state.lastToken = Token.String;
 
 		state = WriteFormatted(state, sb, Token.OpenScope);
 
-		WriteState fieldsState = state;
-		fieldsState.indent += 1;
-		for (int fieldIndex = 0; fieldIndex < contract.fields.Length; ++fieldIndex)
+		if (obj != null)
 		{
-			FieldContract fieldContract = contract.fields[fieldIndex];
-			fieldsState = WriteField(fieldsState, sb, obj, fieldContract);
+			for (int fieldIndex = 0; fieldIndex < contract.fields.Length; ++fieldIndex)
+			{
+				FieldContract fieldContract = contract.fields[fieldIndex];
+				state = WriteField(state, sb, obj, fieldContract);
+			}
 		}
 
-		state.lastToken = fieldsState.lastToken;
+		state = WriteFormatted(state, sb, Token.CloseScope);
 
 		return state;
 	}
@@ -87,6 +89,8 @@ public static partial class Serialiser
 
 		FieldInfo fieldInfo = contract.fieldInfo;
 		state = WriteFormatted(state, sb, fieldInfo.Name);
+
+		state = WriteFormatted(state, sb, Token.KeyValueSeparator);
 
 		object value = fieldInfo.GetValue(obj);
 		state = WriteFieldValue(state, sb, value, contract);
@@ -228,69 +232,74 @@ public static partial class Serialiser
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.SByte value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Int16 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Int32 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Int64 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Byte value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.UInt16 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.UInt32 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.UInt64 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.DateTime value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatted(state, sb, value.ToString("O"));
 		return state;
-	}
-
-	private static void WriteIndented(StringBuilder sb, int indent, string value)
-	{
-		for (int i = 0; i < indent; ++i)
-		{
-			sb.Append(IndentChar);
-		}
-		sb.Append(value);
 	}
 
 	private static WriteState WriteFormatted(WriteState state, StringBuilder sb, Token token)
 	{
+		if (state.useFormatting)
+		{
+			if (state.lastToken != Token.Whitespace)
+			{
+				switch (token)
+				{
+					case Token.OpenScope:
+					{
+						sb.AppendLine();
+					} break;
+				}
+			}
+		}
+
 		state = WriteFormatted(state, sb, TokenString(token));
 		state.lastToken = token;
 		if (state.useFormatting)
@@ -299,14 +308,10 @@ public static partial class Serialiser
 			{
 				case Token.OpenScope:
 				{
-					sb.AppendLine();
-					state.lastToken = Token.Whitespace;
 					state.indent += 1;
 				} break;
 				case Token.CloseScope:
 				{
-					sb.AppendLine();
-					state.lastToken = Token.Whitespace;
 					state.indent -= 1;
 				} break;
 			}
@@ -319,6 +324,15 @@ public static partial class Serialiser
 		if (state.useFormatting)
 		{
 			bool newline;
+			switch (state.lastToken)
+			{
+				case Token.OpenScope:
+				case Token.CloseScope:
+				{
+					sb.AppendLine();
+					state.lastToken = Token.Whitespace;
+				} break;
+			}
 			if (sb.Length > 0)
 			{
 				char prevChar = sb[sb.Length-1];
@@ -353,6 +367,15 @@ public static partial class Serialiser
 			sb.Append(value);
 		}
 		return state;
+	}
+
+	private static void WriteIndented(StringBuilder sb, int indent, string value)
+	{
+		for (int i = 0; i < indent; ++i)
+		{
+			sb.Append(IndentChar);
+		}
+		sb.Append(value);
 	}
 }
 
