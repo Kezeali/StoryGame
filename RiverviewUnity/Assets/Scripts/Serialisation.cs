@@ -40,6 +40,7 @@ public static partial class Serialiser
 		OpenScope,
 		CloseScope,
 		Separator,
+		KeyValueSeparator,
 		DataItemTag,
 		Escape,
 		Whitespace,
@@ -82,12 +83,14 @@ public static partial class Serialiser
 		'{',
 		'}',
 		',',
+		':',
 		'^',
 		'\\'
 	};
 
 	public class StructContract
 	{
+		public System.Type type;
 		public FieldContract[] fields = new FieldContract[0];
 	}
 
@@ -109,6 +112,9 @@ public static partial class Serialiser
 			result = new StructContract();
 			contracts.Add(type, result);
 
+			result.type = type;
+
+			// Recursively build contracts for all the fields & any more types they reference
 			List<FieldContract> fields = new List<FieldContract>();
 
 			FieldInfo[] fieldInfos = type.GetFields();

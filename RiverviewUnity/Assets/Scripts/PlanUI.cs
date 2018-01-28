@@ -16,6 +16,7 @@ public class PlanUI : MonoBehaviour
 	private Plan plan;
 	private PlanSectionUI[] uiSections;
 	private List<GameObject> optionUIs = new List<GameObject>();
+	private DataItemSource dataItemSource;
 
 	public void Awake()
 	{
@@ -23,8 +24,10 @@ public class PlanUI : MonoBehaviour
 		System.Array.Sort(uiSections, PlanSectionUI.Compare);
 	}
 
-	public void Initialise(Plan loadedPlan)
+	public void Initialise(Plan loadedPlan, DataItemSource dataItemSource)
 	{
+		this.dataItemSource = dataItemSource;
+
 		this.plan = new Plan();
 		this.plan.name = planName;
 
@@ -44,7 +47,11 @@ public class PlanUI : MonoBehaviour
 			planSection.slots = new PlanSlot[slotsCount];
 			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
 			{
+				PlanSlotUI slotUI = uiSection.slots[slotIndex];
+
 				var newSlot = new PlanSlot();
+				newSlot.unitIndex = slotUI.SlotUnitIndex();
+				newSlot.slotType = slotUI.slotType;
 				planSection.slots[slotIndex] = newSlot;
 			}
 
@@ -68,6 +75,8 @@ public class PlanUI : MonoBehaviour
 				}
 			}
 		}
+
+		Save();
 	}
 
 	public void Clear()
@@ -84,6 +93,14 @@ public class PlanUI : MonoBehaviour
 		optionUIs.Remove(option.gameObject);
 		option.Selected -= SelectOption;
 		planOptionSelectorUI.AddDeselectedOption(option);
+	}
+
+	public void Save()
+	{
+		System.Text.StringBuilder sb = new System.Text.StringBuilder();
+		Serialiser.Serialise(sb, this.plan, this.dataItemSource);
+
+		System.IO.File.WriteAllText("save.txt", sb.ToString());
 	}
 }
 
