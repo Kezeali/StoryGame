@@ -41,12 +41,27 @@ public static partial class Serialiser
 		CloseScope,
 		Separator,
 		KeyValueSeparator,
+		ClassTag,
 		DataItemTag,
 		Escape,
 		Whitespace,
 		String,
 		Number,
 	}
+
+	private static readonly char[] tokenStrings = new char[]
+	{
+		'\0',
+		'[',
+		']',
+		'{',
+		'}',
+		',',
+		':',
+		'#',
+		'^',
+		'\\'
+	};
 
 	public enum ValueType
 	{
@@ -72,21 +87,8 @@ public static partial class Serialiser
 
 	private static string TokenString(Token key)
 	{
-		return TokenStrings[(int)key].ToString();
+		return tokenStrings[(int)key].ToString();
 	}
-
-	private static readonly char[] TokenStrings = new char[]
-	{
-		'\0',
-		'[',
-		']',
-		'{',
-		'}',
-		',',
-		':',
-		'^',
-		'\\'
-	};
 
 	public class StructContract
 	{

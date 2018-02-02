@@ -30,9 +30,11 @@ public class App : MonoBehaviour
 			loadout.planOptions.Add(option);
 		}
 
+		string data = System.IO.File.ReadAllText("save.txt");
+
 		plan = new Plan();
 		plan.name = "WeekPlan";
-		Serialiser.Deserialise(ref plan, dataItemSource);
+		Serialiser.Deserialise(ref plan, data, dataItemSource);
 	}
 
 	public void Start()
