@@ -54,6 +54,9 @@ public static partial class Serialiser
 	private static WriteState WriteStruct(WriteState state, StringBuilder sb, object obj, StructContract contract)
 	{
 		System.Type type = contract.type;
+
+		state = WriteFormatted(state, sb, Token.ClassTag);
+
 		string className = type.Name;
 		state = WriteFormatted(state, sb, className);
 		state.lastToken = Token.String;
@@ -92,8 +95,12 @@ public static partial class Serialiser
 
 		state = WriteFormatted(state, sb, Token.KeyValueSeparator);
 
+		state.indent += 1;
+
 		object value = fieldInfo.GetValue(obj);
 		state = WriteFieldValue(state, sb, value, contract);
+
+		state.indent -= 1;
 
 		return state;
 	}
@@ -160,7 +167,15 @@ public static partial class Serialiser
 				var enumerableValue = value as IEnumerable;
 				FieldContract elementContract = contract.elementContract;
 
+				bool alreadyIndented = state.indent > 0;
+				if (alreadyIndented)
+				{
+					state.indent -= 1;
+				}
+
 				state = WriteFormatted(state, sb, Token.OpenArray);
+
+				state.indent += 1;
 
 				if (enumerableValue != null)
 				{
@@ -181,7 +196,14 @@ public static partial class Serialiser
 					}
 				}
 
+				state.indent -= 1;
+
 				state = WriteFormatted(state, sb, Token.CloseArray);
+
+				if (alreadyIndented)
+				{
+					state.indent += 1;
+				}
 			} break;
 			case ValueType.Map:
 			{
@@ -220,67 +242,78 @@ public static partial class Serialiser
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Single value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatting(state, sb);
+		sb.AppendFormat("{0:R}", value);
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Double value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("R"));
+		state = WriteFormatting(state, sb);
+		sb.AppendFormat("{0:R}", value);
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.SByte value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Int16 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Int32 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Int64 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.Byte value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.UInt16 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.UInt32 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.UInt64 value)
 	{
-		state = WriteFormatted(state, sb, value.ToString());
+		state = WriteFormatting(state, sb);
+		sb.Append(value.ToString());
 		return state;
 	}
 
 	private static WriteState WriteValue(WriteState state, StringBuilder sb, System.DateTime value)
 	{
-		state = WriteFormatted(state, sb, value.ToString("O"));
+		state = WriteFormatting(state, sb);
+		sb.AppendFormat("{0:O}", value);
 		return state;
 	}
 
@@ -288,18 +321,33 @@ public static partial class Serialiser
 	{
 		if (state.useFormatting)
 		{
-			if (state.lastToken != Token.Whitespace)
+			switch (token)
 			{
-				switch (token)
+				case Token.ClassTag:
+				case Token.OpenScope:
 				{
-					case Token.OpenScope:
+					if (state.lastToken != Token.None)
 					{
 						sb.AppendLine();
-					} break;
-				}
+					}
+				} break;
+				case Token.CloseScope:
+				{
+					if (state.lastToken != Token.None && state.lastToken != Token.Whitespace)
+					{
+						sb.AppendLine();
+					}
+					state.indent -= 1;
+				} break;
+				case Token.CloseArray:
+				{
+					if (state.lastToken != Token.None && state.lastToken != Token.Whitespace)
+					{
+						sb.AppendLine();
+					}
+				} break;
 			}
 		}
-
 		state = WriteFormatted(state, sb, TokenString(token));
 		state.lastToken = token;
 		if (state.useFormatting)
@@ -310,10 +358,6 @@ public static partial class Serialiser
 				{
 					state.indent += 1;
 				} break;
-				case Token.CloseScope:
-				{
-					state.indent -= 1;
-				} break;
 			}
 		}
 		return state;
@@ -321,13 +365,20 @@ public static partial class Serialiser
 
 	private static WriteState WriteFormatted(WriteState state, StringBuilder sb, string value)
 	{
+		state = WriteFormatting(state, sb);
+		sb.Append(value);
+		state = WritePostFormatting(state, sb);
+		return state;
+	}
+
+	private static WriteState WriteFormatting(WriteState state, StringBuilder sb)
+	{
 		if (state.useFormatting)
 		{
 			bool newline;
 			switch (state.lastToken)
 			{
 				case Token.OpenScope:
-				case Token.CloseScope:
 				{
 					sb.AppendLine();
 					state.lastToken = Token.Whitespace;
@@ -355,27 +406,29 @@ public static partial class Serialiser
 			}
 			if (newline)
 			{
-				WriteIndented(sb, state.indent, value);
-			}
-			else
-			{
-				sb.Append(value);
+				WriteIndent(sb, state.indent);
 			}
 		}
-		else
-		{
-			sb.Append(value);
-		}
+		return state;
+	}
+
+	private static WriteState WritePostFormatting(WriteState state, StringBuilder sb)
+	{
 		return state;
 	}
 
 	private static void WriteIndented(StringBuilder sb, int indent, string value)
 	{
+		WriteIndent(sb, indent);
+		sb.Append(value);
+	}
+
+	private static void WriteIndent(StringBuilder sb, int indent)
+	{
 		for (int i = 0; i < indent; ++i)
 		{
 			sb.Append(IndentChar);
 		}
-		sb.Append(value);
 	}
 }
 
