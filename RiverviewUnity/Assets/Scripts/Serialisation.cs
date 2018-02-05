@@ -32,7 +32,7 @@ public class DataItemSource
 
 public static partial class Serialiser
 {
-	public enum Token
+	public enum Token : byte
 	{
 		None,
 		OpenArray,
@@ -41,11 +41,13 @@ public static partial class Serialiser
 		CloseScope,
 		Separator,
 		KeyValueSeparator,
-		ClassTag,
+		TypenameTag,
 		DataItemTag,
 		Escape,
+		StringDelim,
+		StringDelimAlt,
 		Whitespace,
-		String,
+		Text,
 		Number,
 	}
 
@@ -60,7 +62,9 @@ public static partial class Serialiser
 		':',
 		'#',
 		'^',
-		'\\'
+		'\\',
+		'"',
+		'\''
 	};
 
 	public enum ValueType

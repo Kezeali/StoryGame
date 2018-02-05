@@ -55,11 +55,11 @@ public static partial class Serialiser
 	{
 		System.Type type = contract.type;
 
-		state = WriteFormatted(state, sb, Token.ClassTag);
+		state = WriteFormatted(state, sb, Token.TypenameTag);
 
 		string className = type.Name;
 		state = WriteFormatted(state, sb, className);
-		state.lastToken = Token.String;
+		state.lastToken = Token.Text;
 
 		state = WriteFormatted(state, sb, Token.OpenScope);
 
@@ -222,7 +222,7 @@ public static partial class Serialiser
 				var dataItemValue = value as DataItem;
 				state = WriteFormatted(state, sb, Token.DataItemTag);
 				state = WriteFormatted(state, sb, dataItemValue.name);
-				state.lastToken = Token.String;
+				state.lastToken = Token.Text;
 			} break;
 		}
 		return state;
@@ -323,7 +323,7 @@ public static partial class Serialiser
 		{
 			switch (token)
 			{
-				case Token.ClassTag:
+				case Token.TypenameTag:
 				case Token.OpenScope:
 				{
 					if (state.lastToken != Token.None)
