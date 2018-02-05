@@ -1,6 +1,7 @@
 using UnityEngine;
 using NotABear;
 using System.Collections.Generic;
+using YamlDotNet.Serialization;
 
 namespace NotABear
 {
@@ -98,7 +99,11 @@ public class PlanUI : MonoBehaviour
 	public void Save()
 	{
 		System.Text.StringBuilder sb = new System.Text.StringBuilder();
-		Serialiser.Serialise(sb, this.plan, this.dataItemSource);
+		// Serialiser.Serialise(sb, this.plan, this.dataItemSource);
+
+		var serializer = new SerializerBuilder().Build();
+		var yaml = serializer.Serialize(this.plan);
+		sb.Append(yaml);
 
 		System.IO.File.WriteAllText("save.txt", sb.ToString());
 	}

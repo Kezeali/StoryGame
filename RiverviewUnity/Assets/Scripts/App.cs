@@ -1,6 +1,7 @@
 using UnityEngine;
 using NotABear;
 using System.Collections.Generic;
+using YamlDotNet.Serialization;
 
 public class App : MonoBehaviour
 {
@@ -34,7 +35,12 @@ public class App : MonoBehaviour
 
 		plan = new Plan();
 		plan.name = "WeekPlan";
-		Serialiser.Deserialise(ref plan, data, dataItemSource);
+		// Serialiser.Deserialise(ref plan, data, dataItemSource);
+		var deserializer = new DeserializerBuilder()
+			.WithNamingConvention(new CamelCaseNamingConvention())
+			.Build();
+
+		plan = deserializer.Deserialize<Plan>(data);
 	}
 
 	public void Start()
