@@ -8,39 +8,53 @@ public class App : MonoBehaviour
 	[SerializeField]
 	private PlannerData plannerData;
 
+	[SerializeField]
+	private SaveData defaultSave;
+
 	DataItemSource dataItemSource;
 
+	DataItemConverter dataItemConverter;
+
 	PlanOptionsLoadout loadout;
-	Plan plan;
+	SaveData saveData;
 
 	public void Awake()
 	{
 		dataItemSource = new DataItemSource();
-		dataItemSource.AddDataItemRange(plannerData.items);
+		dataItemSource.AddDataItemRange(this.plannerData.items);
 
-		loadout = new PlanOptionsLoadout();
-		loadout.name = "test";
+		this.dataItemConverter = new DataItemConverter();
+		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
 
-		loadout.planOptions = new List<PlanOption>(plannerData.items.Length);
+		this.loadout = new PlanOptionsLoadout();
+		this.loadout.name = "test";
 
-		for (int i = 0; i < plannerData.items.Length; ++i)
+		this.loadout.planOptions = new List<PlanOption>(this.plannerData.items.Length);
+
+		for (int i = 0; i < this.plannerData.items.Length; ++i)
 		{
-			PlannerItemData item = plannerData.items[i];
+			PlannerItemData item = this.plannerData.items[i];
 			PlanOption option = new PlanOption();
 			option.data = item;
-			loadout.planOptions.Add(option);
+			this.loadout.planOptions.Add(option);
 		}
 
 		string data = System.IO.File.ReadAllText("save.txt");
 
-		plan = new Plan();
-		plan.name = "WeekPlan";
 		// Serialiser.Deserialise(ref plan, data, dataItemSource);
 		var deserializer = new DeserializerBuilder()
 			.WithNamingConvention(new CamelCaseNamingConvention())
+			.WithTypeConverter(this.dataItemConverter)
 			.Build();
 
-		plan = deserializer.Deserialize<Plan>(data);
+		try
+		{
+			saveData = deserializer.Deserialize<SaveData>(data);
+		}
+		catch
+		{
+			saveData = this.defaultSave;
+		}
 	}
 
 	public void Start()
@@ -49,14 +63,38 @@ public class App : MonoBehaviour
 		for (int i = 0; i < planOptionSelectorObjects.Length; ++i)
 		{
 			var planOptionSelectorUI = planOptionSelectorObjects[i] as PlanOptionSelectorUI;
-			planOptionSelectorUI.Initialise(loadout);
+			planOptionSelectorUI.Initialise(this.loadout);
 		}
 
 		Object[] planObjects = Object.FindObjectsOfType(typeof(PlanUI));
 		for (int i = 0; i < planObjects.Length; ++i)
 		{
 			var planUI = planObjects[i] as PlanUI;
-			planUI.Initialise(plan, dataItemSource);
+			planUI.Initialise(this.saveData);
 		}
+
+		Save();
+	}
+
+	public void Save()
+	{
+		Save(this.saveData, this.dataItemConverter);
+	}
+
+	public static void Save(SaveData saveData, DataItemConverter dataItemConverter)
+	{
+		using (var buffer = new System.IO.StringWriter())
+		{
+			var serializer = new SerializerBuilder()
+				.EnsureRoundtrip()
+				.EmitDefaults()
+				.WithTypeConverter(dataItemConverter)
+				.Build();
+			
+			serializer.Serialize(buffer, saveData, typeof(SaveData));
+
+			System.IO.File.WriteAllText("save.txt", buffer.ToString());
+		}
+
 	}
 }

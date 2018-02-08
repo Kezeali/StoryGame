@@ -17,7 +17,6 @@ public class PlanUI : MonoBehaviour
 	private Plan plan;
 	private PlanSectionUI[] uiSections;
 	private List<GameObject> optionUIs = new List<GameObject>();
-	private DataItemSource dataItemSource;
 
 	public void Awake()
 	{
@@ -25,9 +24,9 @@ public class PlanUI : MonoBehaviour
 		System.Array.Sort(uiSections, PlanSectionUI.Compare);
 	}
 
-	public void Initialise(Plan loadedPlan, DataItemSource dataItemSource)
+	public void Initialise(SaveData loadedData)
 	{
-		this.dataItemSource = dataItemSource;
+		Plan loadedPlan = loadedData.weeklyPlan;
 
 		this.plan = new Plan();
 		this.plan.name = planName;
@@ -72,12 +71,12 @@ public class PlanUI : MonoBehaviour
 					{
 						fillingSlotType = uiSection.slots[loadedSlotIndex].slotType;
 					}
-					planSection.slots[fillingSlotIndex] = loadedSlot;
+					planSection.slots[fillingSlotIndex].selectedOption = loadedSlot.selectedOption;
 				}
 			}
 		}
 
-		Save();
+		loadedData.weeklyPlan = this.plan;
 	}
 
 	public void Clear()
@@ -94,18 +93,6 @@ public class PlanUI : MonoBehaviour
 		optionUIs.Remove(option.gameObject);
 		option.Selected -= SelectOption;
 		planOptionSelectorUI.AddDeselectedOption(option);
-	}
-
-	public void Save()
-	{
-		System.Text.StringBuilder sb = new System.Text.StringBuilder();
-		// Serialiser.Serialise(sb, this.plan, this.dataItemSource);
-
-		var serializer = new SerializerBuilder().Build();
-		var yaml = serializer.Serialize(this.plan);
-		sb.Append(yaml);
-
-		System.IO.File.WriteAllText("save.txt", sb.ToString());
 	}
 }
 
