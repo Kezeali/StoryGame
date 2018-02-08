@@ -8,7 +8,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <ProjectGuid>{C9ECF325-3762-2891-BD72-8135D640740E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -51,284 +52,400 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Dialogue System\Examples\Feature Demo\FeatureDemo.cs" />
-     <Compile Include="Assets\Dialogue System\Examples\Feature Demo\Multiple Database Example\AddRemoveDatabaseTrigger.cs" />
-     <Compile Include="Assets\Dialogue System\Examples\Lua Example\LuaExample.cs" />
-     <Compile Include="Assets\Dialogue System\Examples\Tutorial Example\Pickups\Pickup.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Chat Mapper\ChatMapperTools.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandAudioWaitOnce.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandAudioWWW.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandLoadLevel.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandSetTimeout.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkClip.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkMixerBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkTrack.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\ConversationMixerBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\ConversationTrack.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\StartConversationBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\StartConversationClip.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\QuestStateMixerBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\QuestStateTrack.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\SetQuestStateBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\SetQuestStateClip.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\AlertMixerBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\AlertTrack.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\ShowAlertBehaviour.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\ShowAlertClip.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Utility\PreviewUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Sequencer Commands\SequencerCommandTimeline.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Triggers\TimelineTrigger.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Bark UI\UnityUIBarkUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\Animated Portraits\AnimatedPortrait.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\Animated Portraits\UseAnimatedPortraits.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\OverrideUnityUIDialogueControls.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIAlertControls.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIBarkSubtitleDialogueUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIDialogueControls.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIDialogueUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIQTEControls.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIResponseButton.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIResponseMenuControls.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIRoot.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUISubtitleControls.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUITextFieldUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUITimer.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\LocalizeUIText.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIColorText.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIContinueButtonFastForward.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIIgnorePauseCodes.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIScrollbarEnabler.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUITypewriterEffect.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UpdateLocalizedUITexts.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestGroupTemplate.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestLogWindow.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTemplate.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTemplateAlternateDescriptions.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTitle.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTracker.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTrackTemplate.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Selector\UnityUISelectorDisplay.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Selector\UnityUISelectorElements.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Selector\UsableUnityUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\PreloadActorPortraits.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\UIButtonKeyTrigger.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\UIShowHideController.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\UITools.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\AlwaysFaceCamera.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\ConversationLogger.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\DialogueSystemEvents.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\DieOnTakeDamage.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\ExtraDatabases.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\From Unity3D Community\SmoothCameraWithBumper.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\IncrementOnDestroy.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\LocalizeTextMesh.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\LuaNetworkCommands.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\NavigateOnMouseClick.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\PauseGameOnConversation.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\PersistentDestructible.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\ProximitySelector.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestLogWindowHotkey.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestStateDispatcher.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestStateIndicator.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestStateListener.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestTracker.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\RangeTrigger.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\SelectionDelegates.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\Selector.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\SelectorFollowTarget.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\SimpleController.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\Usable.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\Aurora\TemplateNWScript.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\PersistentDataTemplate.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\SequencerCommandTemplate.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateBarkUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateCustomLua.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateDialogueUI.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateQuestLogWindow.cs" />
-     <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateTextFieldUI.cs" />
-     <Compile Include="Assets\Scripts\App.cs" />
-     <Compile Include="Assets\Scripts\Plan.cs" />
-     <Compile Include="Assets\Scripts\PlanActivityData.cs" />
-     <Compile Include="Assets\Scripts\PlannerData.cs" />
-     <Compile Include="Assets\Scripts\PlanOption.cs" />
-     <Compile Include="Assets\Scripts\PlanOptionSelectorUI.cs" />
-     <Compile Include="Assets\Scripts\PlanOptionsLoadout.cs" />
-     <Compile Include="Assets\Scripts\PlanOptionUI.cs" />
-     <Compile Include="Assets\Scripts\PlanSectionUI.cs" />
-     <Compile Include="Assets\Scripts\PlanSlotUI.cs" />
-     <Compile Include="Assets\Scripts\PlanUI.cs" />
-     <Compile Include="Assets\Scripts\SequentialPlanSlotUI.cs" />
-     <Compile Include="Assets\Scripts\SequentialPlanSlotUIGroup.cs" />
-     <Compile Include="Assets\Scripts\Serialisation.cs" />
-     <Compile Include="Assets\Scripts\Serialisation_Deserialise.cs" />
-     <Compile Include="Assets\Scripts\Serialisation_Serialise.cs" />
-     <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUI.cs" />
-     <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUIGroup.cs" />
-     <Compile Include="Assets\Scripts\WeeklyPlanSectionUI.cs" />
-     <None Include="Assets\Dialogue System\Examples\Mobile Test\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Bark Example\Three NPCs Bark\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Unity UI Examples\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Mobile\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Computer\Bitwise Font\!license.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Computer\Typing.txt" />
-     <None Include="Assets\Dialogue System\Examples\Lua Example\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Bark Example\Bark Example.xml" />
-     <None Include="Assets\Dialogue System\Third Party Support\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Bark Example\Bark Conversation\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Art\Portraits\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\medium\license.txt" />
-     <None Include="Assets\Dialogue System\Examples\Art\Sounds\_README.txt" />
-     <None Include="Assets\Dialogue System\DLLs\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Circle\Textures\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Necromancer\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\Multiple Database Example\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\solid\read me.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\solid\license.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Speech Bubble\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Bark Example\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Save Load Example\_README_FIRST_IMPORTANT!.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\bold\read me.txt" />
-     <None Include="Assets\Dialogue System\Examples\Bark Example\Three NPCs Bark\Three NPCs Bark.xml" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Shared Audio\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Camera Angle Studio\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\bold\license.txt" />
-     <None Include="Assets\Dialogue System\Examples\Quick Start\Quick Start.xml" />
-     <None Include="Assets\Dialogue System\Examples\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Sequence Example\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\Text Input Example\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Necromancer\Necromancer GUI\Kingthings.txt" />
-     <None Include="Assets\Dialogue System\Examples\Art\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\regular\read me.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\Dialogue Database\Feature Demo.xml" />
-     <None Include="Assets\Dialogue System\Examples\Quest Example\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\regular\license.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Mobile\link.xml" />
-     <None Include="Assets\Dialogue System\Examples\Quick Start\_README.txt" />
-     <None Include="Assets\Dialogue System\Documentation\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Necromancer\Necromancer GUI\Readme.txt" />
-     <None Include="Assets\Dialogue System\Scripts\Supplemental\Utility\_README.txt" />
-     <None Include="Assets\Dialogue System\_README_EVALUATION.txt" />
-     <None Include="Assets\Dialogue System\Scripts\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\Feature Demo with Continue Button\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Wheel\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\Menu Text Demo\Feature Demo With Menu Text.xml" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\medium\read me.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Mobile\_IMPORTANT_README.txt" />
-     <None Include="Assets\Dialogue System\Scripts\Supplemental\UI\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Shared Fonts\Orbitron\SIL Open Font License.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Shared Textures\_README.txt" />
-     <None Include="Assets\Dialogue System\Scripts\Shaders\LinesColoredBlended.shader" />
-     <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Unity UI Assets\_README.txt" />
-     <None Include="Assets\Dialogue System\Prefabs\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\Menu Text Demo\_README.txt" />
-     <None Include="Assets\Dialogue System\Examples\Feature Demo\Articy Feature Demo\Articy Feature Demo.xml" />
-     <None Include="Assets\Dialogue System\Examples\Unity UI Examples\Animated Portrait Example\Private Hart Animated Portrait\sprites_credits.txt" />
- <Reference Include="UnityEngine.UI">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.UI">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/GUISystem/Editor/UnityEditor.UI.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Networking">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Networking">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Networking/Editor/UnityEditor.Networking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.TestRunner">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TestRunner/Editor/UnityEditor.TestRunner.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.TestRunner">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TestRunner/UnityEngine.TestRunner.dll</HintPath>
- </Reference>
- <Reference Include="nunit.framework">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TestRunner/net35/unity-custom/nunit.framework.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Timeline">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Timeline/RuntimeEditor/UnityEngine.Timeline.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Timeline">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Timeline/Editor/UnityEditor.Timeline.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.TreeEditor">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TreeEditor/Editor/UnityEditor.TreeEditor.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.UIAutomation">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UIAutomation/UnityEngine.UIAutomation.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.UIAutomation">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UIAutomation/Editor/UnityEditor.UIAutomation.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.GoogleAudioSpatializer">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/Editor/UnityEditor.GoogleAudioSpatializer.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.GoogleAudioSpatializer">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/RuntimeEditor/UnityEngine.GoogleAudioSpatializer.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.HoloLens">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityHoloLens/Editor/UnityEditor.HoloLens.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.HoloLens">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityHoloLens/RuntimeEditor/UnityEngine.HoloLens.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.SpatialTracking">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/Editor/UnityEditor.SpatialTracking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.SpatialTracking">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.VR">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityVR/Editor/UnityEditor.VR.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Graphs">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/Managed/UnityEditor.Graphs.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Android.Extensions">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.iOS.Extensions">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.WindowsStandalone.Extensions">
- <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/PlaybackEngines/windowsstandalonesupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
- </Reference>
- <Reference Include="DialogueSystem">
- <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Dialogue System/DLLs/DialogueSystem.dll</HintPath>
- </Reference>
- <Reference Include="LuaInterpreter">
- <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Dialogue System/DLLs/LuaInterpreter.dll</HintPath>
- </Reference>
- <Reference Include="DialogueSystemEditors">
- <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Dialogue System/DLLs/Editor/DialogueSystemEditors.dll</HintPath>
- </Reference>
- <Reference Include="YamlDotNet">
- <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Externals/YamlDotNet.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Advertisements">
- <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/UnityEngine.Advertisements.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Advertisements">
- <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/Editor/UnityEditor.Advertisements.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Analytics">
- <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/UnityEngine.Analytics.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Analytics">
- <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/Editor/UnityEditor.Analytics.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.Purchasing">
- <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/UnityEngine.Purchasing.dll</HintPath>
- </Reference>
- <Reference Include="UnityEditor.Purchasing">
- <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/Editor/UnityEditor.Purchasing.dll</HintPath>
- </Reference>
- <Reference Include="UnityEngine.StandardEvents">
- <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.10/UnityEngine.StandardEvents.dll</HintPath>
- </Reference>
+    <Compile Include="Assets\Dialogue System\Examples\Feature Demo\FeatureDemo.cs" />
+    <Compile Include="Assets\Dialogue System\Examples\Feature Demo\Multiple Database Example\AddRemoveDatabaseTrigger.cs" />
+    <Compile Include="Assets\Dialogue System\Examples\Lua Example\LuaExample.cs" />
+    <Compile Include="Assets\Dialogue System\Examples\Tutorial Example\Pickups\Pickup.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Chat Mapper\ChatMapperTools.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandAudioWaitOnce.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandAudioWWW.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandLoadLevel.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Sequencer Commands\SequencerCommandSetTimeout.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkClip.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkMixerBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Bark\BarkTrack.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\ConversationMixerBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\ConversationTrack.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\StartConversationBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Conversation\StartConversationClip.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\QuestStateMixerBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\QuestStateTrack.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\SetQuestStateBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\QuestState\SetQuestStateClip.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\AlertMixerBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\AlertTrack.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\ShowAlertBehaviour.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\ShowAlert\ShowAlertClip.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Playables\Utility\PreviewUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Sequencer Commands\SequencerCommandTimeline.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Timeline\Triggers\TimelineTrigger.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Bark UI\UnityUIBarkUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\Animated Portraits\AnimatedPortrait.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\Animated Portraits\UseAnimatedPortraits.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\OverrideUnityUIDialogueControls.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIAlertControls.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIBarkSubtitleDialogueUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIDialogueControls.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIDialogueUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIQTEControls.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIResponseButton.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIResponseMenuControls.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUIRoot.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUISubtitleControls.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUITextFieldUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Dialogue UI\UnityUITimer.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\LocalizeUIText.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIColorText.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIContinueButtonFastForward.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIIgnorePauseCodes.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUIScrollbarEnabler.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UnityUITypewriterEffect.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Effects\UpdateLocalizedUITexts.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestGroupTemplate.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestLogWindow.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTemplate.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTemplateAlternateDescriptions.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTitle.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTracker.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Quest Log Window\UnityUIQuestTrackTemplate.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Selector\UnityUISelectorDisplay.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Selector\UnityUISelectorElements.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Selector\UsableUnityUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\PreloadActorPortraits.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\UIButtonKeyTrigger.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\UIShowHideController.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\UI\Tools\UITools.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\AlwaysFaceCamera.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\ConversationLogger.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\DialogueSystemEvents.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\DieOnTakeDamage.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\ExtraDatabases.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\From Unity3D Community\SmoothCameraWithBumper.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\IncrementOnDestroy.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\LocalizeTextMesh.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\LuaNetworkCommands.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\NavigateOnMouseClick.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\PauseGameOnConversation.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\PersistentDestructible.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\ProximitySelector.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestLogWindowHotkey.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestStateDispatcher.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestStateIndicator.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestStateListener.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\QuestTracker.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\RangeTrigger.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\SelectionDelegates.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\Selector.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\SelectorFollowTarget.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\SimpleController.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Supplemental\Utility\Usable.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\Aurora\TemplateNWScript.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\PersistentDataTemplate.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\SequencerCommandTemplate.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateBarkUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateCustomLua.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateDialogueUI.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateQuestLogWindow.cs" />
+    <Compile Include="Assets\Dialogue System\Scripts\Templates\TemplateTextFieldUI.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\ArrayExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\ComponentExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismDrawable.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismDynamicDrawableData.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismLogging.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismMoc.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismModel.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismParameter.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismPart.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismTaskableModel.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\CubismTaskQueue.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\GameObjectExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\ICubismTask.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\ByteExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismCoreDll.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismUnmanagedArrayView.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismUnmanagedDrawables.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismUnmanagedMemory.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismUnmanagedMoc.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismUnmanagedModel.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismUnmanagedParameters.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Core\Unmanaged\CubismUnmanagedParts.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\ComponentExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismAutoEyeBlinkInput.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismDontMoveOnReimportAttribute.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismEyeBlinkController.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismEyeBlinkParameter.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismMoveOnReimportCopyComponentsOnly.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismParameterBlendMode.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismParameterExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismParametersInspector.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\CubismPartsInspector.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\HarmonicMotion\CubismHarmonicMotionController.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\HarmonicMotion\CubismHarmonicMotionDirection.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\HarmonicMotion\CubismHarmonicMotionParameter.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Json\CubismBuiltinPickers.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Json\CubismModel3Json.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Json\CubismMotion3Json.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Json\CubismPhysics3Json.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Json\CubismUserData3Json.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\LookAt\CubismLookAxis.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\LookAt\CubismLookController.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\LookAt\CubismLookParameter.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\LookAt\CubismLookTargetBehaviour.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\LookAt\ICubismLookTarget.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\MouthMovement\CubismAudioMouthInput.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\MouthMovement\CubismAudioSamplingQuality.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\MouthMovement\CubismAutoMouthInput.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\MouthMovement\CubismMouthController.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\MouthMovement\CubismMouthParameter.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\ObjectExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysics.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsController.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsInput.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsMath.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsNormalization.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsOutput.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsParticle.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsRig.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsSourceComponent.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Physics\CubismPhysicsSubRig.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Raycasting\CubismRaycastable.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Raycasting\CubismRaycastablePrecision.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Raycasting\CubismRaycaster.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Raycasting\CubismRaycastHit.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\Tasking\CubismBuiltinAsyncTaskHandler.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\UserData\CubismUserDataBody.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\UserData\CubismUserDataTag.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Framework\UserData\CubismUserDataTargetType.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\ArrayExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\CubismBuiltinMaterials.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\CubismBuiltinShaders.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\CubismRenderController.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\CubismRenderer.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\CubismShaderVariables.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\CubismSortingMode.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\CubismSortingModeExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\ICubismDrawOrderHandler.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\ICubismOpacityHandler.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskCommandBuffer.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskController.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskMaskedJunction.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskProperties.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskRenderer.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskRendererExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskTexture.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskTile.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskTilePool.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\CubismMaskTransform.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\ICubismMaskCommandSource.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\ICubismMaskTextureCommandSource.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Rendering\Masking\IntExtensionMethods.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Samples\AsyncBenchmark\AsyncToggler.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Samples\AsyncBenchmark\FpsCounter.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Samples\AsyncBenchmark\ModelSpawner.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Samples\LookAt\Billboarder.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Samples\Masking\MaskTexturePreview.cs" />
+    <Compile Include="Assets\Live2D\Cubism\Samples\Raycasting\RaycastHitDisplay.cs" />
+    <Compile Include="Assets\Scripts\App.cs" />
+    <Compile Include="Assets\Scripts\DataItemConverter.cs" />
+    <Compile Include="Assets\Scripts\Plan.cs" />
+    <Compile Include="Assets\Scripts\PlanActivityData.cs" />
+    <Compile Include="Assets\Scripts\PlannerData.cs" />
+    <Compile Include="Assets\Scripts\PlanOption.cs" />
+    <Compile Include="Assets\Scripts\PlanOptionSelectorUI.cs" />
+    <Compile Include="Assets\Scripts\PlanOptionsLoadout.cs" />
+    <Compile Include="Assets\Scripts\PlanOptionUI.cs" />
+    <Compile Include="Assets\Scripts\PlanSectionUI.cs" />
+    <Compile Include="Assets\Scripts\PlanSlotUI.cs" />
+    <Compile Include="Assets\Scripts\PlanUI.cs" />
+    <Compile Include="Assets\Scripts\SaveData.cs" />
+    <Compile Include="Assets\Scripts\SequentialPlanSlotUI.cs" />
+    <Compile Include="Assets\Scripts\SequentialPlanSlotUIGroup.cs" />
+    <Compile Include="Assets\Scripts\Serialisation.cs" />
+    <Compile Include="Assets\Scripts\Serialisation_Deserialise.cs" />
+    <Compile Include="Assets\Scripts\Serialisation_Serialise.cs" />
+    <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUI.cs" />
+    <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUIGroup.cs" />
+    <Compile Include="Assets\Scripts\WeeklyPlanSectionUI.cs" />
+    <None Include="Assets\Dialogue System\Examples\Mobile Test\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Bark Example\Three NPCs Bark\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Samples\Masking\Description.txt" />
+    <None Include="Assets\Dialogue System\Examples\Unity UI Examples\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Mobile\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Samples\Animation\Description.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Computer\Bitwise Font\!license.txt" />
+    <None Include="Assets\Live2D\Cubism\License.txt" />
+    <None Include="Assets\csc.rsp" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Computer\Typing.txt" />
+    <None Include="Assets\Dialogue System\Examples\Lua Example\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Bark Example\Bark Example.xml" />
+    <None Include="Assets\Dialogue System\Third Party Support\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Bark Example\Bark Conversation\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Art\Portraits\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Samples\PerspectiveCamera\Description.txt" />
+    <None Include="Assets\mcs.rsp" />
+    <None Include="Assets\Live2D\Cubism\Samples\AsyncBenchmark\Description.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\medium\license.txt" />
+    <None Include="Assets\Dialogue System\Examples\Art\Sounds\_README.txt" />
+    <None Include="Assets\Dialogue System\DLLs\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Circle\Textures\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Necromancer\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\Multiple Database Example\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Rendering\Resources\Live2D\Cubism\Shaders\CubismCG.cginc" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\solid\read me.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\solid\license.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Speech Bubble\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Bark Example\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Save Load Example\_README_FIRST_IMPORTANT!.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\bold\read me.txt" />
+    <None Include="Assets\Dialogue System\Examples\Bark Example\Three NPCs Bark\Three NPCs Bark.xml" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Shared Audio\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Camera Angle Studio\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Rendering\Resources\Live2D\Cubism\Shaders\Mask.shader" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\bold\license.txt" />
+    <None Include="Assets\Dialogue System\Examples\Quick Start\Quick Start.xml" />
+    <None Include="Assets\Dialogue System\Examples\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Sequence Example\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Samples\Models\License.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\Text Input Example\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Necromancer\Necromancer GUI\Kingthings.txt" />
+    <None Include="Assets\Live2D\Cubism\Samples\Raycasting\Description.txt" />
+    <None Include="Assets\Dialogue System\Examples\Art\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\regular\read me.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\Dialogue Database\Feature Demo.xml" />
+    <None Include="Assets\Live2D\Cubism\Plugins\RedistributableFiles.txt" />
+    <None Include="Assets\Dialogue System\Examples\Quest Example\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Changelog.txt" />
+    <None Include="Assets\Live2D\Cubism\Rendering\Resources\Live2D\Cubism\Shaders\Unlit.shader" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\regular\license.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Mobile\link.xml" />
+    <None Include="Assets\Dialogue System\Examples\Quick Start\_README.txt" />
+    <None Include="Assets\Dialogue System\Documentation\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Necromancer\Necromancer GUI\Readme.txt" />
+    <None Include="Assets\Dialogue System\Scripts\Supplemental\Utility\_README.txt" />
+    <None Include="Assets\Dialogue System\_README_EVALUATION.txt" />
+    <None Include="Assets\Dialogue System\Scripts\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\Feature Demo with Continue Button\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Wheel\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\Menu Text Demo\Feature Demo With Menu Text.xml" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Shared Assets\Playtime Font\medium\read me.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Mobile\_IMPORTANT_README.txt" />
+    <None Include="Assets\Dialogue System\Scripts\Supplemental\UI\_README.txt" />
+    <None Include="Assets\Live2D\Cubism\Samples\MultipleModels\Description.txt" />
+    <None Include="Assets\Live2D\Cubism\Samples\LookAt\Description.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Shared Fonts\Orbitron\SIL Open Font License.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\Legacy Unity GUI Prefabs\Shared Textures\_README.txt" />
+    <None Include="Assets\Dialogue System\Scripts\Shaders\LinesColoredBlended.shader" />
+    <None Include="Assets\Dialogue System\Prefabs\Unity UI Prefabs\Unity UI Assets\_README.txt" />
+    <None Include="Assets\Dialogue System\Prefabs\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\Menu Text Demo\_README.txt" />
+    <None Include="Assets\Dialogue System\Examples\Feature Demo\Articy Feature Demo\Articy Feature Demo.xml" />
+    <None Include="Assets\Dialogue System\Examples\Unity UI Examples\Animated Portrait Example\Private Hart Animated Portrait\sprites_credits.txt" />
+    <Reference Include="UnityEngine.UI">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.UI">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/GUISystem/Editor/UnityEditor.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Networking">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Networking">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Networking/Editor/UnityEditor.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.TestRunner">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TestRunner/Editor/UnityEditor.TestRunner.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TestRunner">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TestRunner/UnityEngine.TestRunner.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TestRunner/net35/unity-custom/nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Timeline">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Timeline/RuntimeEditor/UnityEngine.Timeline.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Timeline">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/Timeline/Editor/UnityEditor.Timeline.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.TreeEditor">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/TreeEditor/Editor/UnityEditor.TreeEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIAutomation">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UIAutomation/UnityEngine.UIAutomation.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.UIAutomation">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UIAutomation/Editor/UnityEditor.UIAutomation.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.GoogleAudioSpatializer">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/Editor/UnityEditor.GoogleAudioSpatializer.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GoogleAudioSpatializer">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityGoogleAudioSpatializer/RuntimeEditor/UnityEngine.GoogleAudioSpatializer.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.HoloLens">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityHoloLens/Editor/UnityEditor.HoloLens.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.HoloLens">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityHoloLens/RuntimeEditor/UnityEngine.HoloLens.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.SpatialTracking">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/Editor/UnityEditor.SpatialTracking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SpatialTracking">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.VR">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/UnityVR/Editor/UnityEditor.VR.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Graphs">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/Managed/UnityEditor.Graphs.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Android.Extensions">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.iOS.Extensions">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.WindowsStandalone.Extensions">
+      <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/PlaybackEngines/windowsstandalonesupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="DialogueSystem">
+      <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Dialogue System/DLLs/DialogueSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="LuaInterpreter">
+      <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Dialogue System/DLLs/LuaInterpreter.dll</HintPath>
+    </Reference>
+    <Reference Include="DialogueSystemEditors">
+      <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Dialogue System/DLLs/Editor/DialogueSystemEditors.dll</HintPath>
+    </Reference>
+    <Reference Include="YamlDotNet">
+      <HintPath>F:/Projects/starcolt/notabear/RiverviewUnity/Assets/Externals/YamlDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Advertisements">
+      <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/UnityEngine.Advertisements.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Advertisements">
+      <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.ads@2.0.3/Editor/UnityEditor.Advertisements.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Analytics">
+      <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/UnityEngine.Analytics.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Analytics">
+      <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.13/Editor/UnityEditor.Analytics.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Purchasing">
+      <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/UnityEngine.Purchasing.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Purchasing">
+      <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.purchasing@0.0.19/Editor/UnityEditor.Purchasing.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.StandardEvents">
+      <HintPath>D:/Users/Kezeali/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.10/UnityEngine.StandardEvents.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -338,5 +455,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  
 </Project>

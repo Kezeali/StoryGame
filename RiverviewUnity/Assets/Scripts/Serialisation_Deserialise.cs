@@ -79,8 +79,8 @@ public static partial class Serialiser
 
 	public static ReadState Deserialise<T>(ReadState state, ref T loadInto, string data, DataItemSource dataSource)
 	{
-		System.Type type = typeof(T);
-		StructContract structContract = AddStructContracts(type, state.contracts);
+		//System.Type type = typeof(T);
+		//StructContract structContract = AddStructContracts(type, state.contracts);
 
 		//StructContract nextStruct = structContract;
 		//int fieldIndex = -1;
