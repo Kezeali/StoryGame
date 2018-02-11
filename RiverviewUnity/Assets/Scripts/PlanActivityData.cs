@@ -4,7 +4,7 @@ namespace NotABear
 {
 
 	[CreateAssetMenu(fileName="PlanActivity.asset", menuName="Riverview/Plan Activity")]
-	public class PlanActivityData : ScriptableObject
+	public class PlanActivityData : ScriptableObject, IDataItem
 	{
 		public StatBonusData[] statBonuses;
 	}
@@ -15,10 +15,6 @@ namespace NotABear
 		public string name;
 		public CharacterStat stat;
 		public int bonusPerTimeUnit;
-	}
-
-	public class CharacterStat //: ScriptableObject
-	{
 	}
 
 }

@@ -13,43 +13,99 @@ public class PlanOptionSelectorUI : MonoBehaviour
 	[SerializeField]
 	private PlanOptionUI optionUIPrefab;
 
-	//private PlanOptionsLoadout loadout;
-	private List<GameObject> optionUIs = new List<GameObject>();
+	private PlannerData plannerData;
+	private List<PlanOptionUI> optionUIs = new List<PlanOptionUI>();
 
-	public void Initialise(PlanOptionsLoadout loadout)
+	private PlanOptionsLoadout currentLoadout;
+	private PlanOptionsLoadout rootLoadout;
+
+	public void Initialise(PlannerData plannerData)
 	{
-		//this.loadout = loadout;
+		this.plannerData = plannerData;
 
 		Clear();
 		planUI.Clear();
 
-		for (int i = 0; i < loadout.planOptions.Count; ++i)
+		this.rootLoadout = MakeRootLoadout();
+	}
+
+	public void Populate(PlanSlotUI slot)
+	{
+		SlotType type = slot.slotType;
+
+		Clear();
+
+		this.currentLoadout = MakeDerrivedLoadout(this.rootLoadout, type);
+
+		for (int i = 0; i < currentLoadout.planOptions.Count; ++i)
 		{
 			PlanOptionUI newUI = Object.Instantiate(optionUIPrefab, optionsContainer);
-			newUI.Initialise(loadout.planOptions[i]);
+			newUI.Initialise(currentLoadout.planOptions[i]);
 			newUI.Selected += SelectOption;
+			optionUIs.Add(newUI);
 		}
+	}
+
+	public PlanOptionsLoadout MakeDerrivedLoadout(PlanOptionsLoadout rootLoadout, SlotType type)
+	{
+		var newLoadout = new PlanOptionsLoadout();
+		newLoadout.name = type.ToString();
+
+		newLoadout.planOptions = new List<PlanOption>(rootLoadout.planOptions.Count);
+
+		for (int i = 0; i < rootLoadout.planOptions.Count; ++i)
+		{
+			PlanOption option = rootLoadout.planOptions[i];
+			if ((option.data.validSlots & type) != 0)
+			{
+				newLoadout.planOptions.Add(option);
+			}
+		}
+		return newLoadout;
+	}
+
+	public PlanOptionsLoadout MakeRootLoadout()
+	{
+		var newLoadout = new PlanOptionsLoadout();
+		newLoadout.name = "root";
+
+		newLoadout.planOptions = new List<PlanOption>(this.plannerData.items.Length);
+
+		for (int i = 0; i < this.plannerData.items.Length; ++i)
+		{
+			PlannerItemData item = this.plannerData.items[i];
+			{
+				PlanOption option = new PlanOption();
+				option.data = item;
+				newLoadout.planOptions.Add(option);
+			}
+		}
+		return newLoadout;
 	}
 
 	public void Clear()
 	{
 		for (int i = 0; i < optionUIs.Count; ++i)
 		{
-			Object.Destroy(optionUIs[i]);
+			Object.Destroy(optionUIs[i].gameObject);
 		}
 		optionUIs.Clear();
 	}
 
-	public void AddDeselectedOption(PlanOptionUI option)
+	public void DeselectOption(PlanOption option)
 	{
-			option.Selected += SelectOption;
-			option.transform.SetParent(optionsContainer, false);
+		for (int i = 0; i < optionUIs.Count; ++i)
+		{
+			PlanOptionUI optionUI = optionUIs[i];
+			if (optionUI.planOption == option)
+			{
+				optionUI.EnableSelection();
+			}
+		}
 	}
 
 	public void SelectOption(PlanOptionUI option)
 	{
-		optionUIs.Remove(option.gameObject);
-		option.Selected -= SelectOption;
-		//planUI.AddSelectedOption(option);
+		planUI.SelectOption(option);
 	}
 }

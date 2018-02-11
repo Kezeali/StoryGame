@@ -10,14 +10,31 @@ public class PlanOptionUI : MonoBehaviour
 	[SerializeField]
 	private Image icon;
 
+	private Selectable clickableArea;
+
 	public PlanOption planOption;
 
 	public System.Action<PlanOptionUI> Selected;
 
+	public void Awake()
+	{
+		this.clickableArea = this.GetComponentInChildren<Selectable>();
+	}
+
 	public void Initialise(PlanOption option)
 	{
 		this.planOption = option;
-		labelText.text = option.data.name;
+		this.labelText.text = option.data.name;
+	}
+
+	public void EnableSelection()
+	{
+		this.clickableArea.interactable = false;
+	}
+
+	public void DisableSelection()
+	{
+		this.clickableArea.interactable = true;
 	}
 
 	public void Clicked()

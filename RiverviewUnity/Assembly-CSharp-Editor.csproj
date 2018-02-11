@@ -84,6 +84,7 @@
     <Compile Include="Assets\Live2D\Cubism\Editor\Inspectors\CubismRendererInspector.cs" />
     <Compile Include="Assets\Live2D\Cubism\Editor\Inspectors\CubismUserDataTagInspector.cs" />
     <Compile Include="Assets\Live2D\Cubism\Samples\Editor\ImportCustomization.cs" />
+    <Compile Include="Assets\Scripts\Editor\EnumFlagDrawer.cs" />
     <None Include="Assets\Live2D\Cubism\Samples\Editor\Description.txt" />
     <Reference Include="UnityEngine.UI">
       <HintPath>D:/Program Files/Unity-2017.3/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
