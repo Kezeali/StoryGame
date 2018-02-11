@@ -247,7 +247,9 @@
     <Compile Include="Assets\Live2D\Cubism\Samples\Masking\MaskTexturePreview.cs" />
     <Compile Include="Assets\Live2D\Cubism\Samples\Raycasting\RaycastHitDisplay.cs" />
     <Compile Include="Assets\Scripts\App.cs" />
+    <Compile Include="Assets\Scripts\CharacterStat.cs" />
     <Compile Include="Assets\Scripts\DataItemConverter.cs" />
+    <Compile Include="Assets\Scripts\EnumFlagAttribute.cs" />
     <Compile Include="Assets\Scripts\Plan.cs" />
     <Compile Include="Assets\Scripts\PlanActivityData.cs" />
     <Compile Include="Assets\Scripts\PlannerData.cs" />
@@ -266,6 +268,7 @@
     <Compile Include="Assets\Scripts\Serialisation_Serialise.cs" />
     <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUI.cs" />
     <Compile Include="Assets\Scripts\SpecifiedDurationPlanSlotUIGroup.cs" />
+    <Compile Include="Assets\Scripts\Subject.cs" />
     <Compile Include="Assets\Scripts\WeeklyPlanSectionUI.cs" />
     <None Include="Assets\Dialogue System\Examples\Mobile Test\_README.txt" />
     <None Include="Assets\Dialogue System\Examples\Bark Example\Three NPCs Bark\_README.txt" />

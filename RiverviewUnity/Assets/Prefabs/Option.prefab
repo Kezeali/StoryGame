@@ -89,6 +89,7 @@ GameObject:
   m_Component:
   - component: {fileID: 224078639505695610}
   - component: {fileID: 114094483307811976}
+  - component: {fileID: 114602488007598492}
   m_Layer: 5
   m_Name: Option
   m_TagString: Untagged
@@ -109,6 +110,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   labelText: {fileID: 114258997631985454}
   icon: {fileID: 114314158230831546}
+  planOption:
+    used: 0
+    data:
+      name: 
+      timeUnits: 0
+      validSlots: 0
+      subject: {fileID: 0}
+      activity: {fileID: 0}
 --- !u!114 &114208152384608678
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -248,6 +257,25 @@ MonoBehaviour:
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
+--- !u!114 &114602488007598492
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1957724471023992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1679637790, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: 100
+  m_MinHeight: 100
+  m_PreferredWidth: -1
+  m_PreferredHeight: 120
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!114 &114908503368658110
 MonoBehaviour:
   m_ObjectHideFlags: 1

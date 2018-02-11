@@ -14,9 +14,14 @@ public class PlanUI : MonoBehaviour
 	[SerializeField]
 	private PlanOptionSelectorUI planOptionSelectorUI;
 
+	[SerializeField]
+	private PlanOptionUI defaultFilledSlotPrefab;
+
 	private Plan plan;
 	private PlanSectionUI[] uiSections;
 	private List<GameObject> optionUIs = new List<GameObject>();
+
+	private PlanSlotUI selectedSlot;
 
 	public void Awake()
 	{
@@ -27,6 +32,8 @@ public class PlanUI : MonoBehaviour
 	public void Initialise(SaveData loadedData)
 	{
 		Plan loadedPlan = loadedData.weeklyPlan;
+
+		this.selectedSlot = null;
 
 		this.plan = new Plan();
 		this.plan.name = planName;
@@ -53,6 +60,8 @@ public class PlanUI : MonoBehaviour
 				newSlot.unitIndex = slotUI.SlotUnitIndex();
 				newSlot.slotType = slotUI.slotType;
 				planSection.slots[slotIndex] = newSlot;
+
+				slotUI.Initialise(this, newSlot);
 			}
 
 			// Upgrade the data
@@ -86,13 +95,36 @@ public class PlanUI : MonoBehaviour
 			Object.Destroy(this.optionUIs[i]);
 		}
 		this.optionUIs.Clear();
+
+		this.selectedSlot = null;
 	}
 
 	public void SelectOption(PlanOptionUI option)
 	{
-		optionUIs.Remove(option.gameObject);
-		option.Selected -= SelectOption;
-		planOptionSelectorUI.AddDeselectedOption(option);
+		if (this.selectedSlot != null)
+		{
+			option.DisableSelection();
+			this.selectedSlot.Fill(option.planOption);
+
+			PlanOptionUI prefab = this.selectedSlot.filledSlotPrefab ?? this.defaultFilledSlotPrefab;
+			var filledSlotContentInstance = Object.Instantiate(prefab, this.selectedSlot.content);
+			filledSlotContentInstance.Initialise(option.planOption);
+		}
+	}
+
+	public void OnSlotClicked(PlanSlotUI slot)
+	{
+		if (this.selectedSlot != slot)
+		{
+			this.selectedSlot = slot;
+			this.planOptionSelectorUI.Populate(slot);
+		}
+		else
+		{
+			this.planOptionSelectorUI.DeselectOption(slot.dataSlot.selectedOption);
+			this.selectedSlot.Clear();
+			this.planOptionSelectorUI.Populate(slot);
+		}
 	}
 }
 

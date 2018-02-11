@@ -11,33 +11,17 @@ public class App : MonoBehaviour
 	[SerializeField]
 	private SaveData defaultSave;
 
-	DataItemSource dataItemSource;
-
 	DataItemConverter dataItemConverter;
 
-	PlanOptionsLoadout loadout;
 	SaveData saveData;
 
 	public void Awake()
 	{
-		dataItemSource = new DataItemSource();
-		dataItemSource.AddDataItemRange(this.plannerData.items);
-
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
-
-		this.loadout = new PlanOptionsLoadout();
-		this.loadout.name = "test";
-
-		this.loadout.planOptions = new List<PlanOption>(this.plannerData.items.Length);
-
-		for (int i = 0; i < this.plannerData.items.Length; ++i)
-		{
-			PlannerItemData item = this.plannerData.items[i];
-			PlanOption option = new PlanOption();
-			option.data = item;
-			this.loadout.planOptions.Add(option);
-		}
+		this.dataItemConverter.AddDataItemRange(this.plannerData.characterStats);
+		this.dataItemConverter.AddDataItemRange(this.plannerData.subjects);
+		this.dataItemConverter.AddDataItemRange(this.plannerData.planActivities);
 
 		string data = System.IO.File.ReadAllText("save.txt");
 
@@ -63,7 +47,7 @@ public class App : MonoBehaviour
 		for (int i = 0; i < planOptionSelectorObjects.Length; ++i)
 		{
 			var planOptionSelectorUI = planOptionSelectorObjects[i] as PlanOptionSelectorUI;
-			planOptionSelectorUI.Initialise(this.loadout);
+			planOptionSelectorUI.Initialise(this.plannerData);
 		}
 
 		Object[] planObjects = Object.FindObjectsOfType(typeof(PlanUI));
@@ -74,6 +58,14 @@ public class App : MonoBehaviour
 		}
 
 		Save();
+	}
+
+	public void OnApplicationFocus(bool focus)
+	{
+		if (!focus)
+		{
+			Save();
+		}
 	}
 
 	public void Save()
