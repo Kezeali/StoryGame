@@ -7,6 +7,7 @@ namespace NotABear
 	public abstract class DataItem : IDataItem
 	{
 		public string name { get { return m_name; } set { m_name = value; } }
+		[SerializeField]
 		private string m_name;
 	}
 

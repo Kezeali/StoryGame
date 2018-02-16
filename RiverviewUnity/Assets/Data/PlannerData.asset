@@ -12,48 +12,51 @@ MonoBehaviour:
   m_Name: PlannerData
   m_EditorClassIdentifier: 
   items:
-  - name: English
+  - m_name: English
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 88e123a6ab79df94f84a1f5187174cb1, type: 2}
     activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
-  - name: Algebra
+  - m_name: Algebra
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
-  - name: Soccer
+  - m_name: Soccer
     timeUnits: 1
     validSlots: 3
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
     activity: {fileID: 11400000, guid: 16edde81760140f4d8ebaa5b300d1c28, type: 2}
-  - name: Gym
+  - m_name: Gym
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
-    activity: {fileID: 11400000, guid: 16edde81760140f4d8ebaa5b300d1c28, type: 2}
-  - name: Atheletics
+    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+  - m_name: Track
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
-    activity: {fileID: 11400000, guid: 16edde81760140f4d8ebaa5b300d1c28, type: 2}
-  - name: Calculus
+    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+  - m_name: Calculus
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
-  - name: Trigonometry
+  - m_name: Trigonometry
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
-  - name: Statistics
+  - m_name: Statistics
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
-  - name: General
+  - m_name: General Study
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+  characterStats: []
+  subjects: []
+  planActivities: []
