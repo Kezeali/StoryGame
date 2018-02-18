@@ -61,7 +61,8 @@ public class PlanUI : MonoBehaviour
 				newSlot.slotType = slotUI.slotType;
 				planSection.slots[slotIndex] = newSlot;
 
-				slotUI.Initialise(this, newSlot);
+				slotUI.Initialise(newSlot);
+				slotUI.clicked += this.OnSlotClicked;
 			}
 
 			// Upgrade the data
@@ -72,6 +73,7 @@ public class PlanUI : MonoBehaviour
 				SlotType fillingSlotType = SlotType.None;
 				int fillingSlotIndex = 0;
 
+				// Try to transfer the content of each slot
 				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.slots.Length; ++loadedSlotIndex)
 				{
 					PlanSlot loadedSlot = loadedSection.slots[loadedSlotIndex];
@@ -80,8 +82,20 @@ public class PlanUI : MonoBehaviour
 					{
 						fillingSlotType = uiSection.slots[loadedSlotIndex].slotType;
 					}
-					planSection.slots[fillingSlotIndex].selectedOption = loadedSlot.selectedOption;
+					if (loadedSlot.slotType == fillingSlotType)
+					{
+						planSection.slots[fillingSlotIndex].selectedOption = loadedSlot.selectedOption;
+						++fillingSlotIndex;
+						fillingSlotType = SlotType.None;
+					}
 				}
+			}
+
+			// Populate the slot UI elements
+			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
+			{
+				PlanSlotUI slotUI = uiSection.slots[slotIndex];
+				slotUI.Populate(this.defaultFilledSlotPrefab);
 			}
 		}
 
@@ -99,16 +113,12 @@ public class PlanUI : MonoBehaviour
 		this.selectedSlot = null;
 	}
 
-	public void SelectOption(PlanOptionUI option)
+	public void SelectOption(PlanOptionUI optionUi)
 	{
 		if (this.selectedSlot != null)
 		{
-			option.DisableSelection();
-			this.selectedSlot.Fill(option.planOption);
-
-			PlanOptionUI prefab = this.selectedSlot.filledSlotPrefab ?? this.defaultFilledSlotPrefab;
-			var filledSlotContentInstance = Object.Instantiate(prefab, this.selectedSlot.content);
-			filledSlotContentInstance.Initialise(option.planOption);
+			optionUi.DisableSelection();
+			this.selectedSlot.Fill(optionUi.planOption, this.defaultFilledSlotPrefab);
 		}
 	}
 

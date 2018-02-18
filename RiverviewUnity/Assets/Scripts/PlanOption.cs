@@ -5,8 +5,8 @@ namespace NotABear
 	[System.Serializable]
 	public class PlanOption
 	{
-		public bool used;
-		public PlannerItemData data;
+		// public bool used;
+		public PlannerItemData plannerItem;
 	}
 
 }

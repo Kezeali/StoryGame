@@ -24,7 +24,7 @@ public class PlanOptionUI : MonoBehaviour
 	public void Initialise(PlanOption option)
 	{
 		this.planOption = option;
-		this.labelText.text = option.data.name;
+		this.labelText.text = option.plannerItem.name;
 	}
 
 	public void EnableSelection()
