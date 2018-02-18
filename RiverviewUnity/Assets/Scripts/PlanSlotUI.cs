@@ -22,15 +22,17 @@ public class PlanSlotUI : MonoBehaviour
 
 	public Transform content;
 
-	private PlanUI planUI;
-	private Button button;
 	[System.NonSerialized]
 	public PlanSlot dataSlot;
+	[System.NonSerialized]
+	public System.Action<PlanSlotUI> clicked;
+
+	private Button button;
 
 	public void Awake()
 	{
 		this.button = this.GetComponentInChildren<Button>();
-		this.button.onClick.AddListener(this.Clicked);
+		this.button.onClick.AddListener(this.OnClicked);
 
 		this.content = this.transform.Find("Content");
 	}
@@ -40,25 +42,51 @@ public class PlanSlotUI : MonoBehaviour
 		return this.transform.GetSiblingIndex();
 	}
 
-	public void Initialise(PlanUI planUI, PlanSlot dataSlot)
+	public void Initialise(PlanSlot dataSlot)
 	{
-		this.planUI = planUI;
 		this.dataSlot = dataSlot;
 	}
 
-	public void Fill(PlanOption option)
+	public void Fill(PlanOption option, PlanOptionUI defaultFilledSlotPrefab)
 	{
 		this.dataSlot.selectedOption = option;
+		this.Populate(defaultFilledSlotPrefab);
+	}
+
+	public void Populate(PlanOptionUI defaultFilledSlotPrefab)
+	{
+		if (this.dataSlot != null && this.dataSlot.selectedOption != null)
+		{
+			PlanOptionUI prefab = this.filledSlotPrefab ?? defaultFilledSlotPrefab;
+			var filledSlotContentInstance = Object.Instantiate(prefab, this.content);
+			filledSlotContentInstance.Initialise(this.dataSlot.selectedOption);
+		}
+		else
+		{
+			Unpopulate();
+		}
 	}
 
 	public void Clear()
 	{
 		this.dataSlot.selectedOption = null;
+		Unpopulate();
 	}
 
-	public void Clicked()
+	private void Unpopulate()
 	{
-		this.planUI.OnSlotClicked(this);
+		for (int i = this.content.childCount-1; i >= 0; --i)
+		{
+			Object.Destroy(this.content.GetChild(i).gameObject);
+		}
+	}
+
+	private void OnClicked()
+	{
+		if (this.clicked != null)
+		{
+			this.clicked(this);
+		}
 	}
 
 	public static int Compare(PlanSlotUI a, PlanSlotUI b)

@@ -56,7 +56,7 @@ public class PlanOptionSelectorUI : MonoBehaviour
 		for (int i = 0; i < rootLoadout.planOptions.Count; ++i)
 		{
 			PlanOption option = rootLoadout.planOptions[i];
-			if ((option.data.validSlots & type) != 0)
+			if ((option.plannerItem.validSlots & type) != 0)
 			{
 				newLoadout.planOptions.Add(option);
 			}
@@ -76,7 +76,7 @@ public class PlanOptionSelectorUI : MonoBehaviour
 			PlannerItemData item = this.plannerData.items[i];
 			{
 				PlanOption option = new PlanOption();
-				option.data = item;
+				option.plannerItem = item;
 				newLoadout.planOptions.Add(option);
 			}
 		}

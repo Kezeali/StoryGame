@@ -1,4 +1,5 @@
 using UnityEngine;
+using SubjectNerd.Utilities;
 
 namespace NotABear
 {
@@ -19,6 +20,7 @@ namespace NotABear
 	[CreateAssetMenu(fileName="PlannerData.asset", menuName="Riverview/Planner Data")]
 	public class PlannerData : ScriptableObject
 	{
+		[Reorderable]
 		public PlannerItemData[] items;
 
 		public CharacterStat[] characterStats;

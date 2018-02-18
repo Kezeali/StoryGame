@@ -68,6 +68,11 @@ public class App : MonoBehaviour
 		}
 	}
 
+	public void OnApplicationQuit()
+	{
+		Save();
+	}
+
 	public void Save()
 	{
 		Save(this.saveData, this.dataItemConverter);
