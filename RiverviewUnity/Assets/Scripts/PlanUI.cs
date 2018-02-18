@@ -35,6 +35,7 @@ public class PlanUI : MonoBehaviour
 
 		this.selectedSlot = null;
 
+		// NOTE(ehayward): it is important the the plan is a new or cleared plan at this point
 		this.plan = new Plan();
 		this.plan.name = planName;
 
@@ -70,23 +71,40 @@ public class PlanUI : MonoBehaviour
 			{
 				PlanSection loadedSection = loadedPlan.sections[newSectionIndex];
 
-				SlotType fillingSlotType = SlotType.None;
-				int fillingSlotIndex = 0;
-
 				// Try to transfer the content of each slot
 				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.slots.Length; ++loadedSlotIndex)
 				{
 					PlanSlot loadedSlot = loadedSection.slots[loadedSlotIndex];
 
-					if (fillingSlotType == SlotType.None)
+					int unitBegin = loadedSlot.unitIndex;
+					int unitEnd = unitBegin;
+					if (loadedSlot.selectedOption != null && loadedSlot.selectedOption.plannerItem != null)
 					{
-						fillingSlotType = uiSection.slots[loadedSlotIndex].slotType;
+						unitEnd = unitBegin + loadedSlot.selectedOption.plannerItem.timeUnits;
 					}
-					if (loadedSlot.slotType == fillingSlotType)
+
+					SlotType requiredType = loadedSlot.slotType;
+
+					// Look for the first valid slot that overlaps the given entry
+					for (int actualSlotIndex = 0; actualSlotIndex < planSection.slots.Length; ++ actualSlotIndex)
 					{
-						planSection.slots[fillingSlotIndex].selectedOption = loadedSlot.selectedOption;
-						++fillingSlotIndex;
-						fillingSlotType = SlotType.None;
+						PlanSlot actualSlot = planSection.slots[actualSlotIndex];
+						if (actualSlot.slotType == requiredType && actualSlot.selectedOption == null)
+						{
+							int actualSlotUnitEnd = unitEnd; // Default to allowing anything in the last slot
+							if (actualSlotIndex < planSection.slots.Length-1)
+							{
+								PlanSlot nextActualSlot = null;
+								nextActualSlot = planSection.slots[actualSlotIndex+1];
+								actualSlotUnitEnd = nextActualSlot.unitIndex - 1;
+							}
+							if (
+								(actualSlot.unitIndex <= unitBegin && actualSlotUnitEnd > unitBegin) ||
+								(actualSlot.unitIndex < unitEnd && actualSlotUnitEnd >= unitEnd))
+							{
+								actualSlot.selectedOption = loadedSlot.selectedOption;
+							}
+						}
 					}
 				}
 			}
