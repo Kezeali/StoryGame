@@ -35,8 +35,9 @@ public class App : MonoBehaviour
 		{
 			saveData = deserializer.Deserialize<SaveData>(data);
 		}
-		catch
+		catch (System.Exception ex)
 		{
+			Debug.LogException(ex);
 			saveData = this.defaultSave;
 		}
 	}
@@ -80,18 +81,24 @@ public class App : MonoBehaviour
 
 	public static void Save(SaveData saveData, DataItemConverter dataItemConverter)
 	{
-		using (var buffer = new System.IO.StringWriter())
+		try
 		{
-			var serializer = new SerializerBuilder()
-				.EnsureRoundtrip()
-				.EmitDefaults()
-				.WithTypeConverter(dataItemConverter)
-				.Build();
-			
-			serializer.Serialize(buffer, saveData, typeof(SaveData));
+			using (var buffer = new System.IO.StringWriter())
+			{
+				var serializer = new SerializerBuilder()
+					.EnsureRoundtrip()
+					.EmitDefaults()
+					.WithTypeConverter(dataItemConverter)
+					.Build();
+				
+				serializer.Serialize(buffer, saveData, typeof(SaveData));
 
-			System.IO.File.WriteAllText("save.txt", buffer.ToString());
+				System.IO.File.WriteAllText("save.txt", buffer.ToString());
+			}
 		}
-
+		catch (System.Exception ex)
+		{
+			Debug.LogException(ex);
+		}
 	}
 }

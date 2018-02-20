@@ -13,18 +13,27 @@ public class PlanOptionSelectorUI : MonoBehaviour
 	[SerializeField]
 	private PlanOptionUI optionUIPrefab;
 
+	[SerializeField]
+	private PlanOptionCategoryUI optionCategoryUIPrefab;
+
 	private PlannerData plannerData;
-	private List<PlanOptionUI> optionUIs = new List<PlanOptionUI>();
+	private List<PlanOptionUI> optionUis = new List<PlanOptionUI>();
+
+	private List<PlanOptionCategoryUI> optionCategoryUis = new List<PlanOptionCategoryUI>();
 
 	private PlanOptionsLoadout currentLoadout;
 	private PlanOptionsLoadout rootLoadout;
 
 	public void Initialise(PlannerData plannerData)
 	{
+		Debug.Assert(this.planUI != null);
+		Debug.Assert(this.optionsContainer != null);
+
+		Debug.Assert(plannerData != null);
+
 		this.plannerData = plannerData;
 
 		Clear();
-		planUI.Clear();
 
 		this.rootLoadout = MakeRootLoadout();
 	}
@@ -39,11 +48,51 @@ public class PlanOptionSelectorUI : MonoBehaviour
 
 		for (int i = 0; i < currentLoadout.planOptions.Count; ++i)
 		{
-			PlanOptionUI newUI = Object.Instantiate(optionUIPrefab, optionsContainer);
-			newUI.Initialise(currentLoadout.planOptions[i]);
+			Transform container;
+			List<PlanOptionUI> uiCollection;
+
+			PlanOption option = this.currentLoadout.planOptions[i];
+			if (option.plannerItem.subject != null)
+			{
+				PlanOptionCategoryUI categoryUi = this.GetCategoryUI(option.plannerItem.subject);
+				if (categoryUi == null)
+				{
+					categoryUi = Object.Instantiate(this.optionCategoryUIPrefab, this.optionsContainer);
+
+					categoryUi.subject = option.plannerItem.subject;
+					categoryUi.title.text = categoryUi.subject.title;
+
+					this.optionCategoryUis.Add(categoryUi);
+				}
+				container = categoryUi.optionsContainer;
+				uiCollection = categoryUi.optionUis;
+			}
+			else
+			{
+				container = this.optionsContainer;
+				uiCollection = this.optionUis;
+			}
+
+			PlanOptionUI newUI = Object.Instantiate(this.optionUIPrefab, container);
+
+			newUI.Initialise(option);
 			newUI.Selected += SelectOption;
-			optionUIs.Add(newUI);
+
+			uiCollection.Add(newUI);
 		}
+	}
+
+	private PlanOptionCategoryUI GetCategoryUI(SubjectData subjectData)
+	{
+		PlanOptionCategoryUI result = null;
+		for (int i = 0; i < this.optionCategoryUis.Count; ++i)
+		{
+			if (this.optionCategoryUis[i].subject == subjectData)
+			{
+				result = this.optionCategoryUis[i];
+			}
+		}
+		return result;
 	}
 
 	public PlanOptionsLoadout MakeDerrivedLoadout(PlanOptionsLoadout rootLoadout, SlotType type)
@@ -85,18 +134,25 @@ public class PlanOptionSelectorUI : MonoBehaviour
 
 	public void Clear()
 	{
-		for (int i = 0; i < optionUIs.Count; ++i)
+		for (int i = 0; i < this.optionUis.Count; ++i)
 		{
-			Object.Destroy(optionUIs[i].gameObject);
+			Object.Destroy(this.optionUis[i].gameObject);
 		}
-		optionUIs.Clear();
+		this.optionUis.Clear();
+
+		for (int i = 0; i < this.optionCategoryUis.Count; ++i)
+		{
+			this.optionCategoryUis[i].Clear();
+			Object.Destroy(this.optionCategoryUis[i].gameObject);
+		}
+		this.optionCategoryUis.Clear();
 	}
 
 	public void DeselectOption(PlanOption option)
 	{
-		for (int i = 0; i < optionUIs.Count; ++i)
+		for (int i = 0; i < this.optionUis.Count; ++i)
 		{
-			PlanOptionUI optionUI = optionUIs[i];
+			PlanOptionUI optionUI = this.optionUis[i];
 			if (optionUI.planOption == option)
 			{
 				optionUI.EnableSelection();

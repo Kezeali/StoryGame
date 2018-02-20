@@ -11,5 +11,5 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: OutdoorEducation
   m_EditorClassIdentifier: Assembly-CSharp:NotABear:SubjectData
-  title: 
+  title: Outdoor Education
   statBonuses: []

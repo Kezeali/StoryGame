@@ -16,6 +16,7 @@ public class SpecifiedDurationPlanSlotUIGroup : MonoBehaviour
 		for (int i = 0; i < slots.Length; ++i)
 		{
 			SpecifiedDurationPlanSlotUI slot = slots[i];
+			unitIndex += slot.firstUnitOffset;
 			slot.unitIndex = unitIndex;
 			unitIndex += slot.durationInUnits;
 		}
