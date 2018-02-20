@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Name: SoccerActivity
   m_EditorClassIdentifier: 
   statBonuses:
-  - name: Sport
-    stat: {fileID: 0}
+  - name: Soccer Skills
+    stat: {fileID: 11400000, guid: 699b72f44a80ec34792300e9200c0cd0, type: 2}
     bonusPerTimeUnit: 2

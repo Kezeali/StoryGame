@@ -256,6 +256,7 @@
     <Compile Include="Assets\Scripts\PlanActivityData.cs" />
     <Compile Include="Assets\Scripts\PlannerData.cs" />
     <Compile Include="Assets\Scripts\PlanOption.cs" />
+    <Compile Include="Assets\Scripts\PlanOptionCategoryUI.cs" />
     <Compile Include="Assets\Scripts\PlanOptionSelectorUI.cs" />
     <Compile Include="Assets\Scripts\PlanOptionsLoadout.cs" />
     <Compile Include="Assets\Scripts\PlanOptionUI.cs" />
