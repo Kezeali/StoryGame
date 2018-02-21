@@ -113,7 +113,7 @@ public class PlanUI : MonoBehaviour
 			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
 			{
 				PlanSlotUI slotUI = uiSection.slots[slotIndex];
-				slotUI.Populate(this.defaultFilledSlotPrefab);
+				slotUI.DisplayCurrent(this.defaultFilledSlotPrefab);
 			}
 		}
 
@@ -136,7 +136,7 @@ public class PlanUI : MonoBehaviour
 		if (this.selectedSlot != null)
 		{
 			optionUi.DisableSelection();
-			this.selectedSlot.Fill(optionUi.planOption, this.defaultFilledSlotPrefab);
+			this.selectedSlot.Display(optionUi.planOption, this.defaultFilledSlotPrefab);
 		}
 	}
 
@@ -151,7 +151,7 @@ public class PlanUI : MonoBehaviour
 		{
 			this.planOptionSelectorUI.DeselectOption(slot.dataSlot.selectedOption);
 			this.selectedSlot.Clear();
-			this.planOptionSelectorUI.Populate(slot);
+			//this.planOptionSelectorUI.Populate(slot);
 		}
 	}
 }

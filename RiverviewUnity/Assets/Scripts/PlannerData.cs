@@ -23,7 +23,7 @@ namespace NotABear
 		[Reorderable]
 		public PlannerItemData[] items;
 
-		public CharacterStat[] characterStats;
+		public CharacterStatDefinition[] characterStats;
 		public SubjectData[] subjects;
 		public PlanActivityData[] planActivities;
 	}

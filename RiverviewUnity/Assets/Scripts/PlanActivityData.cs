@@ -9,12 +9,4 @@ namespace NotABear
 		public StatBonusData[] statBonuses;
 	}
 
-	[System.Serializable]
-	public class StatBonusData
-	{
-		public string name;
-		public CharacterStat stat;
-		public int bonusPerTimeUnit;
-	}
-
 }

@@ -8,11 +8,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: Maths
+  m_Script: {fileID: 11500000, guid: 99ba547067a6c544bb8461e1ad3b9003, type: 3}
+  m_Name: OutdoorEducationSubject
   m_EditorClassIdentifier: Assembly-CSharp:NotABear:SubjectData
-  title: Mathematics
-  statBonuses:
-  - name: Maths Aptitude
-    stat: {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
-    bonusPerTimeUnit: 1
+  title: Outdoor Education
+  statBonuses: []

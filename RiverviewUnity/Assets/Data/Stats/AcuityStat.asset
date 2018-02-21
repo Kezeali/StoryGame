@@ -8,8 +8,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: OutdoorEducation
-  m_EditorClassIdentifier: Assembly-CSharp:NotABear:SubjectData
-  title: Outdoor Education
-  statBonuses: []
+  m_Script: {fileID: 11500000, guid: fe062f2dbd9c51749bb2c43d61badfdd, type: 3}
+  m_Name: AcuityStat
+  m_EditorClassIdentifier: 
+  title: Acquity
+  baseValue: 0
+  minValue: -100
+  maxValue: 100

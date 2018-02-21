@@ -47,23 +47,21 @@ public class PlanSlotUI : MonoBehaviour
 		this.dataSlot = dataSlot;
 	}
 
-	public void Fill(PlanOption option, PlanOptionUI defaultFilledSlotPrefab)
+	public void Display(PlanOption option, PlanOptionUI defaultFilledSlotPrefab)
 	{
 		this.dataSlot.selectedOption = option;
-		this.Populate(defaultFilledSlotPrefab);
+		this.DisplayCurrent(defaultFilledSlotPrefab);
 	}
 
-	public void Populate(PlanOptionUI defaultFilledSlotPrefab)
+	public void DisplayCurrent(PlanOptionUI defaultFilledSlotPrefab)
 	{
+		Unpopulate();
+
 		if (this.dataSlot != null && this.dataSlot.selectedOption != null)
 		{
 			PlanOptionUI prefab = this.filledSlotPrefab ?? defaultFilledSlotPrefab;
 			var filledSlotContentInstance = Object.Instantiate(prefab, this.content);
 			filledSlotContentInstance.Initialise(this.dataSlot.selectedOption);
-		}
-		else
-		{
-			Unpopulate();
 		}
 	}
 
