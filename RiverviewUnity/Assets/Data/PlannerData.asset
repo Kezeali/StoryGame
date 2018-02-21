@@ -57,6 +57,11 @@ MonoBehaviour:
     validSlots: 1
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
     activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+  - m_name: Nap
+    timeUnits: 1
+    validSlots: 2
+    subject: {fileID: 11400000, guid: f67516e0789ce6a48aba1bfeb48a7182, type: 2}
+    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
   characterStats:
   - {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
   subjects:

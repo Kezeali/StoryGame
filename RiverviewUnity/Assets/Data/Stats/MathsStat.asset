@@ -11,3 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe062f2dbd9c51749bb2c43d61badfdd, type: 3}
   m_Name: MathsStat
   m_EditorClassIdentifier: 
+  title: Maths
+  baseValue: 1
+  minValue: 1
+  maxValue: 1000000
