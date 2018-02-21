@@ -1,0 +1,8 @@
+{
+    "name": "ColourLoversEditor",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
