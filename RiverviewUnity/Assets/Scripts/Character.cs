@@ -18,13 +18,36 @@ namespace NotABear
 		public struct Status
 		{
 			public List<Stat> stats;
+
+			public Stat GetStat(CharacterStatDefinition statDef)
+			{
+				Stat result = default(Stat);
+				for (int i = 0; i < this.stats.Count; ++i)
+				{
+					Stat stat = this.stats[i];
+					if (stat.definition == statDef)
+					{
+						result = stat;
+						break;
+					}
+				}
+				return result;
+			}
 		}
 
 		[System.Serializable]
 		public struct Stat
 		{
 			public CharacterStatDefinition definition;
-			public double value;
+			public float value;
+			public float valueIncludesBonus;
+		}
+
+		[System.Serializable]
+		public struct BaseStat
+		{
+			public CharacterStatDefinition definition;
+			public float value;
 		}
 
 		[System.Serializable]
@@ -32,7 +55,7 @@ namespace NotABear
 		{
 			public ITerm term;
 			public StatBonusData definition;
-			public double value;
+			public float value;
 			public int beginTimeUnit;
 			public int activePeriodTimeUnits;
 
@@ -56,20 +79,11 @@ namespace NotABear
 
 		public string name;
 		public List<ActiveBonus> activeBonuses;
-		public Status baseStats;
+		public BaseStat[] baseStats;
+		[HideInInspector]
 		public Status status;
 
-		public static ActiveBonus CalculateBonus(StatBonusData definition, int timeSpent)
-		{
-			var activeBonus = new ActiveBonus()
-			{
-				value = definition.flatBonus + (definition.bonusPerTimeUnit * (double)timeSpent),
-				//activePeriodTimeUnits = Mathf.RoundToInt(definition.activePeriodTimeUnits + (definition.activePeriodExtensionPerTimeUnit * (double)timeSpent))
-			};
-			return activeBonus;
-		}
-
-		public void ApplyStatBonuses(StatBonusData[] bonuses, int timeSpent)
+		public void AddStatBonuses(StatBonusData[] bonuses, int timeSpent)
 		{
 			for (int i = 0; i < bonuses.Length; ++i)
 			{
@@ -79,15 +93,70 @@ namespace NotABear
 			this.status = CalculateStatus(this);
 		}
 
+		public void ClearStatBonuses()
+		{
+			this.activeBonuses.Clear();
+			this.status = CalculateStatus(this);
+		}
+
+		public void UpdateStatBonuses()
+		{
+			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex)
+			{
+				ActiveBonus bonus = this.activeBonuses[activeBonusIndex];
+				if (!bonus.IsInfinite())
+				{
+					if (bonus.RemainingTime() <= 0)
+					{
+						this.activeBonuses.RemoveAt(activeBonusIndex);
+					}
+				}
+			}
+		}
+
+		public static Stat GetBaseStat(BaseStat[] baseStats, CharacterStatDefinition statDef)
+		{
+			Stat result = default(Stat);
+			result.definition = statDef;
+			result.value = statDef.baseValue;
+			for (int i = 0; i < baseStats.Length; ++i)
+			{
+				BaseStat stat = baseStats[i];
+				if (stat.definition == statDef)
+				{
+					result.value = stat.value;
+					break;
+				}
+			}
+			return result;
+		}
+
+		public static ActiveBonus CalculateBonus(StatBonusData definition, int timeSpent)
+		{
+			var activeBonus = new ActiveBonus()
+			{
+				value = definition.flatBonus + (definition.bonusPerTimeUnit * (float)timeSpent),
+				activePeriodTimeUnits = definition.activePeriodTimeUnits + Mathf.FloorToInt(definition.activePeriodExtensionPerTimeUnit * (float)timeSpent)
+			};
+			return activeBonus;
+		}
+
 		public static Status CalculateStatus(Character character)
 		{
-			var result = new Status();
-			result.stats = new List<Stat>();
+			var result = character.status;
+			result.stats.Clear();
+
 			for (int activeBonusIndex = 0; activeBonusIndex < character.activeBonuses.Count; ++activeBonusIndex)
 			{
-				var stat = new Stat();
-				// stat.
-				// result.stats.Add(
+				ActiveBonus bonus = character.activeBonuses[activeBonusIndex];
+				
+				var stat = GetBaseStat(character.baseStats, bonus.definition.stat);
+
+				// NOTE(elliot): this is adding the bonus value on to the base stat value retrieved
+				stat.value += bonus.value;
+				stat.valueIncludesBonus += bonus.value;
+
+				result.stats.Add(stat);
 			}
 			return result;
 		}

@@ -6,6 +6,9 @@ using YamlDotNet.Serialization;
 public class App : MonoBehaviour
 {
 	[SerializeField]
+	private GameObject cameraPrefab;
+
+	[SerializeField]
 	private PlannerData plannerData;
 
 	[SerializeField]
@@ -15,8 +18,44 @@ public class App : MonoBehaviour
 
 	SaveData saveData;
 
+	private class DataUserCollection<DataT>
+	{
+		static List<IDataUser<DataT>> toInitialise = new List<IDataUser<DataT>>();
+		static List<IDataUser<DataT>> initialised = new List<IDataUser<DataT>>();
+
+		public void Add(IDataUser<DataT> dataUser)
+		{
+		}
+
+		public void Remove(IDataUser<DataT> dataUser)
+		{
+		}
+
+		public void Initialise(DataT data)
+		{
+		}
+	}
+
+	static List<ISaveDataUser> saveDataUsersToInitalise = new List<ISaveDataUser>();
+	static List<ISaveDataUser> saveDataUsers = new List<ISaveDataUser>();
+
+	static List<IPlannerDataUser> plannerDataUsersToInitalise = new List<IPlannerDataUser>();
+	static List<IPlannerDataUser> plannerDataUsers = new List<IPlannerDataUser>();
+
+	public static void Register(ISaveDataUser saveGameUser)
+	{
+		saveDataUsersToInitalise.Add(saveGameUser);
+	}
+
 	public void Awake()
 	{
+		Object[] existingApps = Object.FindObjectsOfType(typeof(App));
+		if (existingApps.Length > 0)
+		{
+			Object.Destroy(this.gameObject);
+		}
+		Object.DontDestroyOnLoad(this.gameObject);
+
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.characterStats);
@@ -38,12 +77,30 @@ public class App : MonoBehaviour
 		catch (System.Exception ex)
 		{
 			Debug.LogException(ex);
+		}
+		if (saveData == null)
+		{
 			saveData = this.defaultSave;
 		}
+
+		Object.Instantiate(this.cameraPrefab);
 	}
 
 	public void Start()
 	{
+		this.Initialise();
+	}
+
+	public void Initialise()
+	{
+		for (int i = 0; i < saveDataUsersToInitalise.Count; ++i)
+		{
+			ISaveDataUser saveDataUser = saveDataUsersToInitalise[i];
+			saveDataUser.Initialise(this.saveData);
+			saveDataUsers.Add(saveDataUser);
+		}
+		saveDataUsersToInitalise.Clear();
+
 		Object[] planOptionSelectorObjects = Object.FindObjectsOfType(typeof(PlanOptionSelectorUI));
 		for (int i = 0; i < planOptionSelectorObjects.Length; ++i)
 		{
@@ -57,6 +114,13 @@ public class App : MonoBehaviour
 			var planUI = planObjects[i] as PlanUI;
 			planUI.Initialise(this.saveData);
 		}
+
+		// Object[] statsUis = Object.FindObjectsOfType(typeof(CharacterStatsCollectionUI));
+		// for (int i = 0; i < statsUis.Length; ++i)
+		// {
+		// 	var statsUi = statsUis[i] as CharacterStatsCollectionUI;
+		// 	statsUi.Initialise(this.saveData);
+		// }
 
 		Save();
 	}
@@ -101,4 +165,19 @@ public class App : MonoBehaviour
 			Debug.LogException(ex);
 		}
 	}
+}
+
+public interface ISaveDataUser
+{
+	void Initialise(SaveData saveData);
+}
+
+public interface IPlannerDataUser
+{
+	void Initialise(PlannerData plannerData);
+}
+
+public interface IDataUser<DataT>
+{
+	void Initialise(DataT data);
 }

@@ -8,5 +8,6 @@ namespace NotABear
 		public string name;
 
 		public Plan weeklyPlan;
+		public Character pc;
 	}
 }

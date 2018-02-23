@@ -8,10 +8,10 @@ namespace NotABear
 	{
 		public string name;
 		public CharacterStatDefinition stat;
-		public double flatBonus;
-		public double bonusPerTimeUnit;
+		public float flatBonus;
+		public float bonusPerTimeUnit;
 		public int activePeriodTimeUnits;
-		public double activePeriodExtensionPerTimeUnit;
+		public float activePeriodExtensionPerTimeUnit;
 
 		public bool IsInfinite()
 		{
