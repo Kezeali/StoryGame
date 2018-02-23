@@ -84,7 +84,7 @@ namespace NotABear
 			IDataItem value = null;
 			if (dataItems != null)
 			{
-				if (name == "null")
+				if (name == "null" || name.Length == 0)
 				{
 					// All good.
 				}
