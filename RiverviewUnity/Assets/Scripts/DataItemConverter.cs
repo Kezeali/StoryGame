@@ -117,7 +117,7 @@ namespace NotABear
 		#endif
 			if (dataItem != null)
 			{
-				emitter.Emit(new Scalar(dataItem.name));
+				emitter.Emit(new Scalar(dataItem.name ?? "missing"));
 			}
 			else
 			{

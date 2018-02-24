@@ -26,6 +26,7 @@ namespace NotABear
 		public CharacterStatDefinition[] characterStats;
 		public SubjectData[] subjects;
 		public PlanActivityData[] planActivities;
+		public QualityData[] qualities;
 	}
 
 	[System.Serializable]
