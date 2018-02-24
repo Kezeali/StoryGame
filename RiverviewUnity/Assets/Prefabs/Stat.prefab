@@ -152,7 +152,7 @@ MonoBehaviour:
   labelText: {fileID: 114977345205321582}
   valueText: {fileID: 114252363584327658}
   icon: {fileID: 0}
-  statType: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
+  statType: {fileID: 0}
 --- !u!114 &114977345205321582
 MonoBehaviour:
   m_ObjectHideFlags: 1

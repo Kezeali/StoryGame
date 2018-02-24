@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 namespace NotABear
 {
 
-public class PlanUI : MonoBehaviour
+public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 {
 	[SerializeField]
 	private string planName;
@@ -27,6 +27,8 @@ public class PlanUI : MonoBehaviour
 	{
 		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>();
 		System.Array.Sort(uiSections, PlanSectionUI.Compare);
+
+		App.Register(this);
 	}
 
 	public void Initialise(SaveData loadedData)

@@ -1,5 +1,6 @@
 using UnityEngine;
 using NotABear;
+using System.Collections;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
@@ -18,43 +19,71 @@ public class App : MonoBehaviour
 
 	SaveData saveData;
 
+	public static App instance;
+
 	private class DataUserCollection<DataT>
 	{
-		static List<IDataUser<DataT>> toInitialise = new List<IDataUser<DataT>>();
-		static List<IDataUser<DataT>> initialised = new List<IDataUser<DataT>>();
+		List<IDataUser<DataT>> toInitialise = new List<IDataUser<DataT>>();
+		List<IDataUser<DataT>> initialised = new List<IDataUser<DataT>>();
 
 		public void Add(IDataUser<DataT> dataUser)
 		{
+			this.toInitialise.Add(dataUser);
 		}
 
 		public void Remove(IDataUser<DataT> dataUser)
 		{
+			bool removed = this.initialised.Remove(dataUser);
+			if (!removed)
+			{
+				this.toInitialise.Remove(dataUser);
+			}
 		}
 
 		public void Initialise(DataT data)
 		{
+			for (int i = 0; i < this.toInitialise.Count; ++i)
+			{
+				this.toInitialise[i].Initialise(data);
+			}
+			this.initialised.AddRange(this.toInitialise);
+			this.toInitialise.Clear();
 		}
 	}
 
-	static List<ISaveDataUser> saveDataUsersToInitalise = new List<ISaveDataUser>();
-	static List<ISaveDataUser> saveDataUsers = new List<ISaveDataUser>();
+	static Dictionary<System.Type, object> dataUserCollections = new Dictionary<System.Type, object>();
 
-	static List<IPlannerDataUser> plannerDataUsersToInitalise = new List<IPlannerDataUser>();
-	static List<IPlannerDataUser> plannerDataUsers = new List<IPlannerDataUser>();
-
-	public static void Register(ISaveDataUser saveGameUser)
+	public static void Register<DataT>(IDataUser<DataT> dataUser)
 	{
-		saveDataUsersToInitalise.Add(saveGameUser);
+		DataUserCollection<DataT> collection = null;
+		object value;
+		if (!dataUserCollections.TryGetValue(typeof(DataT), out value))
+		{
+			collection = new DataUserCollection<DataT>();
+			dataUserCollections.Add(typeof(DataT), collection);
+		}
+		else
+		{
+			collection = value as DataUserCollection<DataT>;
+		}
+		collection.Add(dataUser);
+
+		if (instance != null)
+		{
+			instance.DelayInit();
+		}
 	}
 
 	public void Awake()
 	{
 		Object[] existingApps = Object.FindObjectsOfType(typeof(App));
-		if (existingApps.Length > 0)
+		if (existingApps.Length > 1)
 		{
 			Object.Destroy(this.gameObject);
 		}
 		Object.DontDestroyOnLoad(this.gameObject);
+
+		instance = this;
 
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
@@ -64,24 +93,29 @@ public class App : MonoBehaviour
 
 		string data = System.IO.File.ReadAllText("save.txt");
 
-		// Serialiser.Deserialise(ref plan, data, dataItemSource);
 		var deserializer = new DeserializerBuilder()
 			.WithNamingConvention(new CamelCaseNamingConvention())
 			.WithTypeConverter(this.dataItemConverter)
+			.IgnoreUnmatchedProperties()
 			.Build();
 
 		try
 		{
-			saveData = deserializer.Deserialize<SaveData>(data);
+			this.saveData = deserializer.Deserialize<SaveData>(data);
 		}
 		catch (System.Exception ex)
 		{
 			Debug.LogException(ex);
 		}
-		if (saveData == null)
+		if (this.saveData == null)
 		{
-			saveData = this.defaultSave;
+			this.saveData = this.defaultSave;
 		}
+		if (this.saveData.pc == null)
+		{
+			this.saveData.pc = this.defaultSave.pc;
+		}
+		this.saveData.pc.CalculateStatus();
 
 		Object.Instantiate(this.cameraPrefab);
 	}
@@ -89,40 +123,45 @@ public class App : MonoBehaviour
 	public void Start()
 	{
 		this.Initialise();
+
+		Save();
 	}
 
 	public void Initialise()
 	{
-		for (int i = 0; i < saveDataUsersToInitalise.Count; ++i)
+		this.InitialiseDataUsers(this.saveData);
+		this.InitialiseDataUsers(this.plannerData);
+	}
+
+	void DelayInit()
+	{
+		this.StartCoroutine(this.DelayInitCoroutine());
+	}
+
+	IEnumerator DelayInitCoroutine()
+	{
+		yield return new WaitForEndOfFrame();
+		Initialise();
+	}
+
+	DataUserCollection<DataT> GetDataUserCollection<DataT>()
+	{
+		DataUserCollection<DataT> collection = null;
+		object value;
+		if (dataUserCollections.TryGetValue(typeof(DataT), out value))
 		{
-			ISaveDataUser saveDataUser = saveDataUsersToInitalise[i];
-			saveDataUser.Initialise(this.saveData);
-			saveDataUsers.Add(saveDataUser);
+			collection = value as DataUserCollection<DataT>;
 		}
-		saveDataUsersToInitalise.Clear();
+		return collection;
+	}
 
-		Object[] planOptionSelectorObjects = Object.FindObjectsOfType(typeof(PlanOptionSelectorUI));
-		for (int i = 0; i < planOptionSelectorObjects.Length; ++i)
+	void InitialiseDataUsers<DataT>(DataT data)
+	{
+		var dataUsers = this.GetDataUserCollection<DataT>();
+		if (dataUsers != null)
 		{
-			var planOptionSelectorUI = planOptionSelectorObjects[i] as PlanOptionSelectorUI;
-			planOptionSelectorUI.Initialise(this.plannerData);
+			dataUsers.Initialise(data);
 		}
-
-		Object[] planObjects = Object.FindObjectsOfType(typeof(PlanUI));
-		for (int i = 0; i < planObjects.Length; ++i)
-		{
-			var planUI = planObjects[i] as PlanUI;
-			planUI.Initialise(this.saveData);
-		}
-
-		// Object[] statsUis = Object.FindObjectsOfType(typeof(CharacterStatsCollectionUI));
-		// for (int i = 0; i < statsUis.Length; ++i)
-		// {
-		// 	var statsUi = statsUis[i] as CharacterStatsCollectionUI;
-		// 	statsUi.Initialise(this.saveData);
-		// }
-
-		Save();
 	}
 
 	public void OnApplicationFocus(bool focus)
@@ -165,16 +204,10 @@ public class App : MonoBehaviour
 			Debug.LogException(ex);
 		}
 	}
-}
 
-public interface ISaveDataUser
-{
-	void Initialise(SaveData saveData);
-}
-
-public interface IPlannerDataUser
-{
-	void Initialise(PlannerData plannerData);
+	public void OpenScene(string sceneName)
+	{
+	}
 }
 
 public interface IDataUser<DataT>

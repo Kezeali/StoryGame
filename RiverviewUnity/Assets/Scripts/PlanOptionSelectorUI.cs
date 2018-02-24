@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using NotABear;
 
-public class PlanOptionSelectorUI : MonoBehaviour
+public class PlanOptionSelectorUI : MonoBehaviour, IDataUser<PlannerData>
 {
 	[SerializeField]
 	private PlanUI planUI;
@@ -23,6 +23,11 @@ public class PlanOptionSelectorUI : MonoBehaviour
 
 	private PlanOptionsLoadout currentLoadout;
 	private PlanOptionsLoadout rootLoadout;
+
+	public void Awake()
+	{
+		App.Register(this);
+	}
 
 	public void Initialise(PlannerData plannerData)
 	{

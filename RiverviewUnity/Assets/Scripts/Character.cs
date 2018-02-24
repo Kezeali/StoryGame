@@ -21,7 +21,10 @@ namespace NotABear
 
 			public Stat GetStat(CharacterStatDefinition statDef)
 			{
+				// Create a default stat in case there is no current value
 				Stat result = default(Stat);
+				result.value = statDef.baseValue;
+								
 				for (int i = 0; i < this.stats.Count; ++i)
 				{
 					Stat stat = this.stats[i];
@@ -80,8 +83,13 @@ namespace NotABear
 		public string name;
 		public List<ActiveBonus> activeBonuses;
 		public BaseStat[] baseStats;
-		[HideInInspector]
+		[System.NonSerialized]
 		public Status status;
+
+		public void CalculateStatus()
+		{
+			this.status = CalculateStatus(this);
+		}
 
 		public void AddStatBonuses(StatBonusData[] bonuses, int timeSpent)
 		{
@@ -101,6 +109,7 @@ namespace NotABear
 
 		public void UpdateStatBonuses()
 		{
+			bool removed = false;
 			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex)
 			{
 				ActiveBonus bonus = this.activeBonuses[activeBonusIndex];
@@ -109,8 +118,13 @@ namespace NotABear
 					if (bonus.RemainingTime() <= 0)
 					{
 						this.activeBonuses.RemoveAt(activeBonusIndex);
+						removed = true;
 					}
 				}
+			}
+			if (removed)
+			{
+				this.status = CalculateStatus(this);
 			}
 		}
 
@@ -144,15 +158,27 @@ namespace NotABear
 		public static Status CalculateStatus(Character character)
 		{
 			var result = character.status;
+			if (result.stats == null)
+			{
+				result.stats = new List<Stat>();
+			}
 			result.stats.Clear();
+
+			for (int i = 0; i < character.baseStats.Length; ++i)
+			{
+				Stat stat = default(Stat);
+				stat.definition = character.baseStats[i].definition;
+				stat.value = character.baseStats[i].value;
+				result.stats.Add(stat);
+			}
 
 			for (int activeBonusIndex = 0; activeBonusIndex < character.activeBonuses.Count; ++activeBonusIndex)
 			{
 				ActiveBonus bonus = character.activeBonuses[activeBonusIndex];
 				
-				var stat = GetBaseStat(character.baseStats, bonus.definition.stat);
+				var stat = character.status.GetStat(bonus.definition.stat);
 
-				// NOTE(elliot): this is adding the bonus value on to the base stat value retrieved
+				// NOTE(elliot): this is adding the bonus value on to the existing stat value retrieved
 				stat.value += bonus.value;
 				stat.valueIncludesBonus += bonus.value;
 
