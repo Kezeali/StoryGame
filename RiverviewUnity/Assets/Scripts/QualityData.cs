@@ -3,7 +3,7 @@ using UnityEngine;
 namespace NotABear
 {
 
-	[CreateAssetMenu(fileName="Quality.asset", menuName="Riverview/Quality")]
+	[CreateAssetMenu(fileName="Quality.asset", menuName="Cloverview/Quality")]
 	public class QualityData : ScriptableObject, IDataItem
 	{
 		public string description;

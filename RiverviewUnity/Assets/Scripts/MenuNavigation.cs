@@ -2,18 +2,22 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+using Button = NotABear.Button;
+
 namespace NotABear
 {
 
-public class MenuNavigation : MonoBehaviour, IDataUser<Nav>
+public class MenuNavigation : Button, IDataUser<Nav>
 {
 	public bool preload = true;
 	public MenuData destination;
 
 	Nav nav;
 
-	public void Awake()
+	protected override void Awake()
 	{
+		base.Awake();
+
 		App.Register(this);
 	}
 

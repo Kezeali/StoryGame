@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using NotABear;
 
+namespace NotABear
+{
+
 public class PlanOptionCategoryUI : MonoBehaviour
 {
 	[SerializeField]
@@ -40,4 +43,6 @@ public class PlanOptionCategoryUI : MonoBehaviour
 		this.optionUis.Clear();
 		this.subject = null;
 	}
+}
+
 }
