@@ -3,7 +3,7 @@ using UnityEngine;
 namespace NotABear
 {
 
-	[CreateAssetMenu(fileName="Subject.asset", menuName="Riverview/Subject")]
+	[CreateAssetMenu(fileName="Subject.asset", menuName="Cloverview/Subject")]
 	public class SubjectData : ScriptableObject, IDataItem
 	{
 		public string title;

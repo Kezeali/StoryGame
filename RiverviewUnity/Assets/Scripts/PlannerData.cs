@@ -17,7 +17,7 @@ namespace NotABear
 		string name { get; set; }
 	}
 
-	[CreateAssetMenu(fileName="PlannerData.asset", menuName="Riverview/Planner Data")]
+	[CreateAssetMenu(fileName="PlannerData.asset", menuName="Cloverview/Planner Data")]
 	public class PlannerData : ScriptableObject
 	{
 		[Reorderable]

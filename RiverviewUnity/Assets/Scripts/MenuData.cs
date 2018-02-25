@@ -11,7 +11,7 @@ namespace NotABear
 		FullscreenOverlay
 	}
 
-	[CreateAssetMenu(fileName="Menu.asset", menuName="Riverview/System/Menu")]
+	[CreateAssetMenu(fileName="Menu.asset", menuName="Cloverview/System/Menu")]
 	public class MenuData : ScriptableObject
 	{
 		public SceneField scene;
