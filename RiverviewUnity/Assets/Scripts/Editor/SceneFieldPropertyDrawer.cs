@@ -8,14 +8,14 @@
 	{
 		EditorGUI.BeginProperty(_position, GUIContent.none, _property);
 		SerializedProperty sceneAsset = _property.FindPropertyRelative("sceneAsset");
-		SerializedProperty sceneName = _property.FindPropertyRelative("sceneName");
+		SerializedProperty scenePath = _property.FindPropertyRelative("scenePath");
 		_position = EditorGUI.PrefixLabel(_position, GUIUtility.GetControlID(FocusType.Passive), _label);
 		if (sceneAsset != null)
 		{
 			sceneAsset.objectReferenceValue = EditorGUI.ObjectField(_position, sceneAsset.objectReferenceValue, typeof(SceneAsset), false); 
-			if( sceneAsset.objectReferenceValue != null )
+			if (sceneAsset.objectReferenceValue != null)
 			{
-				sceneName.stringValue = (sceneAsset.objectReferenceValue as SceneAsset).name;
+				scenePath.stringValue = AssetDatabase.GetAssetPath(sceneAsset.objectReferenceValue);
 			}
 		}
 		EditorGUI.EndProperty();
