@@ -6,14 +6,14 @@ public class SceneField
 	[SerializeField]
 	private Object sceneAsset;
 	[SerializeField]
-	private string sceneName = "";
-	public string SceneName
+	private string scenePath = "";
+	public string ScenePath
 	{
-		get { return sceneName; }
+		get { return scenePath; }
 	}
 	// makes it work with the existing Unity methods (LoadLevel/LoadScene)
 	public static implicit operator string(SceneField sceneField)
 	{
-		return sceneField.SceneName;
+		return sceneField.scenePath;
 	}
 }

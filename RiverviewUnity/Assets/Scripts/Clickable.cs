@@ -10,7 +10,7 @@ namespace NotABear
 {
     // Button that's meant to work with mouse or touch-based devices.
     [AddComponentMenu("Cloverview/UI/Button", 30)]
-    public class Button : Selectable, IPointerClickHandler, ISubmitHandler
+    public class Clickable : Selectable, IPointerClickHandler, ISubmitHandler
     {
         [Serializable]
         public class ButtonClickedEvent : UnityEvent {}
@@ -19,9 +19,6 @@ namespace NotABear
         [FormerlySerializedAs("onClick")]
         [SerializeField]
         private ButtonClickedEvent m_OnClick = new ButtonClickedEvent();
-
-        protected Button()
-        {}
 
         public ButtonClickedEvent onClick
         {
@@ -34,8 +31,14 @@ namespace NotABear
             if (!IsActive() || !IsInteractable())
                 return;
 
+            OnPress();
+
             UISystemProfilerApi.AddMarker("Button.onClick", this);
             m_OnClick.Invoke();
+        }
+
+        protected virtual void OnPress()
+        {
         }
 
         // Trigger all registered callbacks.

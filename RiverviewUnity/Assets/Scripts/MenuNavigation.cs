@@ -2,13 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-using Button = NotABear.Button;
-
 namespace NotABear
 {
 
-public class MenuNavigation : Button, IDataUser<Nav>
+public class MenuNavigation : Clickable, IDataUser<Nav>
 {
+	[Header("Menu Navigation")]
 	public bool preload = true;
 	public MenuData destination;
 
@@ -18,16 +17,25 @@ public class MenuNavigation : Button, IDataUser<Nav>
 	{
 		base.Awake();
 
-		App.Register(this);
+		if (Application.isPlaying)
+		{
+			App.Register(this);
+		}
+	}
+
+	protected override void OnPress()
+	{
+		this.Go();
 	}
 
 	public void Initialise(Nav nav)
 	{
+		Debug.Assert(nav);
 		this.nav = nav;
 
 		if (this.preload && this.destination.allowPreload)
 		{
-			this.nav.QueueLoad(this.destination);
+			this.nav.Preload(this.destination);
 		}
 	}
 

@@ -10,6 +10,9 @@ public class App : MonoBehaviour
 	private GameObject cameraPrefab;
 
 	[SerializeField]
+	private Nav nav;
+
+	[SerializeField]
 	private PlannerData plannerData;
 
 	[SerializeField]
@@ -18,6 +21,8 @@ public class App : MonoBehaviour
 	DataItemConverter dataItemConverter;
 
 	SaveData saveData;
+
+	bool waitingForInit = true;
 
 	public static App instance;
 
@@ -85,6 +90,9 @@ public class App : MonoBehaviour
 
 		instance = this;
 
+		Debug.Assert(this.cameraPrefab != null);
+		Debug.Assert(this.nav != null);
+
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.characterStats);
@@ -123,6 +131,7 @@ public class App : MonoBehaviour
 	public void Start()
 	{
 		this.Initialise();
+		this.waitingForInit = false;
 
 		Save();
 	}
@@ -131,17 +140,23 @@ public class App : MonoBehaviour
 	{
 		this.InitialiseDataUsers(this.saveData);
 		this.InitialiseDataUsers(this.plannerData);
+		this.InitialiseDataUsers(this.nav);
 	}
 
 	void DelayInit()
 	{
-		this.StartCoroutine(this.DelayInitCoroutine());
+		if (!this.waitingForInit)
+		{
+			this.StartCoroutine(this.DelayInitCoroutine());
+		}
 	}
 
 	IEnumerator DelayInitCoroutine()
 	{
-		yield return new WaitForEndOfFrame();
-		Initialise();
+		this.waitingForInit = true;
+		yield return 0;
+		this.waitingForInit = false;
+		this.Initialise();
 	}
 
 	DataUserCollection<DataT> GetDataUserCollection<DataT>()

@@ -944,62 +944,6 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.ScrollRect+ScrollRectEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
---- !u!1 &1108682774
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1108682776}
-  - component: {fileID: 1108682775}
-  m_Layer: 0
-  m_Name: App
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1108682775
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1108682774}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2429dc504f046774d89279b5e4ab0623, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cameraPrefab: {fileID: 1128945569395054, guid: 11fc8da49f1c51644a4336889aac2551,
-    type: 2}
-  plannerData: {fileID: 11400000, guid: 2eea9fa73fb9b4c4f9e277940ca300d7, type: 2}
-  defaultSave:
-    name: New
-    weeklyPlan:
-      name: 
-      sections: []
-    pc:
-      name: You
-      activeBonuses: []
-      baseStats:
-      - definition: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
-        value: 10
-      - definition: {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
-        value: 0
---- !u!4 &1108682776
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1108682774}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1496769144
 GameObject:
   m_ObjectHideFlags: 0
@@ -1070,3 +1014,45 @@ RectTransform:
   m_PrefabParentObject: {fileID: 224513214427818340, guid: fc7d0b2fe9e9fff4eab6c76c095b0cf0,
     type: 2}
   m_PrefabInternal: {fileID: 16084944}
+--- !u!1001 &2097619161
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+      propertyPath: m_RootOrder
+      value: 3
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
+  m_IsPrefabParent: 0
