@@ -4,6 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
+namespace NotABear
+{
+
 public class App : MonoBehaviour
 {
 	[SerializeField]
@@ -73,6 +76,8 @@ public class App : MonoBehaviour
 		}
 		collection.Add(dataUser);
 
+		Debug.LogFormat("Data user added: {0}", dataUser);
+
 		if (instance != null)
 		{
 			instance.DelayInit();
@@ -81,11 +86,15 @@ public class App : MonoBehaviour
 
 	public void Awake()
 	{
-		Object[] existingApps = Object.FindObjectsOfType(typeof(App));
-		if (existingApps.Length > 1)
+	#if !UNITY_EDITOR
+		Debug.Assert(instance == null);
+	#else
+		if (instance != null)
 		{
-			Object.Destroy(this.gameObject);
+			Object.DestroyImmediate(this.gameObject);
+			return;
 		}
+	#endif
 		Object.DontDestroyOnLoad(this.gameObject);
 
 		instance = this;
@@ -125,7 +134,7 @@ public class App : MonoBehaviour
 		}
 		this.saveData.pc.CalculateStatus();
 
-		Object.Instantiate(this.cameraPrefab);
+		Object.Instantiate(this.cameraPrefab, this.transform);
 	}
 
 	public void Start()
@@ -138,6 +147,7 @@ public class App : MonoBehaviour
 
 	public void Initialise()
 	{
+		Debug.Log("Initialise()");
 		this.InitialiseDataUsers(this.saveData);
 		this.InitialiseDataUsers(this.plannerData);
 		this.InitialiseDataUsers(this.nav);
@@ -153,6 +163,7 @@ public class App : MonoBehaviour
 
 	IEnumerator DelayInitCoroutine()
 	{
+		Debug.Log("DelayInit Started");
 		this.waitingForInit = true;
 		yield return 0;
 		this.waitingForInit = false;
@@ -228,4 +239,6 @@ public class App : MonoBehaviour
 public interface IDataUser<DataT>
 {
 	void Initialise(DataT data);
+}
+
 }

@@ -10,12 +10,14 @@ public class MenuNavigation : Clickable, IDataUser<Nav>
 	[Header("Menu Navigation")]
 	public bool preload = true;
 	public MenuData destination;
+	[HideInInspector]
+	public MenuData parentScene;
 
 	Nav nav;
 
-	protected override void Awake()
+	protected override void OnEnable()
 	{
-		base.Awake();
+		base.OnEnable();
 
 		if (Application.isPlaying)
 		{
@@ -33,15 +35,18 @@ public class MenuNavigation : Clickable, IDataUser<Nav>
 		Debug.Assert(nav);
 		this.nav = nav;
 
-		if (this.preload && this.destination.allowPreload)
+		if (this.destination != null && this.preload && this.destination.allowPreload)
 		{
-			this.nav.Preload(this.destination);
+			this.nav.Preload(this.destination, this.parentScene);
 		}
 	}
 
 	public void Go()
 	{
-		this.nav.GoTo(this.destination);
+		if (this.destination != null)
+		{
+			this.nav.GoTo(this.destination, this.parentScene);
+		}
 	}
 }
 

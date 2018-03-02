@@ -17,6 +17,10 @@
 			{
 				scenePath.stringValue = AssetDatabase.GetAssetPath(sceneAsset.objectReferenceValue);
 			}
+			else
+			{
+				scenePath.stringValue = "";
+			}
 		}
 		EditorGUI.EndProperty();
 	}

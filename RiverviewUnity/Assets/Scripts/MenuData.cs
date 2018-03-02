@@ -8,7 +8,9 @@ namespace NotABear
 	{
 		Solo,
 		Overlay,
-		FullscreenOverlay
+		FullscreenOverlay,
+		Back,
+		Close
 	}
 
 	[CreateAssetMenu(fileName="Menu.asset", menuName="Cloverview/System/Menu")]

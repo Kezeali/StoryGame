@@ -8,7 +8,7 @@ public class PlanSectionUI : MonoBehaviour
 	[System.NonSerialized]
 	public PlanSlotUI[] slots;
 
-	public void Awake()
+	public void OnEnable()
 	{
 		this.slots = this.GetComponentsInChildren<PlanSlotUI>();
 	}

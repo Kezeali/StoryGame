@@ -23,7 +23,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 
 	private PlanSlotUI selectedSlot;
 
-	public void Awake()
+	public void OnEnable()
 	{
 		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>();
 		System.Array.Sort(uiSections, PlanSectionUI.Compare);

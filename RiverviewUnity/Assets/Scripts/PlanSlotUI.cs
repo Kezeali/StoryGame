@@ -31,7 +31,7 @@ public class PlanSlotUI : MonoBehaviour
 
 	private Button button;
 
-	public void Awake()
+	public void OnEnable()
 	{
 		this.button = this.GetComponentInChildren<Button>();
 		this.button.onClick.AddListener(this.OnClicked);

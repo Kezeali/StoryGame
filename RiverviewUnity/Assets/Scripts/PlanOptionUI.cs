@@ -16,7 +16,7 @@ public class PlanOptionUI : MonoBehaviour
 
 	public System.Action<PlanOptionUI> Selected;
 
-	public void Awake()
+	public void OnEnable()
 	{
 		this.clickableArea = this.GetComponentInChildren<Selectable>();
 	}
