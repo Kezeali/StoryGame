@@ -12,13 +12,13 @@ public class Nav : MonoBehaviour
 	private class ToLoad
 	{
 		public MenuData def;
-		public MenuData prevScene;
+		public LoadedScene parentScene;
 	}
 
 	private class LoadedScene
 	{
 		public MenuData def;
-		public MenuData prevScene;
+		public LoadedScene parentScene;
 		public AsyncOperation loadOp;
 		public Scene scene;
 	}
@@ -27,8 +27,10 @@ public class Nav : MonoBehaviour
 	bool processingQueue = false;
 
 	List<LoadedScene> loadedScenes = new List<LoadedScene>();
-	MenuData nextActiveScene;
-	MenuData activeScene;
+	LoadedScene nextActiveScene;
+	LoadedScene activeScene;
+	Stack<LoadedScene> popupStack = new Stack<LoadedScene>();
+	Stack<MenuData> breadcrumbs = new Stack<MenuData>();
 
 	public void Awake()
 	{
@@ -42,9 +44,9 @@ public class Nav : MonoBehaviour
 		SceneManager.sceneUnloaded -= HandleSceneUnloaded;
 	}
 
-	public void GoTo(MenuData def)
+	public void GoTo(MenuData def, MenuData parentMenuDef = null)
 	{
-		this.StartCoroutine(this.GoToCoroutine(def));
+		this.StartCoroutine(this.GoToCoroutine(def, parentMenuDef));
 	}
 
 	public void Close(MenuData def)
@@ -52,15 +54,20 @@ public class Nav : MonoBehaviour
 		this.StartCoroutine(this.CloseCoroutine(def));
 	}
 
-	public void Preload(MenuData def)
+	public void ClearBreadcrumbs()
+	{
+		this.breadcrumbs.Clear();
+	}
+
+	public void Preload(MenuData def, MenuData parentMenuDef = null)
 	{
 		if (!this.QueuedToLoad(def) && !this.AlreadyLoaded(def))
 		{
-			MenuData prevScene = this.nextActiveScene ?? this.activeScene;
+			LoadedScene parentScene = FindLoadedScene(parentMenuDef) ?? this.nextActiveScene ?? this.activeScene;
 			var item = new ToLoad()
 			{
 				def = def,
-				prevScene = prevScene
+				parentScene = parentScene
 			};
 
 			this.toLoad.Add(item);
@@ -104,12 +111,11 @@ public class Nav : MonoBehaviour
 			ToLoad toLoad = this.toLoad[0];
 			this.toLoad.RemoveAt(0);
 			AsyncOperation asyncLoad = this.LoadScene(toLoad.def);
-			asyncLoad.allowSceneActivation = false;
 
 			LoadedScene loadedScene = new LoadedScene()
 			{
 				def = toLoad.def,
-				prevScene = toLoad.prevScene,
+				parentScene = toLoad.parentScene,
 				loadOp = asyncLoad
 			};
 			this.loadedScenes.Add(loadedScene);
@@ -119,25 +125,76 @@ public class Nav : MonoBehaviour
 		this.processingQueue = false;
 	}
 
-	IEnumerator GoToCoroutine(MenuData def)
+	IEnumerator GoToCoroutine(MenuData def, MenuData parentMenuDef)
 	{
 		while (this.processingQueue)
 		{
 			yield return 0;
 		}
 
+		MenuData resolvedDef = null;
+		if (def.type == MenuType.Back)
+		{
+			if (this.popupStack.Count > 0)
+			{
+				LoadedScene currentPopup = this.popupStack.Pop();
+				AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentPopup.scene);
+				while (!unloadOp.isDone)
+				{
+					yield return 0;
+				}
+				if (this.popupStack.Count > 0)
+				{
+					LoadedScene prevPopup = this.popupStack.Peek();
+					resolvedDef = prevPopup.def;
+				}
+			}
+			if (resolvedDef == null)
+			{
+				if (this.breadcrumbs.Count > 0)
+				{
+					resolvedDef = this.breadcrumbs.Pop();
+				}
+			}
+		}
+		else if (def.type == MenuType.Close)
+		{
+			if (this.popupStack.Count > 0)
+			{
+				LoadedScene currentPopup = this.popupStack.Pop();
+				AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentPopup.scene);
+				while (!unloadOp.isDone)
+				{
+					yield return 0;
+				}
+				if (this.popupStack.Count > 0)
+				{
+					LoadedScene prevPopup = this.popupStack.Peek();
+					resolvedDef = prevPopup.def;
+				}
+			}
+		}
+		else
+		{
+			resolvedDef = def;
+		}
 
-		LoadedScene loadedScene = this.FindLoadedScene(def);
+		if (resolvedDef == null)
+		{
+			yield break;
+		}
+
+		LoadedScene loadedScene = this.FindLoadedScene(resolvedDef);
 		if (loadedScene == null)
 		{
-			MenuData prevScene = this.nextActiveScene ?? this.activeScene;
+			LoadedScene parentScene = this.FindLoadedScene(parentMenuDef) ?? this.nextActiveScene ?? this.activeScene;
 
-			AsyncOperation asyncLoad = this.LoadScene(def);
+			AsyncOperation asyncLoad = this.LoadScene(resolvedDef);
 
 			loadedScene = new LoadedScene()
 			{
-				def = def,
-				prevScene = prevScene,
+				def = resolvedDef,
+				parentScene = parentScene,
 				loadOp = asyncLoad
 			};
 			this.loadedScenes.Add(loadedScene);
@@ -146,16 +203,23 @@ public class Nav : MonoBehaviour
 		if (loadedScene.loadOp != null)
 		{
 			loadedScene.loadOp.allowSceneActivation = true;
-			this.nextActiveScene = def;
+			this.nextActiveScene = loadedScene;
 
 			yield return loadedScene.loadOp;
 
 			this.nextActiveScene = null;
-			this.activeScene = def;
+			this.activeScene = loadedScene;
+
+			if (resolvedDef.type == MenuType.Overlay || resolvedDef.type == MenuType.FullscreenOverlay)
+			{
+				this.popupStack.Push(loadedScene);
+			}
+
+			SceneManager.SetActiveScene(SceneManager.GetSceneByPath(loadedScene.def.scene));
 		}
 		else
 		{
-			Debug.LogErrorFormat("Failed to load menu scene {0}", def.scene);
+			Debug.LogErrorFormat("Failed to load menu scene {0} (going {1})", resolvedDef.scene, def.name);
 		}
 	}
 
@@ -177,6 +241,10 @@ public class Nav : MonoBehaviour
 
 	LoadedScene FindLoadedScene(MenuData def)
 	{
+		if (def == null)
+		{
+			return null;
+		}
 		LoadedScene result = null;
 		for (int i = 0; i < this.loadedScenes.Count; ++i)
 		{
@@ -225,7 +293,7 @@ public class Nav : MonoBehaviour
 			{
 				this.loadedScenes.RemoveAt(i);
 			}
-			else if (loadedScene.prevScene != null && loadedScene.prevScene.scene == scene.path)
+			else if (loadedScene.parentScene != null && loadedScene.parentScene.scene.path == scene.path)
 			{
 				SceneManager.UnloadSceneAsync(loadedScene.scene);
 				this.loadedScenes.RemoveAt(i);

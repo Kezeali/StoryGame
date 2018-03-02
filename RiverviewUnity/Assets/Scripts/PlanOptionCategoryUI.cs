@@ -22,7 +22,7 @@ public class PlanOptionCategoryUI : MonoBehaviour
 	[System.NonSerialized]
 	public List<PlanOptionUI> optionUis = new List<PlanOptionUI>();
 
-	public void Awake()
+	public void OnEnable()
 	{
 		Debug.Assert(this.toggle != null);
 

@@ -24,7 +24,7 @@ public class PlanOptionSelectorUI : MonoBehaviour, IDataUser<PlannerData>
 	private PlanOptionsLoadout currentLoadout;
 	private PlanOptionsLoadout rootLoadout;
 
-	public void Awake()
+	public void OnEnable()
 	{
 		App.Register(this);
 	}

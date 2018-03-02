@@ -16,10 +16,9 @@ public class CharacterStatsContainerUI : MonoBehaviour, IDataUser<SaveData>
 	private Character character;
 	private CharacterStatUI[] statUIs;
 
-	public void Awake()
+	public void OnEnable()
 	{
 		this.statUIs = this.GetComponentsInChildren<CharacterStatUI>();
-
 		App.Register(this);
 	}
 

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace NotABear
 {
 
-	[CreateAssetMenu(fileName="Stat.asset", menuName="Riverview/Character Stat")]
+	[CreateAssetMenu(fileName="Stat.asset", menuName="Cloverview/Character Stat")]
 	public class CharacterStatDefinition : ScriptableObject, IDataItem
 	{
 		public string title;
