@@ -49,9 +49,22 @@ public class Nav : MonoBehaviour
 		this.StartCoroutine(this.GoToCoroutine(def, parentMenuDef));
 	}
 
-	public void Close(MenuData def)
+	public void ClosePopup(MenuData def)
 	{
-		this.StartCoroutine(this.CloseCoroutine(def));
+		if (popupStack.Count > 0)
+		{
+			LoadedScene topPopup = popupStack.Peek();
+			if (topPopup.def == def)
+			{
+				popupStack.Pop();
+				SetRootObjectsActive(topPopup.scene, false);
+			}
+		}
+	}
+
+	public void Unload(MenuData def)
+	{
+		this.StartCoroutine(this.UnloadCoroutine(def));
 	}
 
 	public void ClearBreadcrumbs()
@@ -61,20 +74,23 @@ public class Nav : MonoBehaviour
 
 	public void Preload(MenuData def, MenuData parentMenuDef = null)
 	{
-		if (!this.QueuedToLoad(def) && !this.AlreadyLoaded(def))
+		if (def.type == MenuType.Overlay || def.type == MenuType.FullscreenOverlay)
 		{
-			LoadedScene parentScene = FindLoadedScene(parentMenuDef) ?? this.nextActiveScene ?? this.activeScene;
-			var item = new ToLoad()
+			if (!this.QueuedToLoad(def) && !this.AlreadyLoaded(def))
 			{
-				def = def,
-				parentScene = parentScene
-			};
+				LoadedScene parentScene = FindLoadedScene(parentMenuDef) ?? this.nextActiveScene ?? this.activeScene;
+				var item = new ToLoad()
+				{
+					def = def,
+					parentScene = parentScene
+				};
 
-			this.toLoad.Add(item);
+				this.toLoad.Add(item);
 
-			if (!this.processingQueue)
-			{
-				this.StartCoroutine(this.ProcessQueueCoroutine());
+				if (!this.processingQueue)
+				{
+					this.StartCoroutine(this.ProcessQueueCoroutine());
+				}
 			}
 		}
 	}
@@ -110,15 +126,22 @@ public class Nav : MonoBehaviour
 		{
 			ToLoad toLoad = this.toLoad[0];
 			this.toLoad.RemoveAt(0);
-			AsyncOperation asyncLoad = this.LoadScene(toLoad.def);
-
-			LoadedScene loadedScene = new LoadedScene()
+			if (toLoad.def.type == MenuType.Overlay || toLoad.def.type == MenuType.FullscreenOverlay)
 			{
-				def = toLoad.def,
-				parentScene = toLoad.parentScene,
-				loadOp = asyncLoad
-			};
-			this.loadedScenes.Add(loadedScene);
+				AsyncOperation asyncLoad = this.LoadScene(toLoad.def);
+
+				LoadedScene loadedScene = new LoadedScene()
+				{
+					def = toLoad.def,
+					parentScene = toLoad.parentScene,
+					loadOp = asyncLoad
+				};
+				this.loadedScenes.Add(loadedScene);
+			}
+			else
+			{
+				Debug.LogErrorFormat("Tried to pre-load a solo scene: {0}", toLoad.def);
+			}
 
 			yield return 0;
 		}
@@ -137,12 +160,11 @@ public class Nav : MonoBehaviour
 		{
 			if (this.popupStack.Count > 0)
 			{
+				// Deactivate the current popup
 				LoadedScene currentPopup = this.popupStack.Pop();
-				AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentPopup.scene);
-				while (!unloadOp.isDone)
-				{
-					yield return 0;
-				}
+				SetRootObjectsActive(currentPopup.scene, false);
+
+				// Select prev popup
 				if (this.popupStack.Count > 0)
 				{
 					LoadedScene prevPopup = this.popupStack.Peek();
@@ -161,12 +183,11 @@ public class Nav : MonoBehaviour
 		{
 			if (this.popupStack.Count > 0)
 			{
+				// Deactivate the current popup
 				LoadedScene currentPopup = this.popupStack.Pop();
-				AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentPopup.scene);
-				while (!unloadOp.isDone)
-				{
-					yield return 0;
-				}
+				SetRootObjectsActive(currentPopup.scene, false);
+
+				// Select prev popup
 				if (this.popupStack.Count > 0)
 				{
 					LoadedScene prevPopup = this.popupStack.Peek();
@@ -202,20 +223,28 @@ public class Nav : MonoBehaviour
 
 		if (loadedScene.loadOp != null)
 		{
-			loadedScene.loadOp.allowSceneActivation = true;
 			this.nextActiveScene = loadedScene;
 
-			yield return loadedScene.loadOp;
+			if (!loadedScene.loadOp.isDone)
+			{
+				loadedScene.loadOp.allowSceneActivation = true;
+				yield return loadedScene.loadOp;
+			}
 
-			this.nextActiveScene = null;
 			this.activeScene = loadedScene;
+			this.nextActiveScene = null;
 
 			if (resolvedDef.type == MenuType.Overlay || resolvedDef.type == MenuType.FullscreenOverlay)
 			{
 				this.popupStack.Push(loadedScene);
 			}
 
-			SceneManager.SetActiveScene(SceneManager.GetSceneByPath(loadedScene.def.scene));
+			{
+				Scene scene = SceneManager.GetSceneByPath(loadedScene.def.scene);
+				SceneManager.SetActiveScene(scene);
+
+				SetRootObjectsActive(scene, true);
+			}
 		}
 		else
 		{
@@ -223,7 +252,7 @@ public class Nav : MonoBehaviour
 		}
 	}
 
-	IEnumerator CloseCoroutine(MenuData def)
+	IEnumerator UnloadCoroutine(MenuData def)
 	{
 		LoadedScene loadedScene = this.FindLoadedScene(def);
 		AsyncOperation asyncUnload;
@@ -295,9 +324,25 @@ public class Nav : MonoBehaviour
 			}
 			else if (loadedScene.parentScene != null && loadedScene.parentScene.scene.path == scene.path)
 			{
-				SceneManager.UnloadSceneAsync(loadedScene.scene);
-				this.loadedScenes.RemoveAt(i);
+				// This is a scene that was preloaded for the scene that just got unloaded
+
+				// Check that the given scene isn't active (meaning it is only pre-loaded)
+				if (loadedScene != (this.nextActiveScene ?? this.activeScene)
+					&& !this.popupStack.Contains(loadedScene))
+				{
+					SceneManager.UnloadSceneAsync(loadedScene.scene);
+					this.loadedScenes.RemoveAt(i);
+				}
 			}
+		}
+	}
+
+	static void SetRootObjectsActive(Scene scene, bool active)
+	{
+		GameObject[] roots = scene.GetRootGameObjects();
+		for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
+		{
+			roots[rootObjectIndex].SetActive(active);
 		}
 	}
 }
