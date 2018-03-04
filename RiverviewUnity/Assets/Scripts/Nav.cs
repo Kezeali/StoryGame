@@ -264,6 +264,7 @@ public class Nav : MonoBehaviour
 		}
 
 		// Show the environment scene
+		if (resolvedDef.envScene != null)
 		{
 			VisibleEnvScene visibleEnvScene = this.FindOrMakeVisibleEnvScene(resolvedDef.envScene, requesterScenePath);
 			if (visibleEnvScene != null)
