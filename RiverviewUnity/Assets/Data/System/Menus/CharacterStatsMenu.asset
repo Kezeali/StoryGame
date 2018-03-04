@@ -11,8 +11,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e2e7094da215d54f8f444248f52cd6e, type: 3}
   m_Name: CharacterStatsMenu
   m_EditorClassIdentifier: 
-  scene:
-    sceneAsset: {fileID: 102900000, guid: e26cce5fd84dfc644b4902a6a3228688, type: 3}
+  menuScene:
     scenePath: Assets/Scenes/ui_character_status.unity
-  type: 1
+  envScene: {fileID: 0}
+  type: 2
   allowPreload: 1

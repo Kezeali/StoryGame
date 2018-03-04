@@ -10,8 +10,8 @@ public class MenuNavigation : Clickable, IDataUser<Nav>
 	[Header("Menu Navigation")]
 	public bool preload = true;
 	public MenuData destination;
-	[HideInInspector]
-	public MenuData parentScene;
+	[ReadOnly]
+	public string parentScene;
 
 	Nav nav;
 

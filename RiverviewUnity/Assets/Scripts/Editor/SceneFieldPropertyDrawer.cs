@@ -7,20 +7,19 @@
 	public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
 	{
 		EditorGUI.BeginProperty(_position, GUIContent.none, _property);
-		SerializedProperty sceneAsset = _property.FindPropertyRelative("sceneAsset");
 		SerializedProperty scenePath = _property.FindPropertyRelative("scenePath");
+
+    var oldScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath.stringValue);
+
 		_position = EditorGUI.PrefixLabel(_position, GUIUtility.GetControlID(FocusType.Passive), _label);
+		SceneAsset sceneAsset = EditorGUI.ObjectField(_position, oldScene, typeof(SceneAsset), false) as SceneAsset;
 		if (sceneAsset != null)
 		{
-			sceneAsset.objectReferenceValue = EditorGUI.ObjectField(_position, sceneAsset.objectReferenceValue, typeof(SceneAsset), false); 
-			if (sceneAsset.objectReferenceValue != null)
-			{
-				scenePath.stringValue = AssetDatabase.GetAssetPath(sceneAsset.objectReferenceValue);
-			}
-			else
-			{
-				scenePath.stringValue = "";
-			}
+			scenePath.stringValue = AssetDatabase.GetAssetPath(sceneAsset);
+		}
+		else
+		{
+			scenePath.stringValue = "";
 		}
 		EditorGUI.EndProperty();
 	}

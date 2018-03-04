@@ -36,16 +36,14 @@ public class App : MonoBehaviour
 
 		public void Add(IDataUser<DataT> dataUser)
 		{
+			Remove(dataUser);
 			this.toInitialise.Add(dataUser);
 		}
 
 		public void Remove(IDataUser<DataT> dataUser)
 		{
-			bool removed = this.initialised.Remove(dataUser);
-			if (!removed)
-			{
-				this.toInitialise.Remove(dataUser);
-			}
+			this.initialised.Remove(dataUser);
+			this.toInitialise.Remove(dataUser);
 		}
 
 		public void Initialise(DataT data)

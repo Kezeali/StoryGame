@@ -11,8 +11,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e2e7094da215d54f8f444248f52cd6e, type: 3}
   m_Name: StartMenu
   m_EditorClassIdentifier: 
-  scene:
-    sceneAsset: {fileID: 102900000, guid: 293881876591e74498d9a2a39b65aa40, type: 3}
+  menuScene:
     scenePath: Assets/Scenes/start.unity
+  envScene: {fileID: 0}
   type: 0
   allowPreload: 0
