@@ -11,8 +11,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e2e7094da215d54f8f444248f52cd6e, type: 3}
   m_Name: BackMenu
   m_EditorClassIdentifier: 
-  scene:
-    sceneAsset: {fileID: 0}
+  menuScene:
     scenePath: 
-  type: 3
+  envScene: {fileID: 0}
+  type: 4
   allowPreload: 1

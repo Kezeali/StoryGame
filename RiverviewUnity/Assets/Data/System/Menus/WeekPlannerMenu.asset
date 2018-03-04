@@ -11,8 +11,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e2e7094da215d54f8f444248f52cd6e, type: 3}
   m_Name: WeekPlannerMenu
   m_EditorClassIdentifier: 
-  scene:
-    sceneAsset: {fileID: 102900000, guid: 2e4c35d3c3a5c13498ab12121c1eba99, type: 3}
+  menuScene:
     scenePath: Assets/Scenes/ui_week.unity
-  type: 0
+  envScene: {fileID: 0}
+  type: 2
   allowPreload: 1

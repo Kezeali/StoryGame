@@ -9,28 +9,61 @@ namespace NotABear
 
 public class Nav : MonoBehaviour
 {
-	private class ToLoad
+	private class MenuSceneToLoad
 	{
 		public MenuData def;
-		public LoadedScene parentScene;
+		public string preloadRequesterScenePath;
 	}
 
-	private class LoadedScene
+	private class EnvSceneToLoad
 	{
-		public MenuData def;
-		public LoadedScene parentScene;
+		public SceneData def;
+		public string preloadRequesterScenePath;
+	}
+
+	private class PreloadedScene
+	{
+		public string scenePath;
+		public List<string> preloadRequesterScenePaths;
 		public AsyncOperation loadOp;
 		public Scene scene;
+
+		public bool AddRequester(string requesterScenePath)
+		{
+			if (!string.IsNullOrEmpty(requesterScenePath)
+				&& !this.preloadRequesterScenePaths.Contains(requesterScenePath))
+			{
+				this.preloadRequesterScenePaths.Add(requesterScenePath);
+				return true;
+			}
+			return false;
+		}
 	}
 
-	List<ToLoad> toLoad = new List<ToLoad>();
+	private class VisibleMenu
+	{
+		public MenuData def;
+		public PreloadedScene loadedScene;
+	}
+
+	private class VisibleEnvScene
+	{
+		public SceneData def;
+		public PreloadedScene loadedScene;
+	}
+
+	Queue<MenuSceneToLoad> menuToLoadQueue = new Queue<MenuSceneToLoad>();
+	Queue<EnvSceneToLoad> envSceneToLoadQueue = new Queue<EnvSceneToLoad>();
 	bool processingQueue = false;
 
-	List<LoadedScene> loadedScenes = new List<LoadedScene>();
-	LoadedScene nextActiveScene;
-	LoadedScene activeScene;
-	Stack<LoadedScene> popupStack = new Stack<LoadedScene>();
+	List<PreloadedScene> preloadedScenes = new List<PreloadedScene>();
+
+	VisibleMenu nextActiveMenu;
+	VisibleMenu activeMenu;
+	List<VisibleMenu> popupStack = new List<VisibleMenu>();
 	Stack<MenuData> breadcrumbs = new Stack<MenuData>();
+
+	List<VisibleEnvScene> visibleEnvScenes = new List<VisibleEnvScene>();
 
 	public void Awake()
 	{
@@ -44,27 +77,23 @@ public class Nav : MonoBehaviour
 		SceneManager.sceneUnloaded -= HandleSceneUnloaded;
 	}
 
-	public void GoTo(MenuData def, MenuData parentMenuDef = null)
+	public void GoTo(MenuData def, string requesterScenePath = null)
 	{
-		this.StartCoroutine(this.GoToCoroutine(def, parentMenuDef));
+		this.StartCoroutine(this.GoToCoroutine(def, requesterScenePath));
 	}
 
 	public void ClosePopup(MenuData def)
 	{
 		if (popupStack.Count > 0)
 		{
-			LoadedScene topPopup = popupStack.Peek();
+			VisibleMenu topPopup = popupStack[popupStack.Count-1];
 			if (topPopup.def == def)
 			{
-				popupStack.Pop();
-				SetRootObjectsActive(topPopup.scene, false);
+				popupStack.RemoveAt(popupStack.Count-1);
+				SetRootObjectsActive(topPopup.loadedScene.scene, false);
+				OnSceneHidden(topPopup.loadedScene);
 			}
 		}
-	}
-
-	public void Unload(MenuData def)
-	{
-		this.StartCoroutine(this.UnloadCoroutine(def));
 	}
 
 	public void ClearBreadcrumbs()
@@ -72,46 +101,70 @@ public class Nav : MonoBehaviour
 		this.breadcrumbs.Clear();
 	}
 
-	public void Preload(MenuData def, MenuData parentMenuDef = null)
+	public void Preload(MenuData def, string requesterScenePath = null)
 	{
-		if (def.type == MenuType.Overlay || def.type == MenuType.FullscreenOverlay)
+		if (def.type != MenuType.Back && def.type != MenuType.ClosePopup)
 		{
-			if (!this.QueuedToLoad(def) && !this.AlreadyLoaded(def))
+			// NOTE: validate the requester: only loaded scenes are allowed to hold references to pre-loaded scene.
+			PreloadedScene requester = this.FindLoadedScene(requesterScenePath);
+			if (requester == null)
 			{
-				LoadedScene parentScene = FindLoadedScene(parentMenuDef) ?? this.nextActiveScene ?? this.activeScene;
-				var item = new ToLoad()
-				{
-					def = def,
-					parentScene = parentScene
-				};
+				requesterScenePath = null;
+			}
 
-				this.toLoad.Add(item);
+			var item = new MenuSceneToLoad()
+			{
+				def = def,
+				preloadRequesterScenePath = requesterScenePath
+			};
 
-				if (!this.processingQueue)
-				{
-					this.StartCoroutine(this.ProcessQueueCoroutine());
-				}
+			if (def.envScene != null)
+			{
+				this.Preload(def.envScene, def.menuScene.scenePath);
+			}
+
+			this.menuToLoadQueue.Enqueue(item);
+
+			if (!this.processingQueue)
+			{
+				this.StartCoroutine(this.ProcessQueueCoroutine());
 			}
 		}
 	}
 
-	bool QueuedToLoad(MenuData def)
+	public void Preload(SceneData def, string requesterScenePath = null)
 	{
-		for (int i = 0; i < this.toLoad.Count; ++i)
+		// NOTE: validate the requester
+		PreloadedScene requester = this.FindLoadedScene(requesterScenePath);
+		if (requester == null)
 		{
-			if (this.toLoad[i].def == def)
-			{
-				return true;
-			}
+			requesterScenePath = null;
 		}
-		return false;
+
+		var item = new EnvSceneToLoad()
+		{
+			def = def,
+			preloadRequesterScenePath = requesterScenePath
+		};
+
+		this.envSceneToLoadQueue.Enqueue(item);
+
+		if (!this.processingQueue)
+		{
+			this.StartCoroutine(this.ProcessQueueCoroutine());
+		}
 	}
 
 	bool AlreadyLoaded(MenuData def)
 	{
-		for (int i = 0; i < this.loadedScenes.Count; ++i)
+		return AlreadyLoaded(def.menuScene);
+	}
+
+	bool AlreadyLoaded(string scenePath)
+	{
+		for (int i = 0; i < this.preloadedScenes.Count; ++i)
 		{
-			if (this.loadedScenes[i].def == def)
+			if (this.preloadedScenes[i].scenePath == scenePath)
 			{
 				return true;
 			}
@@ -122,25 +175,37 @@ public class Nav : MonoBehaviour
 	IEnumerator ProcessQueueCoroutine()
 	{
 		this.processingQueue = true;
-		while (this.toLoad.Count > 0)
+		while (this.menuToLoadQueue.Count > 0 || this.envSceneToLoadQueue.Count > 0)
 		{
-			ToLoad toLoad = this.toLoad[0];
-			this.toLoad.RemoveAt(0);
-			if (toLoad.def.type == MenuType.Overlay || toLoad.def.type == MenuType.FullscreenOverlay)
+			// Only load menus if there are no more env scenes to load
+			if (this.envSceneToLoadQueue.Count > 0)
 			{
-				AsyncOperation asyncLoad = this.LoadScene(toLoad.def);
+				EnvSceneToLoad sceneToLoad = this.envSceneToLoadQueue.Dequeue();
 
-				LoadedScene loadedScene = new LoadedScene()
+				if (sceneToLoad.def != null)
 				{
-					def = toLoad.def,
-					parentScene = toLoad.parentScene,
-					loadOp = asyncLoad
-				};
-				this.loadedScenes.Add(loadedScene);
+					PreloadedScene preloadedScene =
+
+					this.FindOrLoadEnvScene(sceneToLoad.def, sceneToLoad.preloadRequesterScenePath);
+
+					Debug.LogFormat("Preload requested for {0}. Current load progress: {1}", preloadedScene.scenePath, preloadedScene.loadOp.progress);
+				}
 			}
-			else
+			else if (this.menuToLoadQueue.Count > 0)
 			{
-				Debug.LogErrorFormat("Tried to pre-load a solo scene: {0}", toLoad.def);
+				MenuSceneToLoad menuToLoad = this.menuToLoadQueue.Dequeue();
+				if (menuToLoad.def.type == MenuType.Root || menuToLoad.def.type == MenuType.Overlay || menuToLoad.def.type == MenuType.OpaqueOverlay)
+				{
+					PreloadedScene preloadedScene =
+
+					this.FindOrLoadMenuScene(menuToLoad.def, menuToLoad.preloadRequesterScenePath);
+
+					Debug.LogFormat("Preload requested for {0}. Current load progress: {1}", preloadedScene.scenePath, preloadedScene.loadOp.progress);
+				}
+				else
+				{
+					Debug.LogErrorFormat("Tried to pre-load an menu type that can't be pre-loaded: {0}", menuToLoad.def);
+				}
 			}
 
 			yield return 0;
@@ -148,7 +213,7 @@ public class Nav : MonoBehaviour
 		this.processingQueue = false;
 	}
 
-	IEnumerator GoToCoroutine(MenuData def, MenuData parentMenuDef)
+	IEnumerator GoToCoroutine(MenuData def, string requesterScenePath)
 	{
 		while (this.processingQueue)
 		{
@@ -158,20 +223,12 @@ public class Nav : MonoBehaviour
 		MenuData resolvedDef = null;
 		if (def.type == MenuType.Back)
 		{
-			if (this.popupStack.Count > 0)
+			VisibleMenu newTopPopup = PopTopPopup();
+			if (newTopPopup != null)
 			{
-				// Deactivate the current popup
-				LoadedScene currentPopup = this.popupStack.Pop();
-				SetRootObjectsActive(currentPopup.scene, false);
-
-				// Select prev popup
-				if (this.popupStack.Count > 0)
-				{
-					LoadedScene prevPopup = this.popupStack.Peek();
-					resolvedDef = prevPopup.def;
-				}
+				resolvedDef = newTopPopup.def;
 			}
-			if (resolvedDef == null)
+			else
 			{
 				if (this.breadcrumbs.Count > 0)
 				{
@@ -179,20 +236,12 @@ public class Nav : MonoBehaviour
 				}
 			}
 		}
-		else if (def.type == MenuType.Close)
+		else if (def.type == MenuType.ClosePopup)
 		{
-			if (this.popupStack.Count > 0)
+			VisibleMenu newTopPopup = PopTopPopup();
+			if (newTopPopup != null)
 			{
-				// Deactivate the current popup
-				LoadedScene currentPopup = this.popupStack.Pop();
-				SetRootObjectsActive(currentPopup.scene, false);
-
-				// Select prev popup
-				if (this.popupStack.Count > 0)
-				{
-					LoadedScene prevPopup = this.popupStack.Peek();
-					resolvedDef = prevPopup.def;
-				}
+				resolvedDef = newTopPopup.def;
 			}
 		}
 		else
@@ -205,109 +254,241 @@ public class Nav : MonoBehaviour
 			yield break;
 		}
 
-		LoadedScene loadedScene = this.FindLoadedScene(resolvedDef);
-		if (loadedScene == null)
+		// Clear the popups before switching to root menus
+		if (resolvedDef.type == MenuType.Boot || resolvedDef.type == MenuType.Root)
 		{
-			LoadedScene parentScene = this.FindLoadedScene(parentMenuDef) ?? this.nextActiveScene ?? this.activeScene;
-
-			AsyncOperation asyncLoad = this.LoadScene(resolvedDef);
-
-			loadedScene = new LoadedScene()
+			while (this.popupStack.Count > 0)
 			{
-				def = resolvedDef,
-				parentScene = parentScene,
+				this.PopTopPopup();
+			}
+		}
+
+		// Show the environment scene
+		{
+			VisibleEnvScene visibleEnvScene = this.FindOrMakeVisibleEnvScene(resolvedDef.envScene, requesterScenePath);
+			if (visibleEnvScene != null)
+			{
+				PreloadedScene preloadedScene = visibleEnvScene.loadedScene;
+
+				if (preloadedScene.loadOp != null)
+				{
+					if (!preloadedScene.loadOp.isDone)
+					{
+						preloadedScene.loadOp.allowSceneActivation = true;
+						yield return preloadedScene.loadOp;
+					}
+
+					this.visibleEnvScenes.Add(visibleEnvScene);
+
+					{
+						Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
+
+						SetRootObjectsActive(scene, true);
+					}
+				}
+				else
+				{
+					Debug.LogErrorFormat("Failed to load scene {0} (going {1})", resolvedDef.envScene, def.name);
+				}
+			}
+			else
+			{
+				Debug.LogErrorFormat("Failed to make the scene at {0} visible", resolvedDef.envScene);
+			}
+		}
+
+		// Show the menu scene
+		{
+			VisibleMenu visibleMenu = this.FindOrMakeVisibleMenu(resolvedDef, requesterScenePath);
+			if (visibleMenu != null)
+			{
+				PreloadedScene preloadedScene = visibleMenu.loadedScene;
+
+				if (preloadedScene.loadOp != null)
+				{
+					this.nextActiveMenu = visibleMenu;
+
+					if (!preloadedScene.loadOp.isDone)
+					{
+						preloadedScene.loadOp.allowSceneActivation = true;
+						yield return preloadedScene.loadOp;
+					}
+
+					this.activeMenu = visibleMenu;
+					this.nextActiveMenu = null;
+
+					this.popupStack.Add(visibleMenu);
+
+					{
+						Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
+						SceneManager.SetActiveScene(scene);
+
+						SetRootObjectsActive(scene, true);
+					}
+				}
+				else
+				{
+					Debug.LogErrorFormat("Failed to load menu scene {0} (going {1})", resolvedDef.menuScene, def.name);
+				}
+			}
+			else
+			{
+
+			}
+		}
+	}
+
+	VisibleEnvScene FindOrMakeVisibleEnvScene(SceneData def, string requesterScenePath)
+	{
+		VisibleEnvScene visible = null;
+		for (int i = 0; i < this.visibleEnvScenes.Count; ++i)
+		{
+			if (this.visibleEnvScenes[i].def == def)
+			{
+				visible = this.visibleEnvScenes[i];
+				break;
+			}
+		}
+		if (visible == null)
+		{
+			visible = new VisibleEnvScene()
+			{
+				def = def,
+				loadedScene = this.FindOrLoadEnvScene(def, requesterScenePath)
+			};
+		}
+		return visible;
+	}
+
+	VisibleMenu FindOrMakeVisibleMenu(MenuData def, string requesterScenePath)
+	{
+		VisibleMenu visible = null;
+		for (int i = 0; i < this.popupStack.Count; ++i)
+		{
+			if (this.popupStack[i].def == def)
+			{
+				visible = this.popupStack[i];
+				break;
+			}
+		}
+		if (visible == null)
+		{
+			visible = new VisibleMenu()
+			{
+				def = def,
+				loadedScene = this.FindOrLoadMenuScene(def, requesterScenePath)
+			};
+		}
+		return visible;
+	}
+
+	PreloadedScene FindOrLoadEnvScene(SceneData def, string requesterScenePath)
+	{
+		PreloadedScene preloadedScene = this.FindLoadedScene(def.scene);
+		if (preloadedScene == null)
+		{
+			AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(def.scene, LoadSceneMode.Additive);
+			preloadedScene = new PreloadedScene()
+			{
+				scenePath = def.scene,
+				preloadRequesterScenePaths = new List<string>(),
 				loadOp = asyncLoad
 			};
-			this.loadedScenes.Add(loadedScene);
+			this.preloadedScenes.Add(preloadedScene);
 		}
-
-		if (loadedScene.loadOp != null)
-		{
-			this.nextActiveScene = loadedScene;
-
-			if (!loadedScene.loadOp.isDone)
-			{
-				loadedScene.loadOp.allowSceneActivation = true;
-				yield return loadedScene.loadOp;
-			}
-
-			this.activeScene = loadedScene;
-			this.nextActiveScene = null;
-
-			if (resolvedDef.type == MenuType.Overlay || resolvedDef.type == MenuType.FullscreenOverlay)
-			{
-				this.popupStack.Push(loadedScene);
-			}
-
-			{
-				Scene scene = SceneManager.GetSceneByPath(loadedScene.def.scene);
-				SceneManager.SetActiveScene(scene);
-
-				SetRootObjectsActive(scene, true);
-			}
-		}
-		else
-		{
-			Debug.LogErrorFormat("Failed to load menu scene {0} (going {1})", resolvedDef.scene, def.name);
-		}
+		preloadedScene.AddRequester(requesterScenePath);
+		return preloadedScene;
 	}
 
-	IEnumerator UnloadCoroutine(MenuData def)
+	PreloadedScene FindOrLoadMenuScene(MenuData def, string requesterScenePath)
 	{
-		LoadedScene loadedScene = this.FindLoadedScene(def);
-		AsyncOperation asyncUnload;
-		if (loadedScene != null && loadedScene.scene.IsValid())
+		PreloadedScene preloadedScene = this.FindLoadedScene(def.menuScene);
+		if (preloadedScene == null)
 		{
-			asyncUnload = SceneManager.UnloadSceneAsync(loadedScene.scene);
+			AsyncOperation asyncLoad = this.LoadMenu(def);
+			preloadedScene = new PreloadedScene()
+			{
+				scenePath = def.menuScene,
+				preloadRequesterScenePaths = new List<string>(),
+				loadOp = asyncLoad
+			};
+			this.preloadedScenes.Add(preloadedScene);
 		}
-		else
-		{
-			asyncUnload = SceneManager.UnloadSceneAsync(def.scene);
-		}
-
-		yield return asyncUnload;
+		preloadedScene.AddRequester(requesterScenePath);
+		return preloadedScene;
 	}
 
-	LoadedScene FindLoadedScene(MenuData def)
+	VisibleMenu PopTopPopup()
 	{
-		if (def == null)
+		VisibleMenu newTopPopup = null;
+		if (this.popupStack.Count > 0)
+		{
+			// Deactivate the current popup
+			VisibleMenu currentPopup = this.popupStack[this.popupStack.Count-1];
+			this.popupStack.RemoveAt(this.popupStack.Count-1);
+
+			PreloadedScene preloadedScene = currentPopup.loadedScene;
+			if (preloadedScene != null)
+			{
+				SetRootObjectsActive(preloadedScene.scene, false);
+				OnSceneHidden(preloadedScene);
+			}
+			else
+			{
+				Debug.LogErrorFormat("Visible menu {0} has no loaded scene", currentPopup.def);
+			}
+
+			// Select prev popup
+			if (this.popupStack.Count > 0)
+			{
+				newTopPopup = this.popupStack[this.popupStack.Count-1];
+
+				this.activeMenu = newTopPopup;
+			}
+		}
+		return newTopPopup;
+	}
+
+	PreloadedScene FindLoadedScene(string scenePath)
+	{
+		if (string.IsNullOrEmpty(scenePath))
 		{
 			return null;
 		}
-		LoadedScene result = null;
-		for (int i = 0; i < this.loadedScenes.Count; ++i)
+		PreloadedScene result = null;
+		for (int i = 0; i < this.preloadedScenes.Count; ++i)
 		{
-			if (this.loadedScenes[i].def == def)
+			if (this.preloadedScenes[i].scenePath == scenePath)
 			{
-				result = this.loadedScenes[i];
+				result = this.preloadedScenes[i];
 				break;
 			}
 		}
 		return result;
 	}
 
-	AsyncOperation LoadScene(MenuData def)
+	AsyncOperation LoadMenu(MenuData def)
 	{
 		AsyncOperation asyncLoad;
-		if (def.type == MenuType.Solo)
+		if (def.type == MenuType.Boot)
 		{
-			asyncLoad = SceneManager.LoadSceneAsync(def.scene, LoadSceneMode.Single);
+			asyncLoad = SceneManager.LoadSceneAsync(def.menuScene, LoadSceneMode.Single);
 		}
 		else
 		{
-			asyncLoad = SceneManager.LoadSceneAsync(def.scene, LoadSceneMode.Additive);
+			asyncLoad = SceneManager.LoadSceneAsync(def.menuScene, LoadSceneMode.Additive);
 		}
 		return asyncLoad;
 	}
 
 	void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
 	{
-		for (int i = 0; i < this.loadedScenes.Count; ++i)
+		for (int i = 0; i < this.preloadedScenes.Count; ++i)
 		{
-			LoadedScene loadedScene = this.loadedScenes[i];
-			if (loadedScene.def.scene == scene.path)
+			PreloadedScene preloadedScene = this.preloadedScenes[i];
+			if (preloadedScene.scenePath == scene.path)
 			{
-				loadedScene.scene = scene;
+				preloadedScene.scene = scene;
 				break;
 			}
 		}
@@ -315,23 +496,58 @@ public class Nav : MonoBehaviour
 
 	void HandleSceneUnloaded(Scene scene)
 	{
-		for (int i = this.loadedScenes.Count-1; i >= 0; --i)
+		for (int i = this.preloadedScenes.Count-1; i >= 0; --i)
 		{
-			LoadedScene loadedScene = this.loadedScenes[i];
+			PreloadedScene loadedScene = this.preloadedScenes[i];
 			if (loadedScene.scene == scene)
 			{
-				this.loadedScenes.RemoveAt(i);
+				this.preloadedScenes.RemoveAt(i);
+				OnSceneHidden(loadedScene);
 			}
-			else if (loadedScene.parentScene != null && loadedScene.parentScene.scene.path == scene.path)
-			{
-				// This is a scene that was preloaded for the scene that just got unloaded
+		}
+	}
 
-				// Check that the given scene isn't active (meaning it is only pre-loaded)
-				if (loadedScene != (this.nextActiveScene ?? this.activeScene)
-					&& !this.popupStack.Contains(loadedScene))
+	bool IsVisible(PreloadedScene preloadedScene)
+	{
+		VisibleMenu activeMenu = this.nextActiveMenu ?? this.activeMenu;
+		if (activeMenu != null && activeMenu.loadedScene == preloadedScene)
+		{
+			return true;
+		}
+		for (int popupIndex = 0; popupIndex < this.popupStack.Count; ++popupIndex)
+		{
+			if (this.popupStack[popupIndex].loadedScene == preloadedScene)
+			{
+				return true;
+			}
+		}
+		for (int envSceneIndex = 0; envSceneIndex < this.visibleEnvScenes.Count; ++envSceneIndex)
+		{
+			if (this.visibleEnvScenes[envSceneIndex].loadedScene == preloadedScene)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void OnSceneHidden(PreloadedScene hiddenScene)
+	{
+		for (int i = this.preloadedScenes.Count-1; i >= 0; --i)
+		{
+			PreloadedScene otherPreloadedScene = this.preloadedScenes[i];
+			if (otherPreloadedScene.preloadRequesterScenePaths.Remove(hiddenScene.scenePath)
+				&& otherPreloadedScene.preloadRequesterScenePaths.Count == 0)
+			{
+				// This is a scene that was preloaded for the scene that just got hidden,
+				//  and now has no more visible requesters
+
+				// Check that the given scene isn't visible
+				if (this.IsVisible(otherPreloadedScene))
 				{
-					SceneManager.UnloadSceneAsync(loadedScene.scene);
-					this.loadedScenes.RemoveAt(i);
+					this.preloadedScenes.RemoveAt(i);
+					SceneManager.UnloadSceneAsync(otherPreloadedScene.scene);
 				}
 			}
 		}

@@ -6,19 +6,29 @@ namespace NotABear
 
 	public enum MenuType
 	{
-		Solo,
+		Boot,
+		Root,
 		Overlay,
-		FullscreenOverlay,
+		OpaqueOverlay,
 		Back,
-		Close
+		ClosePopup
 	}
 
-	[CreateAssetMenu(fileName="Menu.asset", menuName="Cloverview/System/Menu")]
+	[CreateAssetMenu(fileName="Menu.asset", menuName="Cloverview/System/Menu Definition")]
 	public class MenuData : ScriptableObject
 	{
-		public SceneField scene;
+		public SceneField menuScene;
+		public SceneData envScene;
 		public MenuType type;
-		public bool allowPreload = true;
+		public bool allowPreload;
+
+		public void Reset()
+		{
+			this.menuScene = new SceneField() { scenePath = "" };
+
+			this.type = MenuType.Overlay;
+			this.allowPreload = true;
+		}
 	}
 
 }
