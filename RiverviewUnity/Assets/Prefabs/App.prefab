@@ -52,7 +52,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2429dc504f046774d89279b5e4ab0623, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraPrefab: {fileID: 1128945569395054, guid: 11fc8da49f1c51644a4336889aac2551,
+  menuCameraPrefab: {fileID: 1128945569395054, guid: 11fc8da49f1c51644a4336889aac2551,
+    type: 2}
+  envCameraPrefab: {fileID: 1826682069673036, guid: 99d25c842e425f44a9a64ade14828a65,
     type: 2}
   nav: {fileID: 114650394401774564}
   plannerData: {fileID: 11400000, guid: 2eea9fa73fb9b4c4f9e277940ca300d7, type: 2}

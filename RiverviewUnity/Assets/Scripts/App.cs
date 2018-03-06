@@ -10,7 +10,10 @@ namespace NotABear
 public class App : MonoBehaviour
 {
 	[SerializeField]
-	private GameObject cameraPrefab;
+	private GameObject menuCameraPrefab;
+
+	[SerializeField]
+	private SceneField envCameraScene;
 
 	[SerializeField]
 	private Nav nav;
@@ -97,7 +100,7 @@ public class App : MonoBehaviour
 
 		instance = this;
 
-		Debug.Assert(this.cameraPrefab != null);
+		Debug.Assert(this.menuCameraPrefab != null);
 		Debug.Assert(this.nav != null);
 
 		this.dataItemConverter = new DataItemConverter();
@@ -132,7 +135,7 @@ public class App : MonoBehaviour
 		}
 		this.saveData.pc.CalculateStatus();
 
-		Object.Instantiate(this.cameraPrefab, this.transform);
+		Object.Instantiate(this.menuCameraPrefab, this.transform);
 	}
 
 	public void Start()
