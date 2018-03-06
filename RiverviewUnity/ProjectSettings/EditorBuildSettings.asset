@@ -14,3 +14,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ui_character_status.unity
     guid: e26cce5fd84dfc644b4902a6a3228688
+  - enabled: 1
+    path: Assets/Scenes/bedroom.unity
+    guid: 36a598f95515d3b46baec471c43c752b
