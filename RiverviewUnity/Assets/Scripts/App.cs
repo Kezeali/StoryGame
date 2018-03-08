@@ -13,7 +13,7 @@ public class App : MonoBehaviour
 	private GameObject menuCameraPrefab;
 
 	[SerializeField]
-	private SceneField envCameraScene;
+	private GameObject envCameraPrefab;
 
 	[SerializeField]
 	private Nav nav;
@@ -22,7 +22,7 @@ public class App : MonoBehaviour
 	private PlannerData plannerData;
 
 	[SerializeField]
-	private SaveData defaultSave;
+	private DefaultSaveData defaultSaveData;
 
 	DataItemConverter dataItemConverter;
 
@@ -101,7 +101,9 @@ public class App : MonoBehaviour
 		instance = this;
 
 		Debug.Assert(this.menuCameraPrefab != null);
+		Debug.Assert(this.envCameraPrefab != null);
 		Debug.Assert(this.nav != null);
+		Debug.Assert(this.defaultSaveData != null);
 
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
@@ -127,15 +129,16 @@ public class App : MonoBehaviour
 		}
 		if (this.saveData == null)
 		{
-			this.saveData = this.defaultSave;
+			this.saveData = this.defaultSaveData.saveData;
 		}
 		if (this.saveData.pc == null)
 		{
-			this.saveData.pc = this.defaultSave.pc;
+			this.saveData.pc = this.defaultSaveData.saveData.pc;
 		}
 		this.saveData.pc.CalculateStatus();
 
 		Object.Instantiate(this.menuCameraPrefab, this.transform);
+		Object.Instantiate(this.envCameraPrefab, this.transform);
 	}
 
 	public void Start()

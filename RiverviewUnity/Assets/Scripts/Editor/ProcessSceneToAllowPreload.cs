@@ -25,10 +25,10 @@ class ProcessSceneToAllowPreload : IProcessScene
 		}
 		for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
 		{
-			MenuNavigation[] navigationComponents = roots[rootObjectIndex].GetComponentsInChildren<MenuNavigation>();
+			INavigator[] navigationComponents = roots[rootObjectIndex].GetComponentsInChildren<INavigator>();
 			for (int comIndex = 0; comIndex < navigationComponents.Length; ++comIndex)
 			{
-				navigationComponents[comIndex].parentScene = scene.path;
+				navigationComponents[comIndex].SetParentScene(scene.path);
 			}
 		}
 	}

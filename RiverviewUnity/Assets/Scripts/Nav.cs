@@ -9,6 +9,10 @@ namespace NotABear
 
 public class Nav : MonoBehaviour
 {
+	[SerializeField]
+	[Tooltip("A standin menu to use for whatever scene is started from when playing in editor")]
+	private MenuData bootMenuForPlayInEditor;
+
 	private class MenuSceneToLoad
 	{
 		public MenuData def;
@@ -65,10 +69,36 @@ public class Nav : MonoBehaviour
 
 	List<VisibleEnvScene> visibleEnvScenes = new List<VisibleEnvScene>();
 
-	public void Awake()
+	public void OnEnable()
 	{
 		SceneManager.sceneLoaded += HandleSceneLoaded;
 		SceneManager.sceneUnloaded += HandleSceneUnloaded;
+
+	#if UNITY_EDITOR
+		// Intialise the current scene as a menu
+		{
+			Scene bootScene = SceneManager.GetActiveScene();
+			if (bootScene.buildIndex != 0)
+			{
+				var bootLoadedScene = new PreloadedScene()
+				{
+					scenePath = bootScene.path,
+					preloadRequesterScenePaths = new List<string>(),
+					scene = bootScene
+				};
+				var bootMenu = new VisibleMenu()
+				{
+					def = this.bootMenuForPlayInEditor,
+					loadedScene = bootLoadedScene
+				};
+				this.nextActiveMenu = null;
+				this.activeMenu = bootMenu;
+				this.popupStack.Add(bootMenu);
+
+				SetRootObjectsActive(bootScene, true);
+			}
+		}
+	#endif
 	}
 
 	public void OnDestroy()
@@ -255,7 +285,7 @@ public class Nav : MonoBehaviour
 		}
 
 		// Clear the popups before switching to root menus
-		if (resolvedDef.type == MenuType.Boot || resolvedDef.type == MenuType.Root)
+		if (resolvedDef.type == MenuType.Start || resolvedDef.type == MenuType.Root)
 		{
 			while (this.popupStack.Count > 0)
 			{
@@ -271,25 +301,30 @@ public class Nav : MonoBehaviour
 			{
 				PreloadedScene preloadedScene = visibleEnvScene.loadedScene;
 
-				if (preloadedScene.loadOp != null)
+				if (preloadedScene.loadOp != null
+					|| (preloadedScene.scene.IsValid() && preloadedScene.scene.isLoaded))
 				{
-					if (!preloadedScene.loadOp.isDone)
+					if (preloadedScene.loadOp != null && !preloadedScene.loadOp.isDone)
 					{
 						preloadedScene.loadOp.allowSceneActivation = true;
 						yield return preloadedScene.loadOp;
 					}
 
-					this.visibleEnvScenes.Add(visibleEnvScene);
-
+					Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
+					if (scene.IsValid() && scene.isLoaded)
 					{
-						Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
+						this.visibleEnvScenes.Add(visibleEnvScene);
 
 						SetRootObjectsActive(scene, true);
+					}
+					else
+					{
+						Debug.LogErrorFormat("Failed to load env scene {0} (menu: {1})", resolvedDef.envScene, resolvedDef.name);
 					}
 				}
 				else
 				{
-					Debug.LogErrorFormat("Failed to load scene {0} (going {1})", resolvedDef.envScene, def.name);
+					Debug.LogErrorFormat("Failed to load env scene {0} (menu {1})", resolvedDef.envScene, resolvedDef.name);
 				}
 			}
 			else
@@ -305,31 +340,38 @@ public class Nav : MonoBehaviour
 			{
 				PreloadedScene preloadedScene = visibleMenu.loadedScene;
 
-				if (preloadedScene.loadOp != null)
+				if (preloadedScene.loadOp != null
+					|| (preloadedScene.scene.IsValid() && preloadedScene.scene.isLoaded))
 				{
 					this.nextActiveMenu = visibleMenu;
 
-					if (!preloadedScene.loadOp.isDone)
+					if (preloadedScene.loadOp != null && !preloadedScene.loadOp.isDone)
 					{
 						preloadedScene.loadOp.allowSceneActivation = true;
 						yield return preloadedScene.loadOp;
 					}
 
-					this.activeMenu = visibleMenu;
 					this.nextActiveMenu = null;
 
-					this.popupStack.Add(visibleMenu);
-
+					Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
+					if (scene.IsValid() && scene.isLoaded)
 					{
-						Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
+						this.activeMenu = visibleMenu;
+
+						this.popupStack.Add(visibleMenu);
+
 						SceneManager.SetActiveScene(scene);
 
 						SetRootObjectsActive(scene, true);
 					}
+					else
+					{
+						Debug.LogErrorFormat("Failed to load menu scene {0} (menu: {1})", resolvedDef.menuScene, resolvedDef.name);
+					}
 				}
 				else
 				{
-					Debug.LogErrorFormat("Failed to load menu scene {0} (going {1})", resolvedDef.menuScene, def.name);
+					Debug.LogErrorFormat("Failed to load menu scene {0} (menu: {1})", resolvedDef.menuScene, resolvedDef.name);
 				}
 			}
 			else
@@ -471,7 +513,7 @@ public class Nav : MonoBehaviour
 	AsyncOperation LoadMenu(MenuData def)
 	{
 		AsyncOperation asyncLoad;
-		if (def.type == MenuType.Boot)
+		if (def.type == MenuType.Start)
 		{
 			asyncLoad = SceneManager.LoadSceneAsync(def.menuScene, LoadSceneMode.Single);
 		}
@@ -562,6 +604,11 @@ public class Nav : MonoBehaviour
 			roots[rootObjectIndex].SetActive(active);
 		}
 	}
+}
+
+public interface INavigator
+{
+	void SetParentScene(string parentScene);
 }
 
 }

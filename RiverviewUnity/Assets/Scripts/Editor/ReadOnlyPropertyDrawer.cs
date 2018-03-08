@@ -8,7 +8,7 @@ public class ReadOnlyAttributeDrawer : PropertyDrawer
 	{
 		bool wasEnabled = GUI.enabled;
 		GUI.enabled = false;
-		base.OnGUI(rect, prop, label);
+		EditorGUI.PropertyField(rect, prop, label);
 		GUI.enabled = wasEnabled;
 	}
 }
