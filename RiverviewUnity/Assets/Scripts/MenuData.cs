@@ -6,7 +6,7 @@ namespace NotABear
 
 	public enum MenuType
 	{
-		Boot,
+		Start,
 		Root,
 		Overlay,
 		OpaqueOverlay,

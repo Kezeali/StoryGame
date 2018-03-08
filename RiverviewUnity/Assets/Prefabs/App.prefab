@@ -103,8 +103,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   menuCameraPrefab: {fileID: 1128945569395054, guid: 11fc8da49f1c51644a4336889aac2551,
     type: 2}
-  envCameraScene:
-    scenePath: 
+  envCameraPrefab: {fileID: 1826682069673036, guid: 99d25c842e425f44a9a64ade14828a65,
+    type: 2}
   nav: {fileID: 114650394401774564}
   plannerData: {fileID: 11400000, guid: 2eea9fa73fb9b4c4f9e277940ca300d7, type: 2}
   defaultSave:
@@ -120,6 +120,7 @@ MonoBehaviour:
         value: 10
       - definition: {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
         value: 0
+  defaultSaveData: {fileID: 11400000, guid: 38951aae88785cf4e864ff802aeb357b, type: 2}
 --- !u!114 &114650394401774564
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -131,6 +132,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddaaf3595e198a34d979f60b2c74eb20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bootMenuForPlayInEditor: {fileID: 11400000, guid: f1d8c551a3c69df4b8bc44d9c82d92e6,
+    type: 2}
 --- !u!114 &114875822803327668
 MonoBehaviour:
   m_ObjectHideFlags: 1
