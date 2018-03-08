@@ -250,12 +250,14 @@ public class Nav : MonoBehaviour
 			yield return 0;
 		}
 
+		VisibleMenu defaultVisibleMenu = null;
 		MenuData resolvedDef = null;
 		if (def.type == MenuType.Back)
 		{
 			VisibleMenu newTopPopup = PopTopPopup();
 			if (newTopPopup != null)
 			{
+				defaultVisibleMenu = newTopPopup;
 				resolvedDef = newTopPopup.def;
 			}
 			else
@@ -271,6 +273,7 @@ public class Nav : MonoBehaviour
 			VisibleMenu newTopPopup = PopTopPopup();
 			if (newTopPopup != null)
 			{
+				defaultVisibleMenu = newTopPopup;
 				resolvedDef = newTopPopup.def;
 			}
 		}
@@ -335,7 +338,7 @@ public class Nav : MonoBehaviour
 
 		// Show the menu scene
 		{
-			VisibleMenu visibleMenu = this.FindOrMakeVisibleMenu(resolvedDef, requesterScenePath);
+			VisibleMenu visibleMenu = defaultVisibleMenu ?? this.FindOrMakeVisibleMenu(resolvedDef, requesterScenePath);
 			if (visibleMenu != null)
 			{
 				PreloadedScene preloadedScene = visibleMenu.loadedScene;

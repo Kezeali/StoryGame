@@ -12,23 +12,26 @@ class ProcessSceneForUniqueAppObject : IProcessScene
 
 	public void OnProcessScene(Scene scene)
 	{
-		Debug.Log("ProcessSceneForUniqueAppObject.OnProcessScene " + scene.path);
-
-		if (scene.buildIndex != 0)
+		if (!Application.isPlaying)
 		{
-			GameObject[] roots = scene.GetRootGameObjects();
-			for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
+			Debug.Log("ProcessSceneForUniqueAppObject.OnProcessScene " + scene.path);
+
+			if (scene.buildIndex != 0)
 			{
-				App app = roots[rootObjectIndex].GetComponent<App>();
-				if (app != null)
+				GameObject[] roots = scene.GetRootGameObjects();
+				for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
 				{
-					Object.DestroyImmediate(roots[rootObjectIndex]);
+					App app = roots[rootObjectIndex].GetComponent<App>();
+					if (app != null)
+					{
+						Object.DestroyImmediate(roots[rootObjectIndex]);
+					}
 				}
 			}
-		}
-		else
-		{
-			Debug.Log("ProcessSceneForUniqueAppObject: Startup scene, skipping.");
+			else
+			{
+				Debug.Log("ProcessSceneForUniqueAppObject: Startup scene, skipping.");
+			}
 		}
 	}
 }
