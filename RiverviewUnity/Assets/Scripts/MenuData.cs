@@ -14,6 +14,14 @@ namespace NotABear
 		ClosePopup
 	}
 
+	public static class MenuTypeUtils
+	{
+		public static bool IsPreloadable(this MenuType type)
+		{
+			return type == MenuType.Root || type == MenuType.Overlay || type == MenuType.OpaqueOverlay;
+		}
+	}
+
 	[CreateAssetMenu(fileName="Menu.asset", menuName="Cloverview/System/Menu Definition")]
 	public class MenuData : ScriptableObject
 	{

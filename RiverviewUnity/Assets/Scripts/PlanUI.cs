@@ -17,6 +17,9 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 	[SerializeField]
 	private PlanOptionUI defaultFilledSlotPrefab;
 
+	[SerializeField]
+	private PlanExecutor planExecutor;
+
 	private Plan plan;
 	private PlanSectionUI[] uiSections;
 	private List<GameObject> optionUIs = new List<GameObject>();
@@ -28,7 +31,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>();
 		System.Array.Sort(uiSections, PlanSectionUI.Compare);
 
-		App.Register(this);
+		App.Register<SaveData>(this);
 	}
 
 	public void Initialise(SaveData loadedData)
