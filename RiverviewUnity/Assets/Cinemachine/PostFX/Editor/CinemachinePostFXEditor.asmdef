@@ -1,0 +1,14 @@
+{
+    "name": "CinemachinePostFXEditor",
+    "references": [
+        "CinemachinePostFXRuntime",
+        "CinemachineRuntime",
+        "CinemachineEditor",
+        "com.unity.postprocessing.Runtime",
+        "com.unity.postprocessing.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

@@ -1,0 +1,10 @@
+{
+    "name": "CinemachineEditor",
+    "references": [
+        "CinemachineRuntime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
