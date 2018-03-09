@@ -1,0 +1,10 @@
+{
+    "name": "Live2DCubismEditor",
+    "references": [
+        "Live2DCubismRuntime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

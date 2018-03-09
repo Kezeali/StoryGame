@@ -117,7 +117,7 @@ namespace Cinemachine
         public VcamEvent m_CameraActivatedEvent = new VcamEvent();
 
         /// <summary>Support for opaque post-processing module</summary>
-        internal Component PostProcessingComponent { get; set; }
+        public Component PostProcessingComponent { get; set; }
 
         /// <summary>
         /// Because the PostProcessing package is not guaranteed to be present,
@@ -126,7 +126,7 @@ namespace Cinemachine
         /// The intention is that the callback will make the right calls to the PostProcessing module.
         /// Cinemachine provides the CinemachinePostFX behaviour that makes use of this delegate.
         /// </summary>
-        internal static BrainEvent sPostProcessingHandler = new BrainEvent();
+        public static BrainEvent sPostProcessingHandler = new BrainEvent();
 
         /// <summary>
         /// API for the Unity Editor.
@@ -228,7 +228,7 @@ namespace Cinemachine
         /// time-based calculations to be included, -1 otherwise</param>
         /// <returns>The oiverride ID.  Don't forget to call ReleaseCameraOverride
         /// after all overriding is finished, to free the OverideStack resources.</returns>
-        internal int SetCameraOverride(
+        public int SetCameraOverride(
             int overrideId,
             ICinemachineCamera camA, ICinemachineCamera camB,
             float weightB, float deltaTime)
@@ -301,7 +301,7 @@ namespace Cinemachine
         /// </summary>
         /// <param name="overrideId">The ID to released.  This is the value that
         /// was returned by SetCameraOverride</param>
-        internal void ReleaseCameraOverride(int overrideId)
+        public void ReleaseCameraOverride(int overrideId)
         {
             int count = mOverrideStack.Count;
             for (int i = 0; i < count; ++i)
