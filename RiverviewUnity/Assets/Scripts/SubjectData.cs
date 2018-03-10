@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NotABear
+namespace Cloverview
 {
 
 	[CreateAssetMenu(fileName="Subject.asset", menuName="Cloverview/Subject Definition")]

@@ -1,7 +1,13 @@
 using UnityEngine;
 
-namespace NotABear
+namespace Cloverview
 {
+
+	public enum StatVisibility
+	{
+		Nowhere = 0,
+		StatsPage = 1 << 0,
+	}
 
 	[CreateAssetMenu(fileName="Stat.asset", menuName="Cloverview/Character Stat Definition")]
 	public class CharacterStatDefinition : ScriptableObject, IDataItem
@@ -11,6 +17,8 @@ namespace NotABear
 		public float baseValue;
 		public float minValue;
 		public float maxValue;
+		[EnumFlag]
+		public StatVisibility visibility;
 
 		public void Reset()
 		{
@@ -19,6 +27,7 @@ namespace NotABear
 			this.baseValue = 1;
 			this.minValue = 1;
 			this.maxValue = 100;
+			this.visibility = StatVisibility.StatsPage;
 		}
 	}
 

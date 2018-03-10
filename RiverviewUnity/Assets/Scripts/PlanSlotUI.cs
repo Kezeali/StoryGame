@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 using Button = UnityEngine.UI.Button;
 
-namespace NotABear
+namespace Cloverview
 {
 
 [System.Flags]

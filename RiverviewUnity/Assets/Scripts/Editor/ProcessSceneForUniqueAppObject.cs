@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditor.Build;
 
-namespace NotABear
+namespace Cloverview
 {
 
 class ProcessSceneForUniqueAppObject : IProcessScene

@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace NotABear
+namespace Cloverview
 {
     // Button that's meant to work with mouse or touch-based devices.
     [AddComponentMenu("Cloverview/UI/Button", 30)]
