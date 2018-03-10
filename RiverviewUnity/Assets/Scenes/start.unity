@@ -468,7 +468,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: NotABear.Clickable+ButtonClickedEvent, Assembly-CSharp, Version=0.0.0.0,
+    m_TypeName: Cloverview.Clickable+ButtonClickedEvent, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   preload: 1
   destination: {fileID: 11400000, guid: c4f7f7688b050c14485bbef3c139970c, type: 2}

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class CharacterStatUI : MonoBehaviour

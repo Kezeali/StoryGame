@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class Nav : MonoBehaviour
@@ -34,6 +34,7 @@ public class Nav : MonoBehaviour
 		public SceneData def;
 		public string preloadRequesterId;
 		public RequestOp operation;
+		public ActiveActivity activeActivity;
 	}
 
 	public class PreloadedScene
@@ -67,6 +68,8 @@ public class Nav : MonoBehaviour
 	public class VisibleEnvScene
 	{
 		public SceneData def;
+		public EnvSceneController controller;
+		public ActiveActivity activeActivity;
 		public PreloadedScene loadedScene;
 	}
 
@@ -187,17 +190,29 @@ public class Nav : MonoBehaviour
 
 		if (!this.processingGoToQueue)
 		{
-			this.StartCoroutine(this.ProcessQueueCoroutine());
+			this.StartCoroutine(this.ProcessGoToQueueCoroutine());
 		}
 	}
 
-	public void GoToActivity(PlanActivityData def, string requesterId)
+	public void GoToActivity(ActiveActivity activity, string requesterId)
 	{
-		// TODO: queue this
-		SceneData sceneDef = def.scene;
+		SceneData sceneDef = activity.def.scene;
 		if (sceneDef != null)
 		{
-			this.StartCoroutine(this.GoToEnvSceneCoroutine(sceneDef, requesterId));
+			var item = new EnvSceneToLoad()
+			{
+				def = sceneDef,
+				preloadRequesterId = requesterId,
+				operation = RequestOp.AddPreloadRequest,
+				activeActivity = activity
+			};
+
+			this.envSceneToGoToQueue.Enqueue(item);
+
+			if (!this.processingGoToQueue)
+			{
+				this.StartCoroutine(this.ProcessGoToQueueCoroutine());
+			}
 		}
 	}
 
@@ -392,7 +407,7 @@ public class Nav : MonoBehaviour
 
 		yield return 0;
 
-		while (this.menuToLoadQueue.Count > 0 || this.envSceneToLoadQueue.Count > 0)
+		while (this.menuToGoToQueue.Count > 0 || this.envSceneToGoToQueue.Count > 0)
 		{
 			// Only load menus if there are no more env scenes to load
 			if (this.envSceneToLoadQueue.Count > 0)
@@ -401,16 +416,60 @@ public class Nav : MonoBehaviour
 
 				if (envSceneRequest.def != null)
 				{
-					IEnumerator op = this.GoToEnvSceneCoroutine(envSceneRequest.def, envSceneRequest.preloadRequesterId);
-					while (op.MoveNext())
+					if (envSceneRequest.operation == RequestOp.AddPreloadRequest)
 					{
-						yield return 0;
+						IEnumerator op = this.GoToEnvSceneCoroutine(envSceneRequest.def, envSceneRequest.preloadRequesterId);
+						while (op.MoveNext())
+						{
+							yield return 0;
+						}
+						if (envSceneRequest.activeActivity != null)
+						{
+							// Provide a scene reference to the interested activity
+							VisibleEnvScene visibleScene = this.FindVisibleEnvScene(envSceneRequest.def);
+							if (visibleScene != null)
+							{
+								if (visibleScene.activeActivity != null)
+								{
+									visibleScene.activeActivity.envScene = null;
+								}
+								visibleScene.activeActivity = envSceneRequest.activeActivity;
+								visibleScene.controller.SetActivity(envSceneRequest.activeActivity);
+							}
+							// NOTE: is ok to be null
+							envSceneRequest.activeActivity.envScene = visibleScene;
+						}
+					}
+					else if (envSceneRequest.operation == RequestOp.RemovePreloadRequest)
+					{
+						PreloadedScene preloadedScene = this.FindLoadedScene(envSceneRequest.def.scene);
+						if (preloadedScene != null)
+						{
+							if (preloadedScene.preloadRequesterIds.Remove(envSceneRequest.preloadRequesterId))
+							{
+								UnloadUnreferencedScenes();
+							}
+						}
+						if (envSceneRequest.activeActivity != null)
+						{
+							// Provide a scene reference to the interested activity
+							VisibleEnvScene visibleScene = this.FindVisibleEnvScene(envSceneRequest.def);
+							if (visibleScene != null)
+							{
+								if (visibleScene.activeActivity == envSceneRequest.activeActivity)
+								{
+									visibleScene.controller.ClearActivity();
+									visibleScene.activeActivity = null;
+								}
+							}
+							envSceneRequest.activeActivity.envScene = null;
+						}
 					}
 				}
 			}
-			else if (this.menuToLoadQueue.Count > 0)
+			else if (this.menuToGoToQueue.Count > 0)
 			{
-				MenuSceneToLoad menuToLoad = this.menuToLoadQueue.Dequeue();
+				MenuSceneToLoad menuToLoad = this.menuToGoToQueue.Dequeue();
 
 				if (menuToLoad.def != null)
 				{
@@ -597,7 +656,7 @@ public class Nav : MonoBehaviour
 		}
 	}
 
-	VisibleEnvScene FindOrMakeVisibleEnvScene(SceneData def, string requesterId)
+	VisibleEnvScene FindVisibleEnvScene(SceneData def)
 	{
 		VisibleEnvScene visible = null;
 		for (int i = 0; i < this.visibleEnvScenes.Count; ++i)
@@ -608,6 +667,12 @@ public class Nav : MonoBehaviour
 				break;
 			}
 		}
+		return visible;
+	}
+
+	VisibleEnvScene FindOrMakeVisibleEnvScene(SceneData def, string requesterId)
+	{
+		VisibleEnvScene visible = this.FindVisibleEnvScene(def);
 		if (visible == null)
 		{
 			visible = new VisibleEnvScene()
@@ -791,11 +856,15 @@ public class Nav : MonoBehaviour
 		return false;
 	}
 
-	bool ShouldBeVisible(SceneData envScene)
+	bool ShouldBeVisible(VisibleEnvScene envScene)
 	{
+		if (envScene.activeActivity != null)
+		{
+			return true;
+		}
 		for (int popupIndex = 0; popupIndex < this.popupStack.Count; ++popupIndex)
 		{
-			if (this.popupStack[popupIndex].def.envScene == envScene)
+			if (this.popupStack[popupIndex].def.envScene == envScene.def)
 			{
 				return true;
 			}
@@ -826,7 +895,7 @@ public class Nav : MonoBehaviour
 		for (int i = this.visibleEnvScenes.Count-1; i >= 0; --i)
 		{
 			VisibleEnvScene visibleEnvScene = this.visibleEnvScenes[i];
-			if (!this.ShouldBeVisible(visibleEnvScene.def))
+			if (!this.ShouldBeVisible(visibleEnvScene))
 			{
 				PreloadedScene loadedScene = visibleEnvScene.loadedScene;
 				this.visibleEnvScenes.RemoveAt(i);

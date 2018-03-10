@@ -4,7 +4,7 @@ using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
-namespace NotABear
+namespace Cloverview
 {
 
 	public class DataItemConverter : IYamlTypeConverter

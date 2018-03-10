@@ -10,6 +10,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 99ba547067a6c544bb8461e1ad3b9003, type: 3}
   m_Name: OutdoorEducationSubject
-  m_EditorClassIdentifier: Assembly-CSharp:NotABear:SubjectData
+  m_EditorClassIdentifier: Assembly-CSharp:Cloverview:SubjectData
   title: Outdoor Education
   statBonuses: []

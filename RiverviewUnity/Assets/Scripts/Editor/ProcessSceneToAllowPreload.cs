@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using System.Collections.Generic;
 
-namespace NotABear
+namespace Cloverview
 {
 
 class ProcessSceneToAllowPreload : IProcessScene

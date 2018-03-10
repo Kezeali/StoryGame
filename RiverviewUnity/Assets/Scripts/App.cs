@@ -1,10 +1,10 @@
 using UnityEngine;
-using NotABear;
+using Cloverview;
 using System.Collections;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class App : MonoBehaviour

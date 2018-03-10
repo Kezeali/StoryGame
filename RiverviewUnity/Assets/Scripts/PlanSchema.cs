@@ -3,25 +3,26 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 	[System.Serializable]
-	public class Plan
+	public class PlanSchema
 	{
 		public string name;
 
-		public PlanSection[] sections = new PlanSection[0];
+		public PlanSchemaSection[] sections = new PlanSchemaSection[0];
 	}
 
 	// A section of the plan such as a day or week
 	[System.Serializable]
-	public class PlanSection
+	public class PlanSchemaSection
 	{
-		public PlanSlot[] slots = new PlanSlot[0];
+		int totalTimeUnits;
+		public PlanSchemaSlot[] slots = new PlanSchemaSlot[0];
 	}
 
 	[System.Serializable]
-	public class PlanSlot
+	public class PlanSchemaSlot
 	{
 		public int unitIndex;
+		public int unitLength;
 		public SlotType slotType;
-		public PlanOption selectedOption;
 	}
 }

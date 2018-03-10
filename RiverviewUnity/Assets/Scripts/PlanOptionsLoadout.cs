@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NotABear
+namespace Cloverview
 {
 	public class PlanOptionsLoadout
 	{

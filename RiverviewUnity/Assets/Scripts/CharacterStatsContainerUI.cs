@@ -1,8 +1,8 @@
 using UnityEngine;
-using NotABear;
+using Cloverview;
 using System.Collections.Generic;
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class CharacterStatsContainerUI : MonoBehaviour, IDataUser<SaveData>

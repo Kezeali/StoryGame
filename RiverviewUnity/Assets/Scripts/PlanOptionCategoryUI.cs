@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using NotABear;
+using Cloverview;
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class PlanOptionCategoryUI : MonoBehaviour

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class SequentialPlanSlotUI : PlanSlotUI

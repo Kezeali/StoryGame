@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace NotABear
+namespace Cloverview
 {
 
 	// Defines the progression of time for activities and stats
@@ -19,6 +19,28 @@ namespace NotABear
 		{
 			public List<Stat> stats;
 
+			static Stack<List<Stat>> statListPool = new Stack<List<Stat>>();
+			public static Status New()
+			{
+				var clone = new Status();
+				if (statListPool.Count > 0)
+				{
+					clone.stats = statListPool.Pop();
+				}
+				else
+				{
+					clone.stats = new List<Stat>();
+				}
+				return clone;
+			}
+
+			public void Recycle()
+			{
+				this.stats.Clear();
+				statListPool.Push(this.stats);
+				this.stats = null;
+			}
+
 			public Stat GetStat(CharacterStatDefinition statDef)
 			{
 				// Create a default stat in case there is no current value
@@ -31,6 +53,26 @@ namespace NotABear
 					if (stat.definition == statDef)
 					{
 						result = stat;
+						break;
+					}
+				}
+				return result;
+			}
+
+			// Used to retrieve & remove (as necessary) the relevant stat from the list to update it
+			public Stat GetAndRemoveStat(CharacterStatDefinition statDef)
+			{
+				// Create a default stat in case there is no current value
+				Stat result = default(Stat);
+				result.value = statDef.baseValue;
+								
+				for (int i = 0; i < this.stats.Count; ++i)
+				{
+					Stat stat = this.stats[i];
+					if (stat.definition == statDef)
+					{
+						result = stat;
+						this.stats.RemoveAt(i);
 						break;
 					}
 				}
@@ -82,23 +124,32 @@ namespace NotABear
 
 		public string name;
 		public List<ActiveBonus> activeBonuses;
+		public List<ActiveBonus> permanentBonuses;
 		public BaseStat[] baseStats;
 		[System.NonSerialized]
 		public Status status;
 
 		public void CalculateStatus()
 		{
-			this.status = CalculateStatus(this);
+			Status newStatus = CalculateStatus(this);
+			this.status.Recycle();
+			this.status = newStatus;
 		}
 
-		public void AddStatBonuses(StatBonusData[] bonuses, int timeSpent)
+		public static Status AddStatBonuses(Character character, StatBonusData[] bonuses, ITerm term, int timeSpent)
 		{
 			for (int i = 0; i < bonuses.Length; ++i)
 			{
-				this.activeBonuses.Add(CalculateBonus(bonuses[i], timeSpent));
+				var activeBonus = new ActiveBonus()
+				{
+					term = term,
+					beginTimeUnit = term.time
+				};
+				CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
+				character.activeBonuses.Add(activeBonus);
 			}
 
-			this.status = CalculateStatus(this);
+			return CalculateStatus(character);
 		}
 
 		public void ClearStatBonuses()
@@ -124,7 +175,9 @@ namespace NotABear
 			}
 			if (removed)
 			{
-				this.status = CalculateStatus(this);
+				Status newStatus = CalculateStatus(this);
+				this.status.Recycle();
+				this.status = newStatus;
 			}
 		}
 
@@ -145,24 +198,15 @@ namespace NotABear
 			return result;
 		}
 
-		public static ActiveBonus CalculateBonus(StatBonusData definition, int timeSpent)
+		public static void CalculateBonus(ref ActiveBonus activeBonus, StatBonusData definition, int timeSpent)
 		{
-			var activeBonus = new ActiveBonus()
-			{
-				value = definition.flatBonus + (definition.bonusPerTimeUnit * (float)timeSpent),
-				activePeriodTimeUnits = definition.activePeriodTimeUnits + Mathf.FloorToInt(definition.activePeriodExtensionPerTimeUnit * (float)timeSpent)
-			};
-			return activeBonus;
+			activeBonus.value = definition.flatBonus + (definition.bonusPerTimeUnit * (float)timeSpent);
+			activeBonus.activePeriodTimeUnits = definition.activePeriodTimeUnits + Mathf.FloorToInt(definition.activePeriodExtensionPerTimeUnit * (float)timeSpent);
 		}
 
 		public static Status CalculateStatus(Character character)
 		{
-			var result = character.status;
-			if (result.stats == null)
-			{
-				result.stats = new List<Stat>();
-			}
-			result.stats.Clear();
+			Status result = Status.New();
 
 			for (int i = 0; i < character.baseStats.Length; ++i)
 			{
@@ -172,19 +216,27 @@ namespace NotABear
 				result.stats.Add(stat);
 			}
 
-			for (int activeBonusIndex = 0; activeBonusIndex < character.activeBonuses.Count; ++activeBonusIndex)
+			ApplyStatBonuses(ref result, character.activeBonuses);
+			ApplyStatBonuses(ref result, character.permanentBonuses);
+			
+			return result;
+		}
+
+		static void ApplyStatBonuses(ref Status result, List<ActiveBonus> bonuses)
+		{
+			for (int activeBonusIndex = 0; activeBonusIndex < bonuses.Count; ++activeBonusIndex)
 			{
-				ActiveBonus bonus = character.activeBonuses[activeBonusIndex];
+				ActiveBonus bonus = bonuses[activeBonusIndex];
 				
-				var stat = character.status.GetStat(bonus.definition.stat);
+				var stat = result.GetAndRemoveStat(bonus.definition.stat);
 
 				// NOTE(elliot): this is adding the bonus value on to the existing stat value retrieved
 				stat.value += bonus.value;
 				stat.valueIncludesBonus += bonus.value;
 
+				// add the updated stat back to the list
 				result.stats.Add(stat);
 			}
-			return result;
 		}
 	}
 

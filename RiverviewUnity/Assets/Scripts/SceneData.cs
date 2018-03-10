@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace NotABear
+namespace Cloverview
 {
 
 	[CreateAssetMenu(fileName="Scene.asset", menuName="Cloverview/System/Scene Definition")]

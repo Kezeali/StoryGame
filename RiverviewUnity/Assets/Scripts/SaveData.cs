@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NotABear
+namespace Cloverview
 {
 	[System.Serializable]
 	public class SaveData
@@ -10,7 +10,7 @@ namespace NotABear
 		public Plan weeklyPlan;
 		public Character pc;
 		public NavSaveData nav;
-		public PlanExecutorSaveData weeklyPlanExecutor;
+		public Dictionary<string, PlanExecutorSaveData> planExecutors;
 		public int randomSeed;
 	}
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 using SubjectNerd.Utilities;
 
-namespace NotABear
+namespace Cloverview
 {
 
 	[System.Serializable]

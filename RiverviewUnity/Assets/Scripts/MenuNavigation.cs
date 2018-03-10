@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class MenuNavigation : Clickable, IDataUser<Nav>, INavigator

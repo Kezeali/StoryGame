@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NotABear
+namespace Cloverview
 {
 
 	[CreateAssetMenu(fileName="Quality.asset", menuName="Cloverview/Quality Definition")]

@@ -1,27 +1,34 @@
 using UnityEngine;
-using NotABear;
+using Cloverview;
 using System.Collections;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
-namespace NotABear
+namespace Cloverview
 {
 
 public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, INavigator
 {
 	[SerializeField]
+	string id;
+
+	[SerializeField]
 	MenuData executeMenu;
+
+	[SerializeField]
+	EventData[] availableEvents;
 
 	[ReadOnly]
 	public string parentScene;
 
-	SaveData saveData;
+	PlanExecutorSaveData saveData;
 	Nav nav;
 	Plan plan;
+	PlanSchema planSchema;
 	string activityScenePreloadId;
 	List<PlanActivityData> preloadedActivities = new List<PlanActivityData>();
 	List<PlanActivityData> nextPreloadedActivities = new List<PlanActivityData>();
-	// List<EventData> preloadedEvents = new List<EventData>();
+	List<EventData> preloadedEvents = new List<EventData>();
 
 	// NOTE: these are not applied to the character until the plan finishes executing. This allows the game to be saved and reloaded while the plan is being executed, and if the plan data / schema changes the character wont get or miss extra stat changes.
 	Character.Status statChangesInProgress;
@@ -41,9 +48,16 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	{
 		Debug.Assert(saveData != null);
 
-		this.saveData = saveData;
+		if (!saveData.planExecutors.TryGetValue(this.id, out this.saveData))
+		{
+			this.saveData = new PlanExecutorSaveData();
+			saveData.planExecutors.Add(this.id, this.saveData);
+		}
 
-		// TODO: re-execute up to the saved timeUnit
+		if (this.saveData.timeUnitsElapsed > 0)
+		{
+			this.Execute(this.saveData.timeUnitsElapsed);
+		}
 	}
 
 	public void Initialise(Nav nav)
@@ -59,9 +73,10 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		this.PreloadPlanActivities();
 	}
 
-	public void Initialise(Plan plan)
+	public void Initialise(Plan plan, PlanSchema planSchema)
 	{
 		this.plan = plan;
+		this.planSchema = planSchema;
 		this.PreloadPlanActivities();
 	}
 
@@ -154,23 +169,35 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		yield return 0;
 	}
 
-	IEnumerator ExecuteActivity(PlanOption option, bool instant)
+	IEnumerator ExecuteActivity(Character pc, PlanSlot slot, PlanSchemaSlot schemaSlot, bool instant)
 	{
-		Debug.Assert(option.plannerItem != null);
-		if (option.plannerItem != null)
+		if (slot.selectedOption != null)
 		{
-			PlanActivityData activity = option.plannerItem.activity;
-			if (!instant)
-			{
-				this.nav.GoToActivity(activity, this.activityScenePreloadId);
-			}
+			int slotLengthTimeUnits = schemaSlot.unitLength;
 
-			while (false)
+			PlanOption option = slot.selectedOption;
+			Debug.Assert(option.plannerItem != null);
+			if (option.plannerItem != null)
 			{
-				// this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
+				PlanActivityData activity = option.plannerItem.activity;
+				var activeActivity = new ActiveActivity()
+				{
+					def = activity,
+					pc = pc
+				};
+
 				if (!instant)
 				{
-					yield return 0;
+					this.nav.GoToActivity(activeActivity, this.activityScenePreloadId);
+				}
+
+				while (activeActivity.timeUnitsSpent < slotLengthTimeUnits)
+				{
+					this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
+					if (!instant)
+					{
+						yield return 0;
+					}
 				}
 			}
 		}
