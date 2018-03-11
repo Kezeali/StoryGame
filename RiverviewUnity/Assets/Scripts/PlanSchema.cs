@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace Cloverview
 {
+	// Could also be called "Calendar Definition", or "Plan Calendar"
 	[System.Serializable]
 	public class PlanSchema
 	{
@@ -16,6 +17,9 @@ namespace Cloverview
 	{
 		int totalTimeUnits;
 		public PlanSchemaSlot[] slots = new PlanSchemaSlot[0];
+		// Runtime mapping
+		[System.NonSerialized]
+		public PlanSection section;
 	}
 
 	[System.Serializable]
@@ -23,6 +27,8 @@ namespace Cloverview
 	{
 		public int unitIndex;
 		public int unitLength;
-		public SlotType slotType;
+		// Runtime mapping
+		[System.NonSerialized]
+		public PlanSlot slot;
 	}
 }

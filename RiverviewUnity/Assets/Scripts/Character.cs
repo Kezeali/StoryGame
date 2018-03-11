@@ -4,13 +4,6 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
-	// Defines the progression of time for activities and stats
-	public interface ITerm
-	{
-		int time { get; }
-		int length { get; }
-	}
-
 	[System.Serializable]
 	public class Character
 	{
@@ -98,21 +91,20 @@ namespace Cloverview
 		[System.Serializable]
 		public struct ActiveBonus
 		{
-			public ITerm term;
 			public StatBonusData definition;
 			public float value;
 			public int beginTimeUnit;
 			public int activePeriodTimeUnits;
 
-			public int TimeElapsed()
+			public int TimeElapsed(int currentTimeUnit)
 			{
-				int result = this.term.time - this.beginTimeUnit;
+				int result = currentTimeUnit - this.beginTimeUnit;
 				return result;
 			}
 
-			public int RemainingTime()
+			public int RemainingTime(int currentTimeUnit)
 			{
-				int result = this.activePeriodTimeUnits - TimeElapsed();
+				int result = this.activePeriodTimeUnits - TimeElapsed(currentTimeUnit);
 				return result;
 			}
 
@@ -136,14 +128,13 @@ namespace Cloverview
 			this.status = newStatus;
 		}
 
-		public static Status AddStatBonuses(Character character, StatBonusData[] bonuses, ITerm term, int timeSpent)
+		public static Status AddStatBonuses(Character character, StatBonusData[] bonuses, int beginTimeUnit, int timeSpent)
 		{
 			for (int i = 0; i < bonuses.Length; ++i)
 			{
 				var activeBonus = new ActiveBonus()
 				{
-					term = term,
-					beginTimeUnit = term.time
+					beginTimeUnit = beginTimeUnit
 				};
 				CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
 				character.activeBonuses.Add(activeBonus);
@@ -158,7 +149,7 @@ namespace Cloverview
 			this.status = CalculateStatus(this);
 		}
 
-		public void UpdateStatBonuses()
+		public void UpdateStatBonuses(int currentTimeUnit)
 		{
 			bool removed = false;
 			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex)
@@ -166,7 +157,7 @@ namespace Cloverview
 				ActiveBonus bonus = this.activeBonuses[activeBonusIndex];
 				if (!bonus.IsInfinite())
 				{
-					if (bonus.RemainingTime() <= 0)
+					if (bonus.RemainingTime(currentTimeUnit) <= 0)
 					{
 						this.activeBonuses.RemoveAt(activeBonusIndex);
 						removed = true;
