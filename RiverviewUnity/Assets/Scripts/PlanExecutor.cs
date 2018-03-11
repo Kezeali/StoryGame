@@ -21,7 +21,8 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	[ReadOnly]
 	public string parentScene;
 
-	PlanExecutorSaveData saveData;
+	SaveData saveData;
+	PlanExecutorSaveData executorSaveData;
 	Nav nav;
 	Plan plan;
 	PlanSchema planSchema;
@@ -48,15 +49,16 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	{
 		Debug.Assert(saveData != null);
 
-		if (!saveData.planExecutors.TryGetValue(this.id, out this.saveData))
+		this.saveData = saveData;
+		if (!saveData.planExecutors.TryGetValue(this.id, out this.executorSaveData))
 		{
-			this.saveData = new PlanExecutorSaveData();
-			saveData.planExecutors.Add(this.id, this.saveData);
+			this.executorSaveData = new PlanExecutorSaveData();
+			saveData.planExecutors.Add(this.id, this.executorSaveData);
 		}
 
-		if (this.saveData.timeUnitsElapsed > 0)
+		if (this.executorSaveData.timeUnitsElapsed > 0)
 		{
-			this.Execute(this.saveData.timeUnitsElapsed);
+			this.Execute(this.executorSaveData.timeUnitsElapsed);
 		}
 	}
 
@@ -165,8 +167,38 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 
 	IEnumerator ExecuteCoroutine(int instantlyExecuteTimeUnits)
 	{
-		// foreach activity, execute
-		yield return 0;
+		Character pc = this.saveData.pc;
+
+		int localTimeUnitsElapsed = 0;
+		for (int sectionIndex = 0; sectionIndex < this.planSchema.sections.Length; ++sectionIndex)
+		{
+			PlanSchemaSection schemaSection = this.planSchema.sections[sectionIndex];
+			PlanSection planSection = this.plan.sections[sectionIndex];
+			for (int slotIndex = 0; slotIndex < schemaSection.slots.Length; ++slotIndex)
+			{
+				PlanSchemaSlot schemaSlot = schemaSection.slots[slotIndex];
+				PlanSlot slot = planSection.slots[slotIndex];
+
+				// NOTE(elliot): Slot must be completely covered by the instantly-execute range if it is to be instantly executed (because being completely covered indicates that, if the schema hasn't changed, that slot was finished when this save file was created)
+				bool instantSlot = localTimeUnitsElapsed + schemaSlot.unitLength < instantlyExecuteTimeUnits;
+
+				IEnumerator op = this.ExecuteActivity(pc, slot, schemaSlot, instantSlot);
+				while (op.MoveNext())
+				{
+					if (!instantSlot)
+					{
+						yield return 0;
+					}
+				}
+
+				localTimeUnitsElapsed += schemaSlot.unitLength;
+				if (localTimeUnitsElapsed > instantlyExecuteTimeUnits)
+				{
+					this.executorSaveData.timeUnitsElapsed = localTimeUnitsElapsed;
+					yield return 0;
+				}
+			}
+		}
 	}
 
 	IEnumerator ExecuteActivity(Character pc, PlanSlot slot, PlanSchemaSlot schemaSlot, bool instant)
