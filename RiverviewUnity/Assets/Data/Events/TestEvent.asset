@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a32135c11d31fd40bffac10ff94f33b, type: 3}
+  m_Name: TestEvent
+  m_EditorClassIdentifier: 
+  leadRoles: []
+  extrasDescriptions: []
+  props: []
+  statBonuses:
+  - name: Tested
+    stat: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
+    flatBonus: 11
+    bonusPerTimeUnit: 0
+    activePeriodTimeUnits: 1
+    activePeriodExtensionPerTimeUnit: 0
+  - name: Functional
+    stat: {fileID: 11400000, guid: 699b72f44a80ec34792300e9200c0cd0, type: 2}
+    flatBonus: 0
+    bonusPerTimeUnit: 1
+    activePeriodTimeUnits: 0
+    activePeriodExtensionPerTimeUnit: 1
+  - name: LookitTheseNumbers
+    stat: {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
+    flatBonus: 1
+    bonusPerTimeUnit: 0.5
+    activePeriodTimeUnits: 3
+    activePeriodExtensionPerTimeUnit: 1

@@ -4,11 +4,14 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+	// TODO(elliot): narritive editor that loads the ink story and generates / updates EventData for all weaves tagged # event.
+
 	[CreateAssetMenu(fileName="Event.asset", menuName="Cloverview/Event Definition")]
 	public class EventData : ScriptableObject, IDataItem
 	{
-		// public Ink.Story dialogue;
+		public string narritiveSceneId;
 		public EventSceneScript[] leadRoles;
+		// 
 		public CastingCharacterDescription[] extrasDescriptions;
 		public RoleProp[] props;
 		public StatBonusData[] statBonuses;
@@ -25,7 +28,6 @@ namespace Cloverview
 	public struct EventSceneScript
 	{
 		// public RoleData role;
-		// TODO: Dialogue id for this character
 	}
 
 	[System.Serializable]

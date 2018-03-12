@@ -139,9 +139,13 @@ public class Nav : MonoBehaviour
 		SceneManager.sceneUnloaded -= HandleSceneUnloaded;
 	}
 
-	public void Intialise(SaveData saveData)
+	public void Initialise(SaveData saveData)
 	{
 		this.saveData = saveData;
+		if (this.saveData.nav == null)
+		{
+			this.saveData.nav = new NavSaveData();
+		}
 	#if UNITY_EDITOR
 		if (this.loadSave)
 	#endif

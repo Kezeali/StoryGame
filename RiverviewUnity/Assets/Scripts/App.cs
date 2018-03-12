@@ -139,6 +139,9 @@ public class App : MonoBehaviour
 
 		Object.Instantiate(this.menuCameraPrefab, this.transform);
 		Object.Instantiate(this.envCameraPrefab, this.transform);
+
+		// Let nav load immediately
+		this.nav.Initialise(this.saveData);
 	}
 
 	public void Start()
