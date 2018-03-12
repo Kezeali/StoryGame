@@ -20,8 +20,17 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 	[SerializeField]
 	private PlanExecutor planExecutor;
 
-	private Plan plan;
+	[SerializeField]
+	private Animator planUiAnimator;
+
+	[ReadOnly]
+	public PlanSchema planSchema;
+
+	[ReadOnly]
+	[SerializeField]
 	private PlanSectionUI[] uiSections;
+
+	private Plan plan;
 	private List<GameObject> optionUIs = new List<GameObject>();
 
 	private PlanSlotUI selectedSlot;
@@ -31,50 +40,131 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>();
 		System.Array.Sort(uiSections, PlanSectionUI.Compare);
 
+		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
+		{
+			PlanSectionUI uiSection = this.uiSections[sectionIndex];
+			uiSection.GatherSlots();
+
+			int slotsCount = uiSection.slots.Length;
+			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
+			{
+				PlanSlotUI slotUi = uiSection.slots[slotIndex];
+				slotUi.clicked += HandleSlotClicked;
+			}
+		}
+
+		this.GenerateSchema();
+
 		App.Register<SaveData>(this);
 	}
 
-	public void Initialise(SaveData loadedData)
+	public void OnDisable()
 	{
-		Plan loadedPlan = loadedData.weeklyPlan;
+		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
+		{
+			PlanSectionUI uiSection = this.uiSections[sectionIndex];
+			int slotsCount = uiSection.slots.Length;
+			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
+			{
+				PlanSlotUI slotUi = uiSection.slots[slotIndex];
+				slotUi.clicked -= HandleSlotClicked;
+			}
+		}
 
-		this.selectedSlot = null;
+		this.plan = null;
+		this.planSchema = null;
+	}
 
-		// NOTE(ehayward): it is important the the plan is a new or cleared plan at this point
+	void GenerateSchema()
+	{
+		this.planSchema = new PlanSchema();
+		this.planSchema.name = planName;
+
+		// NOTE(elliot): A plan that fits the schema is also generated. After plans are loaded from save data, they are transferred into this plan, attempting to migrate the loaded data to the current schema
 		this.plan = new Plan();
 		this.plan.name = planName;
 
 		int sectionsCount = this.uiSections.Length;
 
-		this.plan.sections = new PlanSection[sectionsCount];
+		this.planSchema.sections = new PlanSchemaSection[sectionsCount];
 		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
 		{
-			var planSection = new PlanSection();
-			this.plan.sections[newSectionIndex] = planSection;
+			var schemaSection = new PlanSchemaSection();
+			this.planSchema.sections[newSectionIndex] = schemaSection;
 
 			PlanSectionUI uiSection = uiSections[newSectionIndex];
 			//planSection.name = uiSection.name;
 
 			int slotsCount = uiSection.slots.Length;
 
+			schemaSection.slots = new PlanSchemaSlot[slotsCount];
+			for (int slotIndex = 0; slotIndex < slotsCount-1; ++slotIndex)
+			{
+				PlanSlotUI slotUI = uiSection.slots[slotIndex];
+				PlanSlotUI nextSlotUI = uiSection.slots[slotIndex+1];
+
+				var schemaSlot = new PlanSchemaSlot();
+				schemaSlot.unitIndex = slotUI.SlotUnitIndex();
+				schemaSlot.unitLength = nextSlotUI.SlotUnitIndex() - schemaSlot.unitIndex;
+				schemaSlot.slotType = slotUI.slotType;
+				schemaSection.slots[slotIndex] = schemaSlot;
+			}
+
+			// TODO: calculate the unit length of the last schema slot by looking at the total length defined in the section component
+		}
+
+		this.plan.sections = new PlanSection[sectionsCount];
+		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
+		{
+			PlanSchemaSection schemaSection = this.planSchema.sections[newSectionIndex];
+			PlanSectionUI uiSection = uiSections[newSectionIndex];
+
+			var planSection = new PlanSection();
+			this.plan.sections[newSectionIndex] = planSection;
+
+			schemaSection.section = planSection;
+
+			int slotsCount = uiSection.slots.Length;
+
 			planSection.slots = new PlanSlot[slotsCount];
 			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
 			{
+				PlanSchemaSlot schemaSlot = schemaSection.slots[slotIndex];
+
 				PlanSlotUI slotUI = uiSection.slots[slotIndex];
 
-				var newSlot = new PlanSlot();
-				newSlot.unitIndex = slotUI.SlotUnitIndex();
-				newSlot.slotType = slotUI.slotType;
-				planSection.slots[slotIndex] = newSlot;
+				var planSlot = new PlanSlot();
+				planSlot.unitIndex = slotUI.SlotUnitIndex();
+				planSlot.slotType = slotUI.slotType;
+				planSection.slots[slotIndex] = planSlot;
 
-				slotUI.Initialise(newSlot);
-				slotUI.clicked += this.OnSlotClicked;
+				schemaSlot.slot = planSlot;
+
+				slotUI.Initialise(planSlot);
 			}
+		}
+	}
 
-			// Upgrade the data
-			if (loadedPlan != null && loadedPlan.sections.Length > newSectionIndex)
+	public void Initialise(SaveData loadedData)
+	{
+		// TODO: get the plan named this.planName from loaded data
+		Plan loadedPlan = loadedData.weeklyPlan;
+		loadedData.weeklyPlan = this.plan;
+
+		this.selectedSlot = null;
+
+		// Upgrade the data
+		int sectionsCount = this.planSchema.sections.Length;
+		for (int sectionIndex = 0; sectionIndex < sectionsCount; ++sectionIndex)
+		{
+			PlanSchemaSection schemaSection = this.planSchema.sections[sectionIndex];
+			PlanSection planSection = this.plan.sections[sectionIndex];
+
+			int slotsCount = schemaSection.slots.Length;
+
+			if (loadedPlan != null && loadedPlan.sections.Length > sectionIndex)
 			{
-				PlanSection loadedSection = loadedPlan.sections[newSectionIndex];
+				PlanSection loadedSection = loadedPlan.sections[sectionIndex];
 
 				// Try to transfer the content of each slot
 				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.slots.Length; ++loadedSlotIndex)
@@ -113,16 +203,19 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 					}
 				}
 			}
+		}
 
-			// Populate the slot UI elements
+		// Populate the slot UI elements
+		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
+		{
+			PlanSectionUI uiSection = this.uiSections[sectionIndex];
+			int slotsCount = uiSection.slots.Length;
 			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
 			{
 				PlanSlotUI slotUI = uiSection.slots[slotIndex];
 				slotUI.DisplayCurrent(this.defaultFilledSlotPrefab);
 			}
 		}
-
-		loadedData.weeklyPlan = this.plan;
 	}
 
 	public void Clear()
@@ -134,6 +227,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		this.optionUIs.Clear();
 
 		this.selectedSlot = null;
+		this.planUiAnimator.SetBool("options_open", false);
 	}
 
 	public void SelectOption(PlanOptionUI optionUi)
@@ -142,15 +236,19 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		{
 			optionUi.DisableSelection();
 			this.selectedSlot.Display(optionUi.planOption, this.defaultFilledSlotPrefab);
+			this.selectedSlot = null;
+			this.planUiAnimator.SetBool("options_open", false);
 		}
 	}
 
-	public void OnSlotClicked(PlanSlotUI slot)
+	public void HandleSlotClicked(PlanSlotUI slot)
 	{
+		Debug.Log("HandleSlotClicked(" + slot.ToString() + ")");
 		if (this.selectedSlot != slot)
 		{
 			this.selectedSlot = slot;
 			this.planOptionSelectorUI.Populate(slot);
+			this.planUiAnimator.SetBool("options_open", true);
 		}
 		else
 		{

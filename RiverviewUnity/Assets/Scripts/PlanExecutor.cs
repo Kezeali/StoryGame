@@ -50,6 +50,10 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		Debug.Assert(saveData != null);
 
 		this.saveData = saveData;
+		if (this.saveData.planExecutors == null)
+		{
+			this.saveData.planExecutors = new Dictionary<string, PlanExecutorSaveData>();
+		}
 		if (!saveData.planExecutors.TryGetValue(this.id, out this.executorSaveData))
 		{
 			this.executorSaveData = new PlanExecutorSaveData();
@@ -159,6 +163,8 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 
 	public void Execute(int instantlyExecuteTimeUnits = 0)
 	{
+		Object.DontDestroyOnLoad(this.gameObject);
+		
 		this.nav.GoTo(this.executeMenu, this.parentScene);
 		this.PreloadPlanActivities();
 

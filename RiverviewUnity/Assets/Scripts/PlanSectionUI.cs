@@ -5,10 +5,18 @@ namespace Cloverview
 
 public class PlanSectionUI : MonoBehaviour
 {
-	[System.NonSerialized]
+	[ReadOnly]
 	public PlanSlotUI[] slots;
 
 	public void OnEnable()
+	{
+		if (this.slots == null)
+		{
+			this.GatherSlots();
+		}
+	}
+
+	public void GatherSlots()
 	{
 		this.slots = this.GetComponentsInChildren<PlanSlotUI>();
 	}

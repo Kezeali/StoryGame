@@ -29,9 +29,18 @@ namespace Cloverview
 
 			public void Recycle()
 			{
-				this.stats.Clear();
-				statListPool.Push(this.stats);
-				this.stats = null;
+				Debug.Assert(this.stats != null);
+				if (this.stats != null)
+				{
+					this.stats.Clear();
+					statListPool.Push(this.stats);
+					this.stats = null;
+				}
+			}
+
+			public bool IsUsable()
+			{
+				return this.stats != null;
 			}
 
 			public Stat GetStat(CharacterStatDefinition statDef)
@@ -124,7 +133,10 @@ namespace Cloverview
 		public void CalculateStatus()
 		{
 			Status newStatus = CalculateStatus(this);
-			this.status.Recycle();
+			if (this.status.IsUsable())
+			{
+				this.status.Recycle();
+			}
 			this.status = newStatus;
 		}
 
@@ -137,13 +149,20 @@ namespace Cloverview
 					beginTimeUnit = beginTimeUnit
 				};
 				CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
-				character.activeBonuses.Add(activeBonus);
+				if (activeBonus.IsInfinite())
+				{
+					character.permanentBonuses.Add(activeBonus);
+				}
+				else
+				{
+					character.activeBonuses.Add(activeBonus);
+				}
 			}
 
 			return CalculateStatus(character);
 		}
 
-		public void ClearStatBonuses()
+		public void ClearTemporaryStatBonuses()
 		{
 			this.activeBonuses.Clear();
 			this.status = CalculateStatus(this);
@@ -155,13 +174,11 @@ namespace Cloverview
 			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex)
 			{
 				ActiveBonus bonus = this.activeBonuses[activeBonusIndex];
-				if (!bonus.IsInfinite())
+				Debug.Assert(!bonus.IsInfinite());
+				if (bonus.RemainingTime(currentTimeUnit) <= 0)
 				{
-					if (bonus.RemainingTime(currentTimeUnit) <= 0)
-					{
-						this.activeBonuses.RemoveAt(activeBonusIndex);
-						removed = true;
-					}
+					this.activeBonuses.RemoveAt(activeBonusIndex);
+					removed = true;
 				}
 			}
 			if (removed)
@@ -205,6 +222,15 @@ namespace Cloverview
 				stat.definition = character.baseStats[i].definition;
 				stat.value = character.baseStats[i].value;
 				result.stats.Add(stat);
+			}
+
+			if (character.activeBonuses == null)
+			{
+				character.activeBonuses = new List<ActiveBonus>();
+			}
+			if (character.permanentBonuses == null)
+			{
+				character.permanentBonuses = new List<ActiveBonus>();
 			}
 
 			ApplyStatBonuses(ref result, character.activeBonuses);
