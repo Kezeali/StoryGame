@@ -36,7 +36,10 @@ public class PlanSlotUI : MonoBehaviour
 		this.button = this.GetComponentInChildren<Button>();
 		this.button.onClick.AddListener(this.OnClicked);
 
-		this.content = this.transform.Find("Content");
+		if (this.content == null)
+		{
+			this.content = this.transform.Find("Content");
+		}
 	}
 
 	public virtual int SlotUnitIndex()

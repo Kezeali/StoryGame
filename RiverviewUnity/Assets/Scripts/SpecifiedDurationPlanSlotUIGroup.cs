@@ -3,10 +3,12 @@ using UnityEngine;
 namespace Cloverview
 {
 
-public class SpecifiedDurationPlanSlotUIGroup : MonoBehaviour
+public class SpecifiedDurationPlanSlotUIGroup : MonoBehaviour, IPlanSlotUIGroup
 {
 	[System.NonSerialized]
 	public SpecifiedDurationPlanSlotUI[] slots;
+
+	int totalTimeUnits;
 
 	public void Awake()
 	{
@@ -20,6 +22,17 @@ public class SpecifiedDurationPlanSlotUIGroup : MonoBehaviour
 			slot.unitIndex = unitIndex;
 			unitIndex += slot.durationInUnits;
 		}
+
+		this.totalTimeUnits = unitIndex;
+	}
+
+	public int TotalTimeUnits()
+	{
+		if (this.totalTimeUnits == 0)
+		{
+			this.Awake();
+		}
+		return this.totalTimeUnits;
 	}
 }
 
