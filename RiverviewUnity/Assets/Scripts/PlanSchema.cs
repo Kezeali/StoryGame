@@ -15,7 +15,7 @@ namespace Cloverview
 	[System.Serializable]
 	public class PlanSchemaSection
 	{
-		int totalTimeUnits;
+		public int totalTimeUnits;
 		public PlanSchemaSlot[] slots = new PlanSchemaSlot[0];
 		// Runtime mapping
 		[System.NonSerialized]

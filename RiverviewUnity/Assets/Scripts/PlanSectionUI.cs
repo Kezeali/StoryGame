@@ -26,6 +26,19 @@ public class PlanSectionUI : MonoBehaviour
 		return this.transform.GetSiblingIndex();
 	}
 
+	public virtual int TotalTimeUnits()
+	{
+		var planSlotUIGroup = this.GetComponent<IPlanSlotUIGroup>();
+		if (planSlotUIGroup != null)
+		{
+			return planSlotUIGroup.TotalTimeUnits();
+		}
+		else
+		{
+			return slots.Length;
+		}
+	}
+
 	public static int Compare(PlanSectionUI a, PlanSectionUI b)
 	{
 		if (a.SectionUnitIndex() < b.SectionUnitIndex())
@@ -41,6 +54,11 @@ public class PlanSectionUI : MonoBehaviour
 			return 0;
 		}
 	}
+}
+
+public interface IPlanSlotUIGroup
+{
+	int TotalTimeUnits();
 }
 
 }

@@ -89,11 +89,11 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		this.planSchema.sections = new PlanSchemaSection[sectionsCount];
 		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
 		{
-			var schemaSection = new PlanSchemaSection();
-			this.planSchema.sections[newSectionIndex] = schemaSection;
-
 			PlanSectionUI uiSection = uiSections[newSectionIndex];
-			//planSection.name = uiSection.name;
+
+			var schemaSection = new PlanSchemaSection();
+			schemaSection.totalTimeUnits = uiSection.TotalTimeUnits();
+			this.planSchema.sections[newSectionIndex] = schemaSection;
 
 			int slotsCount = uiSection.slots.Length;
 
@@ -106,11 +106,17 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 				var schemaSlot = new PlanSchemaSlot();
 				schemaSlot.unitIndex = slotUI.SlotUnitIndex();
 				schemaSlot.unitLength = nextSlotUI.SlotUnitIndex() - schemaSlot.unitIndex;
-				schemaSlot.slotType = slotUI.slotType;
 				schemaSection.slots[slotIndex] = schemaSlot;
 			}
+			if (slotsCount > 0)
+			{
+				PlanSlotUI slotUI = uiSection.slots[slotsCount-1];
 
-			// TODO: calculate the unit length of the last schema slot by looking at the total length defined in the section component
+				var schemaSlot = new PlanSchemaSlot();
+				schemaSlot.unitIndex = slotUI.SlotUnitIndex();
+				schemaSlot.unitLength = schemaSection.totalTimeUnits - schemaSlot.unitIndex;
+				schemaSection.slots[slotsCount-1] = schemaSlot;
+			}
 		}
 
 		this.plan.sections = new PlanSection[sectionsCount];
@@ -147,6 +153,11 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 
 	public void Initialise(SaveData loadedData)
 	{
+		if (this.planSchema == null)
+		{
+			this.GenerateSchema();
+		}
+
 		// TODO: get the plan named this.planName from loaded data
 		Plan loadedPlan = loadedData.weeklyPlan;
 		loadedData.weeklyPlan = this.plan;
@@ -159,8 +170,6 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		{
 			PlanSchemaSection schemaSection = this.planSchema.sections[sectionIndex];
 			PlanSection planSection = this.plan.sections[sectionIndex];
-
-			int slotsCount = schemaSection.slots.Length;
 
 			if (loadedPlan != null && loadedPlan.sections.Length > sectionIndex)
 			{
@@ -183,7 +192,9 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 					// Look for the first valid slot that overlaps the given entry
 					for (int actualSlotIndex = 0; actualSlotIndex < planSection.slots.Length; ++ actualSlotIndex)
 					{
+						PlanSchemaSlot schemaSlot = schemaSection.slots[actualSlotIndex];
 						PlanSlot actualSlot = planSection.slots[actualSlotIndex];
+
 						if (actualSlot.slotType == requiredType && actualSlot.selectedOption == null)
 						{
 							int actualSlotUnitEnd = unitEnd; // Default to allowing anything in the last slot
@@ -193,6 +204,8 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 								nextActualSlot = planSection.slots[actualSlotIndex+1];
 								actualSlotUnitEnd = nextActualSlot.unitIndex - 1;
 							}
+
+							// TODO: check that length (unitEnd - unitBegin) < schema unit length
 							if (
 								(actualSlot.unitIndex <= unitBegin && actualSlotUnitEnd > unitBegin) ||
 								(actualSlot.unitIndex < unitEnd && actualSlotUnitEnd >= unitEnd))

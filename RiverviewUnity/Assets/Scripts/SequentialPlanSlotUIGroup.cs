@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
-public class SequentialPlanSlotUIGroup : MonoBehaviour
+public class SequentialPlanSlotUIGroup : MonoBehaviour, IPlanSlotUIGroup
 {
 	[SerializeField]
 	private int totalUnits;
@@ -20,6 +20,11 @@ public class SequentialPlanSlotUIGroup : MonoBehaviour
 		{
 			slots[i].unitIndex = slotDurationUnits * i;
 		}
+	}
+
+	public int TotalTimeUnits()
+	{
+		return this.totalUnits;
 	}
 }
 
