@@ -13,6 +13,14 @@ public class SequentialPlanSlotUIGroup : MonoBehaviour, IPlanSlotUIGroup
 
 	public void Awake()
 	{
+		if (this.slots == null)
+		{
+			this.Initialise();
+		}
+	}
+
+	public void Initialise()
+	{
 		this.slots = this.GetComponentsInChildren<SequentialPlanSlotUI>();
 
 		int slotDurationUnits = totalUnits / slots.Length;

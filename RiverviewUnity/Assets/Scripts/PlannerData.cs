@@ -37,6 +37,11 @@ namespace Cloverview
 		public SlotType validSlots;
 		public SubjectData subject;
 		public PlanActivityData activity;
+
+		public override string ToString()
+		{
+			return this.name + ": subject=" + subject.name + ", activity=" + activity.name;
+		}
 	}
 
 }

@@ -37,7 +37,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 
 	public void OnEnable()
 	{
-		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>();
+		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>(true);
 		System.Array.Sort(uiSections, PlanSectionUI.Compare);
 
 		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
@@ -54,6 +54,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		}
 
 		this.GenerateSchema();
+		this.CreateBlankPlan();
 
 		App.Register<SaveData>(this);
 	}
@@ -70,19 +71,12 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 				slotUi.clicked -= HandleSlotClicked;
 			}
 		}
-
-		this.plan = null;
-		this.planSchema = null;
 	}
 
 	void GenerateSchema()
 	{
 		this.planSchema = new PlanSchema();
 		this.planSchema.name = planName;
-
-		// NOTE(elliot): A plan that fits the schema is also generated. After plans are loaded from save data, they are transferred into this plan, attempting to migrate the loaded data to the current schema
-		this.plan = new Plan();
-		this.plan.name = planName;
 
 		int sectionsCount = this.uiSections.Length;
 
@@ -118,6 +112,14 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 				schemaSection.slots[slotsCount-1] = schemaSlot;
 			}
 		}
+	}
+
+	void CreateBlankPlan()
+	{
+		int sectionsCount = this.uiSections.Length;
+
+		this.plan = new Plan();
+		this.plan.name = planName;
 
 		this.plan.sections = new PlanSection[sectionsCount];
 		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
@@ -153,10 +155,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 
 	public void Initialise(SaveData loadedData)
 	{
-		if (this.planSchema == null)
-		{
-			this.GenerateSchema();
-		}
+		this.plan.ClearSelections();
 
 		// TODO: get the plan named this.planName from loaded data
 		Plan loadedPlan = loadedData.weeklyPlan;
@@ -180,16 +179,24 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 				{
 					PlanSlot loadedSlot = loadedSection.slots[loadedSlotIndex];
 
-					int unitBegin = loadedSlot.unitIndex;
-					int unitEnd = unitBegin;
+					if (loadedSlot.selectedOption == null)
+					{
+						continue;
+					}
+
+					int loadedSlotUnitBegin = loadedSlot.unitIndex;
+					int selectedOptionLength = 0;
 					if (loadedSlot.selectedOption != null && loadedSlot.selectedOption.plannerItem != null)
 					{
-						unitEnd = unitBegin + loadedSlot.selectedOption.plannerItem.timeUnits;
+						selectedOptionLength = loadedSlot.selectedOption.plannerItem.timeUnits;
 					}
+					// this is just a guess, but that's fine
+					// TODO(elliot): consider saving the schema for each plan so this doesn't have to be guessed?
+					int loadedSlotUnitEnd = loadedSlotUnitBegin + selectedOptionLength;
 
 					SlotType requiredType = loadedSlot.slotType;
 
-					// Look for the first valid slot that overlaps the given entry
+					// Look for the first empty & valid slot that overlaps the given entry
 					for (int actualSlotIndex = 0; actualSlotIndex < planSection.slots.Length; ++ actualSlotIndex)
 					{
 						PlanSchemaSlot schemaSlot = schemaSection.slots[actualSlotIndex];
@@ -197,20 +204,16 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 
 						if (actualSlot.slotType == requiredType && actualSlot.selectedOption == null)
 						{
-							int actualSlotUnitEnd = unitEnd; // Default to allowing anything in the last slot
-							if (actualSlotIndex < planSection.slots.Length-1)
-							{
-								PlanSlot nextActualSlot = null;
-								nextActualSlot = planSection.slots[actualSlotIndex+1];
-								actualSlotUnitEnd = nextActualSlot.unitIndex - 1;
-							}
+							int actualUnitLength = schemaSlot.unitLength;
+							int actualBegin = schemaSlot.unitIndex;
+							int actualEnd = actualBegin + actualUnitLength;
 
-							// TODO: check that length (unitEnd - unitBegin) < schema unit length
-							if (
-								(actualSlot.unitIndex <= unitBegin && actualSlotUnitEnd > unitBegin) ||
-								(actualSlot.unitIndex < unitEnd && actualSlotUnitEnd >= unitEnd))
+							// NOTE(elliot): this should check whether both, 1) the loaded slot overlaps the slot currently being checked (called "actualSlot", as it is a slot that is actually in the current schema), and 2) the selected option in the loaded slot will fit in the actual slot
+							if (((loadedSlotUnitBegin > actualBegin && loadedSlotUnitBegin <= actualEnd) || (loadedSlotUnitEnd > actualBegin && loadedSlotUnitEnd <= actualEnd))
+								&& selectedOptionLength <= actualUnitLength)
 							{
 								actualSlot.selectedOption = loadedSlot.selectedOption;
+								break;
 							}
 						}
 					}
@@ -229,6 +232,8 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 				slotUI.DisplayCurrent(this.defaultFilledSlotPrefab);
 			}
 		}
+
+		this.planExecutor.Initialise(this.plan, this.planSchema);
 	}
 
 	public void Clear()
@@ -269,6 +274,11 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 			this.selectedSlot.Clear();
 			//this.planOptionSelectorUI.Populate(slot);
 		}
+	}
+
+	public void Execute()
+	{
+		this.planExecutor.Execute();
 	}
 }
 

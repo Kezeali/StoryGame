@@ -53,6 +53,16 @@ public class App : MonoBehaviour
 		{
 			for (int i = 0; i < this.toInitialise.Count; ++i)
 			{
+			#if UNITY_EDITOR
+				var component = this.toInitialise[i] as MonoBehaviour;
+				if (component != null)
+				{
+					if (!component.isActiveAndEnabled)
+					{
+						continue;
+					}
+				}
+			#endif
 				this.toInitialise[i].Initialise(data);
 			}
 			this.initialised.AddRange(this.toInitialise);
@@ -82,6 +92,19 @@ public class App : MonoBehaviour
 		if (instance != null)
 		{
 			instance.DelayInit();
+		}
+	}
+
+	public static void Deregister<DataT>(IDataUser<DataT> dataUser)
+	{
+		DataUserCollection<DataT> collection = null;
+		object value;
+		if (dataUserCollections.TryGetValue(typeof(DataT), out value))
+		{
+			collection = value as DataUserCollection<DataT>;
+			collection.Remove(dataUser);
+
+			Debug.LogFormat("Data user removed: {0}", dataUser);
 		}
 	}
 

@@ -42,7 +42,15 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 
 	public void OnDisable()
 	{
-		this.UnloadAllPreloadedActivities();
+		if (this.nav != null)
+		{
+			this.UnloadAllPreloadedActivities();
+		}
+	}
+
+	public void OnApplicationQuit()
+	{
+		this.nav = null;
 	}
 
 	public void Initialise(SaveData saveData)
@@ -60,10 +68,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 			saveData.planExecutors.Add(this.id, this.executorSaveData);
 		}
 
-		if (this.executorSaveData.timeUnitsElapsed > 0)
-		{
-			this.Execute(this.executorSaveData.timeUnitsElapsed);
-		}
+		this.ExecuteIfReady();
 	}
 
 	public void Initialise(Nav nav)
@@ -76,14 +81,39 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 
 		this.nav.Preload(this.executeMenu, this.parentScene);
 
-		this.PreloadPlanActivities();
+		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
 	}
 
 	public void Initialise(Plan plan, PlanSchema planSchema)
 	{
 		this.plan = plan;
 		this.planSchema = planSchema;
-		this.PreloadPlanActivities();
+		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
+	}
+
+	bool PreloadIfReady()
+	{
+		if (this.DataReady())
+		{
+			this.PreloadPlanActivities();
+			return true;
+		}
+		return false;
+	}
+
+	bool ExecuteIfReady()
+	{
+		if (this.DataReady() && this.isActiveAndEnabled && this.executorSaveData.timeUnitsElapsed > 0)
+		{
+			this.Execute(this.executorSaveData.timeUnitsElapsed);
+			return true;
+		}
+		return false;
+	}
+
+	bool DataReady()
+	{
+		return this.plan != null && this.planSchema != null && this.nav != null && this.saveData != null;
 	}
 
 	public void SetParentScene(string parentScene)
@@ -110,7 +140,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 			for (int sectionIndex = 0; sectionIndex < this.plan.sections.Length; ++sectionIndex)
 			{
 				PlanSection section = this.plan.sections[sectionIndex];
-				for (int slotIndex = 0; slotIndex < this.plan.sections.Length; ++slotIndex)
+				for (int slotIndex = 0; slotIndex < section.slots.Length; ++slotIndex)
 				{
 					PlanSlot slot = section.slots[slotIndex];
 					if (slot.selectedOption != null)
@@ -142,7 +172,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 			}
 			var temp = this.preloadedActivities;
 			this.preloadedActivities = this.nextPreloadedActivities;
-			this.preloadedActivities = temp;
+			this.nextPreloadedActivities = temp;
 
 			this.nextPreloadedActivities.Clear();
 		}
@@ -193,7 +223,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				{
 					if (!instantSlot)
 					{
-						yield return 0;
+						yield return op.Current;
 					}
 				}
 
@@ -205,10 +235,17 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				}
 			}
 		}
+
+		// TODO(elliot): write final stats out to all characters
+
+		this.executorSaveData.timeUnitsElapsed = 0;
+
+		Debug.Log("Plan done.");
 	}
 
 	IEnumerator ExecuteActivity(Character pc, PlanSlot slot, PlanSchemaSlot schemaSlot, bool instant)
 	{
+		float secondsPerUnitTime = 2;
 		if (slot.selectedOption != null)
 		{
 			int slotLengthTimeUnits = schemaSlot.unitLength;
@@ -224,6 +261,8 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 					pc = pc
 				};
 
+				Debug.LogFormat("Executing plannerItem: {0}", option.plannerItem);
+
 				if (!instant)
 				{
 					this.nav.GoToActivity(activeActivity, this.activityScenePreloadId);
@@ -232,9 +271,10 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				while (activeActivity.timeUnitsSpent < slotLengthTimeUnits)
 				{
 					this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
+					activeActivity.timeUnitsSpent += 1;
 					if (!instant)
 					{
-						yield return 0;
+						yield return new WaitForSeconds(secondsPerUnitTime);
 					}
 				}
 			}

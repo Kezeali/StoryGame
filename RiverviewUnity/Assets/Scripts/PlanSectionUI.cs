@@ -18,7 +18,12 @@ public class PlanSectionUI : MonoBehaviour
 
 	public void GatherSlots()
 	{
-		this.slots = this.GetComponentsInChildren<PlanSlotUI>();
+		this.slots = this.GetComponentsInChildren<PlanSlotUI>(true);
+		var planSlotUIGroup = this.GetComponent<IPlanSlotUIGroup>();
+		if (planSlotUIGroup != null)
+		{
+			planSlotUIGroup.Initialise();
+		}
 	}
 
 	public virtual int SectionUnitIndex()
@@ -58,6 +63,7 @@ public class PlanSectionUI : MonoBehaviour
 
 public interface IPlanSlotUIGroup
 {
+	void Initialise();
 	int TotalTimeUnits();
 }
 
