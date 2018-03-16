@@ -24,4 +24,20 @@ namespace Cloverview
 		public SlotType slotType;
 		public PlanOption selectedOption;
 	}
+
+	public static class PlanMethods
+	{
+		public static void ClearSelections(this Plan plan)
+		{
+			for (int sectionIndex = 0; sectionIndex < plan.sections.Length; ++sectionIndex)
+			{
+				PlanSection section = plan.sections[sectionIndex];
+				for (int slotIndex = 0; slotIndex < section.slots.Length; ++slotIndex)
+				{
+					PlanSlot slot = section.slots[slotIndex];
+					slot.selectedOption = null;
+				}
+			}
+		}
+	}
 }

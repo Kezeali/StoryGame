@@ -14,6 +14,11 @@ public class WeeklyPlanSectionUI : PlanSectionUI
 
 	public int totalHours;
 
+	public void OnValidate()
+	{
+		this.totalHours = Mathf.Max(this.totalHours, base.TotalTimeUnits());
+	}
+
 	public override int SectionUnitIndex() { return (int)this.weekday; }
 
 	public override int TotalTimeUnits()

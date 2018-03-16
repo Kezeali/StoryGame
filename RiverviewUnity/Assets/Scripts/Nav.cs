@@ -93,6 +93,7 @@ public class Nav : MonoBehaviour
 
 #if UNITY_EDITOR
 	bool loadSave = false;
+	Scene bootScene;
 #endif
 
 	public void OnEnable()
@@ -103,14 +104,14 @@ public class Nav : MonoBehaviour
 	#if UNITY_EDITOR
 		// Intialise the current scene as a menu
 		{
-			Scene bootScene = SceneManager.GetActiveScene();
-			if (bootScene.buildIndex != 0)
+			this.bootScene = SceneManager.GetActiveScene();
+			if (this.bootScene.buildIndex != 0)
 			{
 				var bootLoadedScene = new PreloadedScene()
 				{
-					scenePath = bootScene.path,
+					scenePath = this.bootScene.path,
 					preloadRequesterIds = new List<string>(),
-					scene = bootScene
+					scene = this.bootScene
 				};
 				var bootMenu = new VisibleMenu()
 				{
@@ -121,14 +122,22 @@ public class Nav : MonoBehaviour
 				this.activeMenu = bootMenu;
 				this.popupStack.Add(bootMenu);
 
-				SetRootObjectsActive(bootScene, true);
-
 				this.loadSave = false;
 			}
 			else
 			{
 				this.loadSave = true;
 			}
+		}
+	#endif
+	}
+
+	public void Start()
+	{
+	#if UNITY_EDITOR
+		if (!this.loadSave)
+		{
+			SetRootObjectsActive(bootScene, true);
 		}
 	#endif
 	}

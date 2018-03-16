@@ -12,6 +12,14 @@ public class SpecifiedDurationPlanSlotUIGroup : MonoBehaviour, IPlanSlotUIGroup
 
 	public void Awake()
 	{
+		if (this.slots == null)
+		{
+			this.Initialise();
+		}
+	}
+
+	public void Initialise()
+	{
 		this.slots = this.GetComponentsInChildren<SpecifiedDurationPlanSlotUI>();
 
 		int unitIndex = 0;
