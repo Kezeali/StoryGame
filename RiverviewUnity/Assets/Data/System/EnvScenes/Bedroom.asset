@@ -8,8 +8,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5a86956968eb814aa95c07b766db260, type: 3}
-  m_Name: GenericActivity
+  m_Script: {fileID: 11500000, guid: b4b6b98ebaea73b4ca2d5e28256ee81c, type: 3}
+  m_Name: Bedroom
   m_EditorClassIdentifier: 
-  scene: {fileID: 11400000, guid: 9e8d67d87b3276e4baf8c8749c74a25a, type: 2}
-  statBonuses: []
+  scene:
+    scenePath: Assets/Scenes/bedroom.unity
+  allowPreload: 1

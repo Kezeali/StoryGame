@@ -113,6 +113,7 @@ public class Nav : MonoBehaviour
 					preloadRequesterIds = new List<string>(),
 					scene = this.bootScene
 				};
+				this.preloadedScenes.Add(bootLoadedScene);
 				var bootMenu = new VisibleMenu()
 				{
 					def = this.bootMenuForPlayInEditor,
@@ -256,7 +257,7 @@ public class Nav : MonoBehaviour
 			// Validate the requester id: must be a visible scene
 			{
 				PreloadedScene loadedScene = this.FindLoadedScene(requesterId);
-				if (loadedScene != null && !this.IsVisible(loadedScene))
+				if (loadedScene == null || !this.IsVisible(loadedScene))
 				{
 					Debug.LogWarningFormat("Invalid requester {0} tried to preload menu {1}. Preload requesters for menus must be loaded menus themselves.", requesterId, def.name);
 					requesterId = null;
@@ -423,9 +424,9 @@ public class Nav : MonoBehaviour
 		while (this.menuToGoToQueue.Count > 0 || this.envSceneToGoToQueue.Count > 0)
 		{
 			// Only load menus if there are no more env scenes to load
-			if (this.envSceneToLoadQueue.Count > 0)
+			if (this.envSceneToGoToQueue.Count > 0)
 			{
-				EnvSceneToLoad envSceneRequest = this.envSceneToLoadQueue.Dequeue();
+				EnvSceneToLoad envSceneRequest = this.envSceneToGoToQueue.Dequeue();
 
 				if (envSceneRequest.def != null)
 				{
@@ -434,7 +435,7 @@ public class Nav : MonoBehaviour
 						IEnumerator op = this.GoToEnvSceneCoroutine(envSceneRequest.def, envSceneRequest.preloadRequesterId);
 						while (op.MoveNext())
 						{
-							yield return 0;
+							yield return op.Current;
 						}
 						if (envSceneRequest.activeActivity != null)
 						{
@@ -447,7 +448,10 @@ public class Nav : MonoBehaviour
 									visibleScene.activeActivity.envScene = null;
 								}
 								visibleScene.activeActivity = envSceneRequest.activeActivity;
-								visibleScene.controller.SetActivity(envSceneRequest.activeActivity);
+								if (visibleScene.controller != null)
+								{
+									visibleScene.controller.SetActivity(envSceneRequest.activeActivity);
+								}
 							}
 							// NOTE: is ok to be null
 							envSceneRequest.activeActivity.envScene = visibleScene;
@@ -489,7 +493,7 @@ public class Nav : MonoBehaviour
 					IEnumerator op = this.GoToCoroutine(menuToLoad.def, menuToLoad.preloadRequesterId);
 					while (op.MoveNext())
 					{
-						yield return 0;
+						yield return op.Current;
 					}
 				}
 			}
@@ -544,16 +548,6 @@ public class Nav : MonoBehaviour
 			yield break;
 		}
 
-		// Clear the popups before switching to root menus
-		if (resolvedDef.type == MenuType.Start || resolvedDef.type == MenuType.Root)
-		{
-			while (this.popupStack.Count > 0)
-			{
-				this.PopTopPopup();
-			}
-			this.breadcrumbs.Clear();
-		}
-
 		// Show the environment scene
 		if (resolvedDef.envScene != null)
 		{
@@ -566,20 +560,33 @@ public class Nav : MonoBehaviour
 
 		// Show the menu scene
 		{
+			// NOTE(elliot): if there isn't already a visible menu provided by a back / close operation above, request the visible menu now, before closing existing menus, to ensure that this new requester is added and any preloaded scene wont be unloaded!
 			VisibleMenu visibleMenu = defaultVisibleMenu ?? this.FindOrMakeVisibleMenu(resolvedDef, requesterId);
+
 			if (visibleMenu != null)
 			{
+				this.nextActiveMenu = visibleMenu;
+
 				PreloadedScene preloadedScene = visibleMenu.loadedScene;
+
+				// Clear the popups before switching to root menus
+				if (resolvedDef.type == MenuType.Start || resolvedDef.type == MenuType.Root)
+				{
+					RemoveOtherPopups(resolvedDef);
+					this.breadcrumbs.Clear();
+				}
+
 
 				if (preloadedScene.loadOp != null
 					|| (preloadedScene.scene.IsValid() && preloadedScene.scene.isLoaded))
 				{
-					this.nextActiveMenu = visibleMenu;
-
 					if (preloadedScene.loadOp != null && !preloadedScene.loadOp.isDone)
 					{
 						preloadedScene.loadOp.allowSceneActivation = true;
-						yield return preloadedScene.loadOp;
+						while (!preloadedScene.loadOp.isDone)
+						{
+							yield return 0;
+						}
 					}
 
 					this.nextActiveMenu = null;
@@ -589,7 +596,17 @@ public class Nav : MonoBehaviour
 					{
 						this.activeMenu = visibleMenu;
 
-						this.popupStack.Add(visibleMenu);
+						// Add / move this popup to the top of the stack
+						int existingPopupIndex = this.popupStack.IndexOf(visibleMenu);
+						if (existingPopupIndex == -1)
+						{
+							this.popupStack.Add(visibleMenu);
+						}
+						else if (existingPopupIndex < this.popupStack.Count-1)
+						{
+							this.popupStack.RemoveAt(existingPopupIndex);
+							this.popupStack.Add(visibleMenu);
+						}
 
 						if (!this.breadcrumbs.Contains(visibleMenu.def))
 						{
@@ -619,6 +636,9 @@ public class Nav : MonoBehaviour
 				{
 					Debug.LogErrorFormat("Failed to load menu scene {0} (menu: {1})", resolvedDef.menuScene, resolvedDef.name);
 				}
+
+				// Normally cleared immediately after load succeeded: clearing here in case load failed
+				this.nextActiveMenu = null;
 			}
 			else
 			{
@@ -652,6 +672,20 @@ public class Nav : MonoBehaviour
 					this.visibleEnvScenes.Add(visibleEnvScene);
 
 					SetRootObjectsActive(scene, true);
+
+					// Find controller
+					EnvSceneController controller = null;
+					// TODO(elliot): FindWithTag("GameController") ?
+					GameObject[] roots = scene.GetRootGameObjects();
+					for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
+					{
+						controller = roots[rootObjectIndex].GetComponent<EnvSceneController>();
+						if (controller != null)
+						{
+							break;
+						}
+					}
+					visibleEnvScene.controller = controller;
 				}
 				else
 				{
@@ -758,11 +792,41 @@ public class Nav : MonoBehaviour
 	VisibleMenu PopTopPopup()
 	{
 		VisibleMenu newTopPopup = null;
+
+
 		if (this.popupStack.Count > 0)
 		{
+			int index = this.popupStack.Count-1;
+			DeactivatePopupAt(index);
+			this.popupStack.RemoveAt(index);
+		}
+
+		// Select prev popup
+		if (this.popupStack.Count > 0)
+		{
+			newTopPopup = this.popupStack[this.popupStack.Count-1];
+
+			this.activeMenu = newTopPopup;
+		}
+		return newTopPopup;
+	}
+
+	void RemoveOtherPopups(MenuData def)
+	{
+		int firstFreeIndex = this.popupStack.ExcludeAll(PopupHasOtherDef, def);
+		for (int i = firstFreeIndex; i < this.popupStack.Count; ++i)
+		{
+			DeactivatePopupAt(i);
+		}
+		this.popupStack.RemoveRange(firstFreeIndex, this.popupStack.Count-firstFreeIndex);
+	}
+
+	void DeactivatePopupAt(int index)
+	{
+		if (index >= 0 && index < this.popupStack.Count)
+		{
 			// Deactivate the current popup
-			VisibleMenu currentPopup = this.popupStack[this.popupStack.Count-1];
-			this.popupStack.RemoveAt(this.popupStack.Count-1);
+			VisibleMenu currentPopup = this.popupStack[index];
 
 			PreloadedScene preloadedScene = currentPopup.loadedScene;
 			if (preloadedScene != null)
@@ -774,16 +838,12 @@ public class Nav : MonoBehaviour
 			{
 				Debug.LogErrorFormat("Visible menu {0} has no loaded scene", currentPopup.def);
 			}
-
-			// Select prev popup
-			if (this.popupStack.Count > 0)
-			{
-				newTopPopup = this.popupStack[this.popupStack.Count-1];
-
-				this.activeMenu = newTopPopup;
-			}
 		}
-		return newTopPopup;
+	}
+
+	static bool PopupHasOtherDef(VisibleMenu popup, MenuData def)
+	{
+		return popup.def != def;
 	}
 
 	PreloadedScene FindLoadedScene(string scenePath)
@@ -875,6 +935,11 @@ public class Nav : MonoBehaviour
 		{
 			return true;
 		}
+		VisibleMenu activeMenu = this.nextActiveMenu ?? this.activeMenu;
+		if (activeMenu != null && activeMenu.def.envScene == envScene.def)
+		{
+			return true;
+		}
 		for (int popupIndex = 0; popupIndex < this.popupStack.Count; ++popupIndex)
 		{
 			if (this.popupStack[popupIndex].def.envScene == envScene.def)
@@ -913,6 +978,8 @@ public class Nav : MonoBehaviour
 				PreloadedScene loadedScene = visibleEnvScene.loadedScene;
 				this.visibleEnvScenes.RemoveAt(i);
 				SetRootObjectsActive(loadedScene.scene, false);
+
+				Debug.LogFormat("Hid env scene {0} ({1})", visibleEnvScene.def, loadedScene.scenePath);
 			}
 		}
 
@@ -929,6 +996,8 @@ public class Nav : MonoBehaviour
 				{
 					this.preloadedScenes.RemoveAt(i);
 					SceneManager.UnloadSceneAsync(otherPreloadedScene.scene);
+
+					Debug.LogFormat("Unloading scene {0}", otherPreloadedScene.scenePath);
 				}
 			}
 		}

@@ -9,13 +9,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5a86956968eb814aa95c07b766db260, type: 3}
-  m_Name: SoccerActivity
+  m_Name: NapActivity
   m_EditorClassIdentifier: 
-  scene: {fileID: 11400000, guid: 735231d4e6b8d0a42824bc192c051d24, type: 2}
+  scene: {fileID: 11400000, guid: 9e8d67d87b3276e4baf8c8749c74a25a, type: 2}
   statBonuses:
-  - name: Soccer Skills
-    stat: {fileID: 11400000, guid: 699b72f44a80ec34792300e9200c0cd0, type: 2}
-    flatBonus: 0
-    bonusPerTimeUnit: 2
-    activePeriodTimeUnits: 0
-    activePeriodExtensionPerTimeUnit: 0
+  - name: Well Rested
+    stat: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
+    flatBonus: 1
+    bonusPerTimeUnit: 0.25
+    activePeriodTimeUnits: 12
+    activePeriodExtensionPerTimeUnit: 0.5
