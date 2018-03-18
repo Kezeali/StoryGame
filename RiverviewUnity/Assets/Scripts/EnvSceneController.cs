@@ -17,7 +17,7 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 	{
 	}
 
-	public void AddEvent(ActiveEvent @event)
+	public void SetEvent(ActiveEvent @event)
 	{
 	}
 

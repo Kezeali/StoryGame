@@ -16,6 +16,9 @@ public class Nav : MonoBehaviour
 	[SerializeField]
 	private int maxPreloadedScenes = 10;
 
+	[SerializeField]
+	private CommuteSceneData[] commuteScenes;
+
 	private enum RequestOp
 	{
 		AddPreloadRequest,
@@ -35,6 +38,7 @@ public class Nav : MonoBehaviour
 		public string preloadRequesterId;
 		public RequestOp operation;
 		public ActiveActivity activeActivity;
+		public ActiveEvent activeEvent;
 	}
 
 	public class PreloadedScene
@@ -70,7 +74,15 @@ public class Nav : MonoBehaviour
 		public SceneData def;
 		public EnvSceneController controller;
 		public ActiveActivity activeActivity;
+		public ActiveEvent activeEvent;
 		public PreloadedScene loadedScene;
+	}
+
+	[System.Serializable]
+	public class VisibleCommute
+	{
+		public CommuteSceneData def;
+		public VisibleEnvScene visibleEnvScene;
 	}
 
 	Queue<MenuSceneToLoad> menuToLoadQueue = new Queue<MenuSceneToLoad>();
@@ -88,6 +100,8 @@ public class Nav : MonoBehaviour
 	Stack<MenuData> breadcrumbs = new Stack<MenuData>();
 
 	List<VisibleEnvScene> visibleEnvScenes = new List<VisibleEnvScene>();
+	VisibleEnvScene activeEnvScene;
+	VisibleCommute activeCommute;
 
 	SaveData saveData;
 
@@ -210,6 +224,13 @@ public class Nav : MonoBehaviour
 
 	public void GoToActivity(ActiveActivity activity, string requesterId)
 	{
+		if (this.activeEnvScene != null && this.activeEnvScene.activeActivity != null)
+		{
+			this.visibleEnvScenes.Remove(this.activeEnvScene);
+			SetRootObjectsActive(this.activeEnvScene.loadedScene.scene, true);
+			this.activeEnvScene = null;
+		}
+
 		SceneData sceneDef = activity.def.scene;
 		if (sceneDef != null)
 		{
@@ -227,6 +248,88 @@ public class Nav : MonoBehaviour
 			{
 				this.StartCoroutine(this.ProcessGoToQueueCoroutine());
 			}
+		}
+	}
+
+	public void GoToCommute(ActiveEvent @event, string requesterId)
+	{
+		// Leave any current active commute
+		if (this.activeCommute != null)
+		{
+			this.RemovePreloadRequest(this.activeCommute.visibleEnvScene.def, requesterId);
+		}
+
+		// SceneData sceneDef = @event.def.scene;
+		// if (sceneDef != null)
+		// {
+		// 	var item = new EnvSceneToLoad()
+		// 	{
+		// 		def = sceneDef,
+		// 		preloadRequesterId = requesterId,
+		// 		operation = RequestOp.AddPreloadRequest,
+		// 		activeEvent = @event
+		// 	};
+
+		// 	this.envSceneToGoToQueue.Enqueue(item);
+
+		// 	if (!this.processingGoToQueue)
+		// 	{
+		// 		this.StartCoroutine(this.ProcessGoToQueueCoroutine());
+		// 	}
+		// }
+	}
+
+	public void GoToCommute(SceneData destination, string requesterId)
+	{
+		// Leave any current active commute
+		if (this.activeCommute != null)
+		{
+			this.RemovePreloadRequest(this.activeCommute.visibleEnvScene.def, requesterId);
+		}
+
+		SceneData sceneDef = destination;
+		if (sceneDef != null)
+		{
+			var item = new EnvSceneToLoad()
+			{
+				def = sceneDef,
+				preloadRequesterId = requesterId,
+				operation = RequestOp.AddPreloadRequest,
+			};
+
+			this.envSceneToGoToQueue.Enqueue(item);
+
+			if (!this.processingGoToQueue)
+			{
+				this.StartCoroutine(this.ProcessGoToQueueCoroutine());
+			}
+		}
+	}
+
+	CommuteSceneData FindCommuteScene(out CommuteDirection direction, SceneData from, SceneData to)
+	{
+		CommuteSceneData result = null;
+		direction = CommuteDirection.AtoB;
+		for (int i = 0; i < this.commuteScenes.Length; ++i)
+		{
+			CommuteSceneData commute = this.commuteScenes[i];
+			bool forward = commute.sceneA == from && commute.sceneB == to;
+			bool backward = !forward && commute.sceneA == to && commute.sceneB == from;
+			if (forward || backward)
+			{
+				result = commute;
+				direction = forward ? CommuteDirection.AtoB : CommuteDirection.BtoA;
+				break;
+			}
+		}
+		return result;
+	}
+
+	public void FinishCommute(string requesterId)
+	{
+		if (this.activeCommute != null)
+		{
+			this.RemovePreloadRequest(this.activeCommute.visibleEnvScene.def, requesterId);
 		}
 	}
 
@@ -437,20 +540,31 @@ public class Nav : MonoBehaviour
 						{
 							yield return op.Current;
 						}
-						if (envSceneRequest.activeActivity != null)
+						if (envSceneRequest.activeActivity != null || envSceneRequest.activeEvent != null)
 						{
 							// Provide a scene reference to the interested activity
 							VisibleEnvScene visibleScene = this.FindVisibleEnvScene(envSceneRequest.def);
 							if (visibleScene != null)
 							{
+								// Remove the scene from any current activities / events using it
 								if (visibleScene.activeActivity != null)
 								{
 									visibleScene.activeActivity.envScene = null;
 								}
+								if (visibleScene.activeEvent != null)
+								{
+									visibleScene.activeEvent.envScene = null;
+								}
+
 								visibleScene.activeActivity = envSceneRequest.activeActivity;
 								if (visibleScene.controller != null)
 								{
 									visibleScene.controller.SetActivity(envSceneRequest.activeActivity);
+								}
+								visibleScene.activeEvent = envSceneRequest.activeEvent;
+								if (visibleScene.controller != null)
+								{
+									visibleScene.controller.SetEvent(envSceneRequest.activeEvent);
 								}
 							}
 							// NOTE: is ok to be null

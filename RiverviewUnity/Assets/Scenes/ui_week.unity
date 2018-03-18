@@ -3361,7 +3361,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2118207277}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9999999
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3878,6 +3878,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: GeneralWeekly
   executeMenu: {fileID: 11400000, guid: 3a182ad9387bd7e4bb7e1a67ea017de3, type: 2}
+  backMenu: {fileID: 11400000, guid: 3db9e5f8f95f1a84d85ab003971a97c5, type: 2}
   availableEvents:
   - {fileID: 11400000, guid: d139e2505083b4f4e921c236df28f851, type: 2}
   parentScene: 

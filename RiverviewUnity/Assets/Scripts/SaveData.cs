@@ -1,3 +1,4 @@
+using UnityEngine;
 using System.Collections.Generic;
 
 namespace Cloverview
@@ -11,7 +12,7 @@ namespace Cloverview
 		public Character pc;
 		public NavSaveData nav;
 		public Dictionary<string, PlanExecutorSaveData> planExecutors;
-		public int randomSeed;
+		public Random.State randomState;
 	}
 
 	[System.Serializable]
@@ -27,6 +28,8 @@ namespace Cloverview
 	public class PlanExecutorSaveData
 	{
 		public int timeUnitsElapsed;
-		public int eventSeed;
+		public Random.State randomState;
+		public Character.Status pcStatusInProgress;
+		public Dictionary<RoleData, Character.Status> leadsStatusInProgress;
 	}
 }
