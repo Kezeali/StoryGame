@@ -16,6 +16,9 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	MenuData executeMenu;
 
 	[SerializeField]
+	MenuData backMenu;
+
+	[SerializeField]
 	EventData[] availableEvents;
 
 	[ReadOnly]
@@ -30,6 +33,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	List<PlanActivityData> preloadedActivities = new List<PlanActivityData>();
 	List<PlanActivityData> nextPreloadedActivities = new List<PlanActivityData>();
 	List<EventData> preloadedEvents = new List<EventData>();
+	List<EventData> nextPreloadedEvents = new List<EventData>();
 
 	// NOTE: these are not applied to the character until the plan finishes executing. This allows the game to be saved and reloaded while the plan is being executed, and if the plan data / schema changes the character wont get or miss extra stat changes.
 	Character.Status statChangesInProgress;
@@ -191,17 +195,101 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		}
 	}
 
-	public void Execute(int instantlyExecuteTimeUnits = 0)
+	void FilterAvailableEvents()
+	{
+		if (this.saveData != null)
+		{
+			Character pc = this.saveData.pc;
+
+			this.nextPreloadedEvents.Clear();
+
+			for (int eventDataIndex = 0; eventDataIndex < this.availableEvents.Length; ++eventDataIndex)
+			{
+				EventData eventDef = this.availableEvents[eventDataIndex];
+				Debug.Assert(!this.nextPreloadedEvents.Contains(eventDef));
+				EventConditions conditions = eventDef.conditions;
+				if (!DesiredStat.DetermineHardNo(pc, conditions.requiredPcStats))
+				{
+					this.nextPreloadedEvents.Add(eventDef);
+				}
+			}
+			// TODO(elliot): cache the sorter to avoid extra garbage creation
+			this.nextPreloadedEvents.Sort(new EventDataSorter() { pc = pc });
+
+			// Remove preload requests for events that are no longer available, and add requests for events that now are
+			// for (int eventIndex = 0; eventIndex < this.preloadedEvents.Count; ++eventIndex)
+			// {
+			// 	EventData eventDef = this.preloadedEvents[eventIndex];
+			// 	if (!this.nextPreloadedEvents.Contains(eventDef))
+			// 	{
+			// 		this.nav.RemovePreloadRequest(eventDef.scene, this.activityScenePreloadId);
+			// 	}
+			// }
+			// for (int eventIndex = 0; eventIndex < this.nextPreloadedEvents.Count; ++eventIndex)
+			// {
+			// 	EventData eventDef = this.nextPreloadedEvents[eventIndex];
+			// 	if (!this.preloadedEvents.Contains(eventDef))
+			// 	{
+			// 		this.nav.Preload(eventDef.scene, this.activityScenePreloadId);
+			// 	}
+			// }
+			var temp = this.preloadedEvents;
+			this.preloadedEvents = this.nextPreloadedEvents;
+			this.nextPreloadedEvents = temp;
+
+			this.nextPreloadedEvents.Clear();
+		}
+		else
+		{
+			this.UnloadAllPreloadedActivities();
+		}
+	}
+
+	public class EventDataSorter : IComparer<EventData>
+	{
+		public Character pc;
+		public int Compare(EventData a, EventData b)
+		{
+			// NOTE(elliot): assumes neither event has any hard-nos
+			if (a.conditions.priority < b.conditions.priority)
+			{
+				return -1;
+			}
+			else if (a.conditions.priority > b.conditions.priority)
+			{
+				return 1;
+			}
+			else
+			{
+				float ratingA = DesiredStat.Rate(pc.status, a.conditions.requiredPcStats);
+				float ratingB = DesiredStat.Rate(pc.status, b.conditions.requiredPcStats);
+				if (ratingA > ratingB)
+				{
+					return -1;
+				}
+				else if (ratingA < ratingB)
+				{
+					return 1;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+		}
+	}
+
+	public void Execute(int skipTimeUnits = 0)
 	{
 		Object.DontDestroyOnLoad(this.gameObject);
 		
 		this.nav.GoTo(this.executeMenu, this.parentScene);
 		this.PreloadPlanActivities();
 
-		this.StartCoroutine(this.ExecuteCoroutine(instantlyExecuteTimeUnits));
+		this.StartCoroutine(this.ExecuteCoroutine(skipTimeUnits, 0));
 	}
 
-	IEnumerator ExecuteCoroutine(int instantlyExecuteTimeUnits)
+	IEnumerator ExecuteCoroutine(int skipTimeUnits, int instantTimeUnits)
 	{
 		Character pc = this.saveData.pc;
 
@@ -216,19 +304,80 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				PlanSlot slot = planSection.slots[slotIndex];
 
 				// NOTE(elliot): Slot must be completely covered by the instantly-execute range if it is to be instantly executed (because being completely covered indicates that, if the schema hasn't changed, that slot was finished when this save file was created)
-				bool instantSlot = localTimeUnitsElapsed + schemaSlot.unitLength < instantlyExecuteTimeUnits;
+				bool skipSlot = localTimeUnitsElapsed + schemaSlot.unitLength < skipTimeUnits;
 
-				IEnumerator op = this.ExecuteActivity(pc, slot, schemaSlot, instantSlot);
-				while (op.MoveNext())
+				bool instantSlot = localTimeUnitsElapsed + schemaSlot.unitLength < instantTimeUnits;
+
+				if (!skipSlot)
 				{
-					if (!instantSlot)
+					// NOTE(elliot): even if the slot itself isn't skipped, skip commute-to events if the skip time is beyond the start of the slot
+					bool skipCommuteTo = localTimeUnitsElapsed <= skipTimeUnits;
+					if (!skipCommuteTo)
 					{
-						yield return op.Current;
+						EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, DesiredSlot.When.Before);
+						if (selectedEvent != null)
+						{
+							ActiveEvent activeEvent = new ActiveEvent()
+							{
+								def = selectedEvent,
+								pc = pc
+							};
+
+							PlanActivityData activity = slot.selectedOption.plannerItem.activity;
+							this.nav.GoToCommute(activeEvent, this.activityScenePreloadId);
+
+							// while (activeEvent.timeUnitsSpent < slotLengthTimeUnits)
+							// {
+							// 	this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
+							// 	activeActivity.timeUnitsSpent += 1;
+
+							// 	yield return new WaitForSeconds(secondsPerUnitTime);
+							// }
+
+							this.nav.FinishCommute(this.activityScenePreloadId);
+						}
+					}
+
+					IEnumerator op = this.ExecuteActivity(pc, slot, schemaSlot, instantSlot);
+					while (op.MoveNext())
+					{
+						if (!instantSlot)
+						{
+							yield return op.Current;
+						}
 					}
 				}
 
 				localTimeUnitsElapsed += schemaSlot.unitLength;
-				if (localTimeUnitsElapsed > instantlyExecuteTimeUnits)
+
+				bool skipCommuteFrom = localTimeUnitsElapsed <= skipTimeUnits;
+				if (!skipCommuteFrom)
+				{
+					EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, DesiredSlot.When.After);
+					if (selectedEvent != null)
+					{
+						ActiveEvent activeEvent = new ActiveEvent()
+						{
+							def = selectedEvent,
+							pc = pc
+						};
+
+						PlanActivityData activity = slot.selectedOption.plannerItem.activity;
+						this.nav.GoToCommute(activeEvent, this.activityScenePreloadId);
+
+						// while (activeEvent.timeUnitsSpent < slotLengthTimeUnits)
+						// {
+						// 	this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
+						// 	activeActivity.timeUnitsSpent += 1;
+
+						// 	yield return new WaitForSeconds(secondsPerUnitTime);
+						// }
+
+						this.nav.FinishCommute(this.activityScenePreloadId);
+					}
+				}
+
+				if (localTimeUnitsElapsed > skipTimeUnits)
 				{
 					this.executorSaveData.timeUnitsElapsed = localTimeUnitsElapsed;
 					yield return 0;
@@ -241,6 +390,10 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		this.executorSaveData.timeUnitsElapsed = 0;
 
 		Debug.Log("Plan done.");
+
+		this.UnloadAllPreloadedActivities();
+
+		this.nav.GoTo(this.backMenu, this.parentScene);
 	}
 
 	IEnumerator ExecuteActivity(Character pc, PlanSlot slot, PlanSchemaSlot schemaSlot, bool instant)
@@ -279,6 +432,25 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				}
 			}
 		}
+	}
+
+	EventData SelectEventFor(PlanSlot slot, PlanSchemaSlot schemaSlot, DesiredSlot.When when)
+	{
+		this.FilterAvailableEvents();
+
+		Random.state = this.executorSaveData.randomState;
+
+		EventData result = null;
+		for (int eventDataIndex = 0; eventDataIndex < this.preloadedEvents.Count; ++eventDataIndex)
+		{
+			EventData def = this.preloadedEvents[eventDataIndex];
+			EventConditions conditions = def.conditions;
+			DesiredSlot[] slotConditions = conditions.slotConditions;
+		}
+
+		this.executorSaveData.randomState = Random.state;
+
+		return result;
 	}
 }
 

@@ -9,43 +9,120 @@ namespace Cloverview
 	[CreateAssetMenu(fileName="Event.asset", menuName="Cloverview/Event Definition")]
 	public class EventData : ScriptableObject, IDataItem
 	{
-		public string narritiveSceneId;
+		public EventConditions conditions;
+		public string narritiveId;
 		public EventSceneScript[] leadRoles;
-		// 
 		public CastingCharacterDescription[] extrasDescriptions;
-		public RoleProp[] props;
+		// TODO(elliot): would be cool if characters could pick up Set Props as part of event scripts
+		public SetProp[] props;
 		public StatBonusData[] statBonuses;
 	}
 
+	public enum EventPriority
+	{
+		Higest,
+		High,
+		Normal,
+		Low,
+		Lowest
+	}
+
 	[System.Serializable]
-	public struct RoleProp
+	public struct EventConditions
+	{
+		public EventPriority priority;
+		public DesiredStat[] requiredPcStats;
+		public DesiredSlot[] slotConditions;
+		public DesiredSection[] sectionConditions;
+	}
+
+	[System.Serializable]
+	public struct DesiredSlot
+	{
+		public enum When
+		{
+			Before,
+			After
+		}
+		public SlotType type;
+		public int time;
+		public When when;
+		[Range(0.0f, 1.0f)]
+		public float chance;
+	}
+
+	[System.Serializable]
+	public struct DesiredSection
+	{
+		public enum When
+		{
+			Before,
+			After
+		}
+		public int sectionIndex;
+		public When when;
+		[Range(0.0f, 1.0f)]
+		public float chance;
+	}
+
+	[System.Serializable]
+	public struct SetProp
 	{
 		public StageMarkData mark;
 		public GameObject prop;
 	}
 
 	[System.Serializable]
-	public struct EventSceneScript
+	public struct CharacterProp
 	{
-		// public RoleData role;
+		public string slotName;
+		public GameObject prop;
 	}
 
 	[System.Serializable]
-	public struct CastingCharacterDescription
+	public struct EventSceneScript
+	{
+		public RoleData role;
+		public CharacterProp[] props;
+	}
+
+	[System.Serializable]
+	public struct CastingCharacterDescription : IComparer<Character>
 	{
 		public StageMarkData mark;
 		public DesiredStat[] stats;
 
 		// returns the index of the first excluded actor
-		public static int SortActors(List<Character> actors, DesiredStat[] desiredStats)
+		public int SortActors(List<Character> actors)
 		{
+			var desiredStats = this.stats;
 			int firstExcluded = 0;
 			for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
 			{
 				DesiredStat desiredStat = desiredStats[desiredStatIndex];
 				firstExcluded = actors.ExcludeAll(DesiredStat.DetermineHardNo, desiredStat, 0, firstExcluded);
 			}
+			actors.Sort(0, firstExcluded, this);
 			return firstExcluded;
+		}
+
+		public int Compare(Character a, Character b)
+		{
+			float ratingA = DesiredStat.Rate(a.status, this.stats);
+			float ratingB = DesiredStat.Rate(b.status, this.stats);
+			// Higher ratings come first
+			if (ratingA > ratingB)
+			{
+				return -1;
+			}
+			else if (ratingA < ratingB)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
 		}
 	}
 
@@ -68,16 +145,50 @@ namespace Cloverview
 
 		public static bool DetermineHardNo(Character actor, DesiredStat desiredStat)
 		{
-			return Rate(actor, desiredStat) == float.NegativeInfinity;
+			return DetermineHardNo(actor.status, desiredStat);
 		}
 
-		public static float Rate(Character actor, DesiredStat desiredStat)
+		public static bool DetermineHardNo(Character.Status actorStatus, DesiredStat desiredStat)
+		{
+			return Rate(actorStatus, desiredStat) == float.NegativeInfinity;
+		}
+
+		public static bool DetermineHardNo(Character actor, DesiredStat[] desiredStats)
+		{
+			return DetermineHardNo(actor.status, desiredStats);
+		}
+
+		public static bool DetermineHardNo(Character.Status actorStatus, DesiredStat[] desiredStats)
+		{
+			bool result = false;
+			for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
+			{
+				if (DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex]) == float.NegativeInfinity)
+				{
+					result = true;
+					break;
+				}
+			}
+			return result;
+		}
+
+		public static float Rate(Character.Status actorStatus, DesiredStat[] desiredStats)
+		{
+			float result = 0;
+			for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
+			{
+				result += DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex]);
+			}
+			return result;
+		}
+
+		public static float Rate(Character.Status actorStatus, DesiredStat desiredStat)
 		{
 			Debug.Assert(desiredStat.minValue <= desiredStat.maxValue);
 			Debug.Assert(desiredStat.importance >= 0 && desiredStat.importance <= 1);
 
 			float rating = 0;
-			Character.Stat stat = actor.status.GetStat(desiredStat.stat);
+			Character.Stat stat = actorStatus.GetStat(desiredStat.stat);
 			float range = desiredStat.maxValue - desiredStat.minValue;
 			float scaledValue = (stat.value - desiredStat.minValue) / range;
 			if (scaledValue >= 0 && scaledValue <= 1)
