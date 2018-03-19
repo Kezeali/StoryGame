@@ -10,6 +10,7 @@ namespace Cloverview
 
 		public Plan weeklyPlan;
 		public Character pc;
+		public List<Character> leadNpcs;
 		public NavSaveData nav;
 		public Dictionary<string, PlanExecutorSaveData> planExecutors;
 		public Random.State randomState;
@@ -29,7 +30,6 @@ namespace Cloverview
 	{
 		public int timeUnitsElapsed;
 		public Random.State randomState;
-		public Character.Status pcStatusInProgress;
-		public Dictionary<RoleData, Character.Status> leadsStatusInProgress;
+		public Cast liveCast;
 	}
 }

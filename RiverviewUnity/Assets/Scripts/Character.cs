@@ -8,23 +8,23 @@ namespace Cloverview
 	public class Character
 	{
 		[System.Serializable]
-		public struct Status
+		public class Status
 		{
 			public List<Stat> stats;
 
 			static Stack<List<Stat>> statListPool = new Stack<List<Stat>>();
 			public static Status New()
 			{
-				var clone = new Status();
+				var newStatus = new Status();
 				if (statListPool.Count > 0)
 				{
-					clone.stats = statListPool.Pop();
+					newStatus.stats = statListPool.Pop();
 				}
 				else
 				{
-					clone.stats = new List<Stat>();
+					newStatus.stats = new List<Stat>();
 				}
-				return clone;
+				return newStatus;
 			}
 
 			public void Recycle()
@@ -38,9 +38,16 @@ namespace Cloverview
 				}
 			}
 
-			public bool IsUsable()
+			public Status CreateClone()
 			{
-				return this.stats != null;
+				var newStatus = New();
+				newStatus.stats.AddRange(this.stats);
+				return newStatus;
+			}
+
+			public static bool IsUsable(Status status)
+			{
+				return status != null && status.stats != null;
 			}
 
 			public Stat GetStat(CharacterStatDefinition statDef)
@@ -130,17 +137,38 @@ namespace Cloverview
 		[System.NonSerialized]
 		public Status status;
 
+		public Character CreateSimulationClone()
+		{
+			Character clone = new Character();
+			clone.name = this.name;
+			clone.activeBonuses = new List<ActiveBonus>(this.activeBonuses);
+			clone.permanentBonuses = new List<ActiveBonus>(this.permanentBonuses);
+			clone.baseStats = new BaseStat[this.baseStats.Length];
+			System.Array.Copy(this.baseStats, 0, clone.baseStats, 0, this.baseStats.Length);
+			clone.status = this.status.CreateClone();
+			return clone;
+		}
+
+		public void Recycle()
+		{
+			if (Status.IsUsable(this.status))
+			{
+				this.status.Recycle();
+			}
+			this.status = null;
+		}
+
 		public void CalculateStatus()
 		{
 			Status newStatus = CalculateStatus(this);
-			if (this.status.IsUsable())
+			if (Status.IsUsable(this.status))
 			{
 				this.status.Recycle();
 			}
 			this.status = newStatus;
 		}
 
-		public static Status AddStatBonuses(Character character, StatBonusData[] bonuses, int beginTimeUnit, int timeSpent)
+		public void AddStatBonuses(StatBonusData[] bonuses, int beginTimeUnit, int timeSpent)
 		{
 			for (int i = 0; i < bonuses.Length; ++i)
 			{
@@ -151,21 +179,21 @@ namespace Cloverview
 				CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
 				if (activeBonus.IsInfinite())
 				{
-					character.permanentBonuses.Add(activeBonus);
+					this.permanentBonuses.Add(activeBonus);
 				}
 				else
 				{
-					character.activeBonuses.Add(activeBonus);
+					this.activeBonuses.Add(activeBonus);
 				}
 			}
 
-			return CalculateStatus(character);
+			this.CalculateStatus();
 		}
 
 		public void ClearTemporaryStatBonuses()
 		{
 			this.activeBonuses.Clear();
-			this.status = CalculateStatus(this);
+			this.CalculateStatus();
 		}
 
 		public void UpdateStatBonuses(int currentTimeUnit)
@@ -183,9 +211,7 @@ namespace Cloverview
 			}
 			if (removed)
 			{
-				Status newStatus = CalculateStatus(this);
-				this.status.Recycle();
-				this.status = newStatus;
+				this.CalculateStatus();
 			}
 		}
 

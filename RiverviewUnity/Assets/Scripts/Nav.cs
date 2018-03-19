@@ -19,6 +19,9 @@ public class Nav : MonoBehaviour
 	[SerializeField]
 	private CommuteSceneData[] commuteScenes;
 
+	[SerializeField]
+	private CommuteSceneData defaultCommuteScene;
+
 	private enum RequestOp
 	{
 		AddPreloadRequest,
@@ -39,6 +42,8 @@ public class Nav : MonoBehaviour
 		public RequestOp operation;
 		public ActiveActivity activeActivity;
 		public ActiveEvent activeEvent;
+		public CommuteSceneData commuteDef;
+		public CommuteDirection commuteDirection;
 	}
 
 	public class PreloadedScene
@@ -251,7 +256,7 @@ public class Nav : MonoBehaviour
 		}
 	}
 
-	public void GoToCommute(ActiveEvent @event, string requesterId)
+	public void GoToCommute(ActiveEvent @event, SceneData destination, string requesterId)
 	{
 		// Leave any current active commute
 		if (this.activeCommute != null)
@@ -259,24 +264,46 @@ public class Nav : MonoBehaviour
 			this.RemovePreloadRequest(this.activeCommute.visibleEnvScene.def, requesterId);
 		}
 
-		// SceneData sceneDef = @event.def.scene;
-		// if (sceneDef != null)
-		// {
-		// 	var item = new EnvSceneToLoad()
-		// 	{
-		// 		def = sceneDef,
-		// 		preloadRequesterId = requesterId,
-		// 		operation = RequestOp.AddPreloadRequest,
-		// 		activeEvent = @event
-		// 	};
+		SceneData origin = null;
+		if (this.activeEnvScene != null || destination != null)
+		{
+			origin = this.activeEnvScene != null ? this.activeEnvScene.def : destination;
+			destination = destination != null ? destination : origin;
+		}
 
-		// 	this.envSceneToGoToQueue.Enqueue(item);
+		if (origin != null && destination != null)
+		{
+			SceneData commuteSceneDef = null;
+			CommuteSceneData commuteData = null;
+			CommuteDirection direction = CommuteDirection.AtoB;
+			if (origin != destination)
+			{
+				commuteData = FindCommuteScene(out direction, origin, destination);
+				commuteSceneDef = commuteData.commuteScene;
+			}
+			else
+			{
+				// No commute needs to happen if origin & destination are the same scene
+				commuteSceneDef = origin;
+			}
 
-		// 	if (!this.processingGoToQueue)
-		// 	{
-		// 		this.StartCoroutine(this.ProcessGoToQueueCoroutine());
-		// 	}
-		// }
+			var item = new EnvSceneToLoad()
+			{
+				def = commuteSceneDef,
+				preloadRequesterId = requesterId,
+				operation = RequestOp.AddPreloadRequest,
+				activeEvent = @event,
+				commuteDef = commuteData,
+				commuteDirection = direction,
+			};
+
+			this.envSceneToGoToQueue.Enqueue(item);
+
+			if (!this.processingGoToQueue)
+			{
+				this.StartCoroutine(this.ProcessGoToQueueCoroutine());
+			}
+		}
 	}
 
 	public void GoToCommute(SceneData destination, string requesterId)
@@ -308,7 +335,7 @@ public class Nav : MonoBehaviour
 
 	CommuteSceneData FindCommuteScene(out CommuteDirection direction, SceneData from, SceneData to)
 	{
-		CommuteSceneData result = null;
+		CommuteSceneData result = this.defaultCommuteScene;
 		direction = CommuteDirection.AtoB;
 		for (int i = 0; i < this.commuteScenes.Length; ++i)
 		{
