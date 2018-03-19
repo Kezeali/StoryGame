@@ -7,13 +7,11 @@ namespace Cloverview
 	{
 		public PlanActivityData def;
 		public Nav.VisibleEnvScene envScene;
-		public Character pc;
-		public List<Character> npcs = new List<Character>();
+		public Cast cast;
 		public int timeUnitsSpent;
 
-		public Character.Status Progress(Character.Status statusInProgress)
+		public void Progress()
 		{
-			return statusInProgress;
 		}
 	}
 

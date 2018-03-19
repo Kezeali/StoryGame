@@ -291,7 +291,15 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 
 	IEnumerator ExecuteCoroutine(int skipTimeUnits, int instantTimeUnits)
 	{
-		Character pc = this.saveData.pc;
+		var liveCast = new Cast();
+		this.executorSaveData.liveCast = liveCast;
+
+		liveCast.pc = this.saveData.pc.CreateSimulationClone();
+		liveCast.leadNpcs = new List<Character>(this.saveData.leadNpcs.Count);
+		for (int npcIndex = 0; npcIndex < this.saveData.leadNpcs.Count; ++npcIndex)
+		{
+			liveCast.leadNpcs.Add(this.saveData.leadNpcs[npcIndex].CreateSimulationClone());
+		}
 
 		int localTimeUnitsElapsed = 0;
 		for (int sectionIndex = 0; sectionIndex < this.planSchema.sections.Length; ++sectionIndex)
@@ -314,31 +322,39 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 					bool skipCommuteTo = localTimeUnitsElapsed <= skipTimeUnits;
 					if (!skipCommuteTo)
 					{
-						EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, DesiredSlot.When.Before);
+						EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.Before);
 						if (selectedEvent != null)
 						{
+							Debug.LogFormat("Executing event {0}", selectedEvent);
+
 							ActiveEvent activeEvent = new ActiveEvent()
 							{
 								def = selectedEvent,
-								pc = pc
+								cast = liveCast
 							};
 
-							PlanActivityData activity = slot.selectedOption.plannerItem.activity;
-							this.nav.GoToCommute(activeEvent, this.activityScenePreloadId);
+							SceneData scene = null;
+							PlanActivityData activityData = GetActivity(slot);
+							if (activityData != null)
+							{
+								scene = activityData.scene;
+							}
 
-							// while (activeEvent.timeUnitsSpent < slotLengthTimeUnits)
-							// {
-							// 	this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
-							// 	activeActivity.timeUnitsSpent += 1;
+							this.nav.GoToCommute(activeEvent, scene, this.activityScenePreloadId);
+							yield return 0;
 
-							// 	yield return new WaitForSeconds(secondsPerUnitTime);
-							// }
+							EventProgressResult result = EventProgressResult.Continue;
+							while (result == EventProgressResult.Continue)
+							{
+								result = activeEvent.Progress();
+								yield return 0;
+							}
 
 							this.nav.FinishCommute(this.activityScenePreloadId);
 						}
 					}
 
-					IEnumerator op = this.ExecuteActivity(pc, slot, schemaSlot, instantSlot);
+					IEnumerator op = this.ExecuteActivity(liveCast, slot, schemaSlot, instantSlot);
 					while (op.MoveNext())
 					{
 						if (!instantSlot)
@@ -353,25 +369,45 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				bool skipCommuteFrom = localTimeUnitsElapsed <= skipTimeUnits;
 				if (!skipCommuteFrom)
 				{
-					EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, DesiredSlot.When.After);
+					EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.After);
 					if (selectedEvent != null)
 					{
+						Debug.LogFormat("Executing event {0}", selectedEvent);
+
 						ActiveEvent activeEvent = new ActiveEvent()
 						{
 							def = selectedEvent,
-							pc = pc
+							cast = liveCast
 						};
 
-						PlanActivityData activity = slot.selectedOption.plannerItem.activity;
-						this.nav.GoToCommute(activeEvent, this.activityScenePreloadId);
+						SceneData scene = null;
+						if (slotIndex < schemaSection.slots.Length-1)
+						{
+							PlanSlot nextSlot = planSection.slots[slotIndex+1];
+							PlanActivityData activityData = GetActivity(nextSlot);
+							if (activityData != null)
+							{
+								scene = activityData.scene;
+							}
+						}
+						else
+						{
+							PlanActivityData activityData = GetActivity(slot);
+							if (activityData != null)
+							{
+								scene = activityData.scene;
+							}
+						}
 
-						// while (activeEvent.timeUnitsSpent < slotLengthTimeUnits)
-						// {
-						// 	this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
-						// 	activeActivity.timeUnitsSpent += 1;
+						this.nav.GoToCommute(activeEvent, scene, this.activityScenePreloadId);
+						yield return 0;
 
-						// 	yield return new WaitForSeconds(secondsPerUnitTime);
-						// }
+						EventProgressResult result = EventProgressResult.Continue;
+						while (result == EventProgressResult.Continue)
+						{
+							result = activeEvent.Progress();
+							yield return 0;
+						}
 
 						this.nav.FinishCommute(this.activityScenePreloadId);
 					}
@@ -396,12 +432,25 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		this.nav.GoTo(this.backMenu, this.parentScene);
 	}
 
-	IEnumerator ExecuteActivity(Character pc, PlanSlot slot, PlanSchemaSlot schemaSlot, bool instant)
+	static PlanActivityData GetActivity(PlanSlot slot)
+	{
+		PlanActivityData result = null;
+		if (slot.selectedOption != null && slot.selectedOption.plannerItem != null)
+		{
+			result = slot.selectedOption.plannerItem.activity;
+		}
+		return result;
+	}
+
+	IEnumerator ExecuteActivity(Cast liveCast, PlanSlot slot, PlanSchemaSlot schemaSlot, bool instant)
 	{
 		float secondsPerUnitTime = 2;
 		if (slot.selectedOption != null)
 		{
 			int slotLengthTimeUnits = schemaSlot.unitLength;
+			int timeUnitsBeforeEvent = slotLengthTimeUnits / 2;
+
+			EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.During);
 
 			PlanOption option = slot.selectedOption;
 			Debug.Assert(option.plannerItem != null);
@@ -411,7 +460,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				var activeActivity = new ActiveActivity()
 				{
 					def = activity,
-					pc = pc
+					cast = liveCast
 				};
 
 				Debug.LogFormat("Executing plannerItem: {0}", option.plannerItem);
@@ -419,11 +468,51 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				if (!instant)
 				{
 					this.nav.GoToActivity(activeActivity, this.activityScenePreloadId);
+					yield return 0;
+				}
+
+				while (activeActivity.timeUnitsSpent < timeUnitsBeforeEvent)
+				{
+					activeActivity.Progress();
+					activeActivity.timeUnitsSpent += 1;
+					if (!instant)
+					{
+						yield return new WaitForSeconds(secondsPerUnitTime);
+					}
+				}
+
+				if (selectedEvent != null)
+				{
+					Debug.LogFormat("Executing event {0}", selectedEvent);
+
+					ActiveEvent activeEvent = new ActiveEvent()
+					{
+						def = selectedEvent,
+						cast = liveCast
+					};
+
+					SceneData activityScene = null;
+					if (!instant)
+					{
+						activityScene = activity.scene;
+					}
+					// NOTE(elliot): this is just to make sure the activity scene is passed to the event as soon as it loads (if it hasn't already). no actual commute is expected, as the activity scene should already be the current scene.
+					this.nav.GoToCommute(activeEvent, activityScene, this.activityScenePreloadId);
+					yield return 0;
+
+					EventProgressResult result = EventProgressResult.Continue;
+					while (result == EventProgressResult.Continue)
+					{
+						result = activeEvent.Progress();
+						yield return 0;
+					}
+
+					this.nav.FinishCommute(this.activityScenePreloadId);
 				}
 
 				while (activeActivity.timeUnitsSpent < slotLengthTimeUnits)
 				{
-					this.statChangesInProgress = activeActivity.Progress(this.statChangesInProgress);
+					activeActivity.Progress();
 					activeActivity.timeUnitsSpent += 1;
 					if (!instant)
 					{
@@ -434,18 +523,45 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		}
 	}
 
-	EventData SelectEventFor(PlanSlot slot, PlanSchemaSlot schemaSlot, DesiredSlot.When when)
+	EventData SelectEventFor(PlanSlot slot, PlanSchemaSlot schemaSlot, EventSide when)
 	{
 		this.FilterAvailableEvents();
 
 		Random.state = this.executorSaveData.randomState;
 
+		// NOTE(elliot): events should be sorted by priority at this point, so higher priority events will get a chance to go first
 		EventData result = null;
 		for (int eventDataIndex = 0; eventDataIndex < this.preloadedEvents.Count; ++eventDataIndex)
 		{
 			EventData def = this.preloadedEvents[eventDataIndex];
 			EventConditions conditions = def.conditions;
 			DesiredSlot[] slotConditions = conditions.slotConditions;
+			for (int conditionIndex = 0; conditionIndex < slotConditions.Length; ++conditionIndex)
+			{
+				bool conditionPassed = false;
+				DesiredSlot slotCondition = slotConditions[conditionIndex];
+				if (slotCondition.when == when)
+				{
+					if (slotCondition.type == slot.slotType)
+					{
+						conditionPassed = true;
+					}
+					else if (slotCondition.time >= 0 && slotCondition.time > schemaSlot.unitIndex && slotCondition.time < schemaSlot.unitIndex + schemaSlot.unitLength)
+					{
+						conditionPassed = true;
+					}
+				}
+				if (conditionPassed)
+				{
+					float randomValue = Random.value;
+					if (randomValue <= slotCondition.chance)
+					{
+						// Condition & random chance passed, select this event
+						result = def;
+						break;
+					}
+				}
+			}
 		}
 
 		this.executorSaveData.randomState = Random.state;

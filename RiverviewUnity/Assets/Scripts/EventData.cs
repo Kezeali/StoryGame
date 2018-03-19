@@ -33,34 +33,26 @@ namespace Cloverview
 		public EventPriority priority;
 		public DesiredStat[] requiredPcStats;
 		public DesiredSlot[] slotConditions;
-		public DesiredSection[] sectionConditions;
+	}
+
+	public enum EventSide
+	{
+		Before,
+		During,
+		After
 	}
 
 	[System.Serializable]
 	public struct DesiredSlot
 	{
-		public enum When
-		{
-			Before,
-			After
-		}
+		// Must match either type OR time if they are set (if both are set only one must match)
 		public SlotType type;
-		public int time;
-		public When when;
-		[Range(0.0f, 1.0f)]
-		public float chance;
-	}
-
-	[System.Serializable]
-	public struct DesiredSection
-	{
-		public enum When
-		{
-			Before,
-			After
-		}
+		public int time; // Match the slot overlapping time
+		// Must match section index if it is set
 		public int sectionIndex;
-		public When when;
+		// So if sectionIndex is set, but if type is None and time is -1, this matches any slot in the section.
+
+		public EventSide when;
 		[Range(0.0f, 1.0f)]
 		public float chance;
 	}
