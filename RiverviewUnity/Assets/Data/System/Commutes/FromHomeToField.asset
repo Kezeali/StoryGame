@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93afc9a8e67dc744f9251465c5d91764, type: 3}
+  m_Name: FromHomeToField
+  m_EditorClassIdentifier: 
+  commuteScene: {fileID: 11400000, guid: edbac21b1d70dcd46b8f1f3aa55b21c1, type: 2}
+  sceneA: {fileID: 11400000, guid: 9e8d67d87b3276e4baf8c8749c74a25a, type: 2}
+  sceneB: {fileID: 11400000, guid: 735231d4e6b8d0a42824bc192c051d24, type: 2}

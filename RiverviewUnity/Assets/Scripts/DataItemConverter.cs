@@ -7,7 +7,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-	public class DataItemConverter : IYamlTypeConverter
+	public sealed class DataItemConverter : IYamlTypeConverter
 	{
 		private class DataItemCollection : Dictionary<string, IDataItem>
 		{

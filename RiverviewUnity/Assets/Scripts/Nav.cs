@@ -83,13 +83,6 @@ public class Nav : MonoBehaviour
 		public PreloadedScene loadedScene;
 	}
 
-	[System.Serializable]
-	public class VisibleCommute
-	{
-		public CommuteSceneData def;
-		public VisibleEnvScene visibleEnvScene;
-	}
-
 	Queue<MenuSceneToLoad> menuToLoadQueue = new Queue<MenuSceneToLoad>();
 	Queue<EnvSceneToLoad> envSceneToLoadQueue = new Queue<EnvSceneToLoad>();
 	bool processingQueue = false;
@@ -106,7 +99,7 @@ public class Nav : MonoBehaviour
 
 	List<VisibleEnvScene> visibleEnvScenes = new List<VisibleEnvScene>();
 	VisibleEnvScene activeEnvScene;
-	VisibleCommute activeCommute;
+	CommuteSceneData activeCommuteDef;
 
 	SaveData saveData;
 
@@ -229,13 +222,6 @@ public class Nav : MonoBehaviour
 
 	public void GoToActivity(ActiveActivity activity, string requesterId)
 	{
-		if (this.activeEnvScene != null && this.activeEnvScene.activeActivity != null)
-		{
-			this.visibleEnvScenes.Remove(this.activeEnvScene);
-			SetRootObjectsActive(this.activeEnvScene.loadedScene.scene, true);
-			this.activeEnvScene = null;
-		}
-
 		SceneData sceneDef = activity.def.scene;
 		if (sceneDef != null)
 		{
@@ -259,9 +245,9 @@ public class Nav : MonoBehaviour
 	public void GoToCommute(ActiveEvent @event, SceneData destination, string requesterId)
 	{
 		// Leave any current active commute
-		if (this.activeCommute != null)
+		if (this.activeCommuteDef != null)
 		{
-			this.RemovePreloadRequest(this.activeCommute.visibleEnvScene.def, requesterId);
+			this.RemovePreloadRequest(this.activeCommuteDef.commuteScene, requesterId);
 		}
 
 		SceneData origin = null;
@@ -309,9 +295,9 @@ public class Nav : MonoBehaviour
 	public void GoToCommute(SceneData destination, string requesterId)
 	{
 		// Leave any current active commute
-		if (this.activeCommute != null)
+		if (this.activeCommuteDef != null)
 		{
-			this.RemovePreloadRequest(this.activeCommute.visibleEnvScene.def, requesterId);
+			this.RemovePreloadRequest(this.activeCommuteDef.commuteScene, requesterId);
 		}
 
 		SceneData sceneDef = destination;
@@ -354,9 +340,9 @@ public class Nav : MonoBehaviour
 
 	public void FinishCommute(string requesterId)
 	{
-		if (this.activeCommute != null)
+		if (this.activeCommuteDef != null)
 		{
-			this.RemovePreloadRequest(this.activeCommute.visibleEnvScene.def, requesterId);
+			this.RemovePreloadRequest(this.activeCommuteDef.commuteScene, requesterId);
 		}
 	}
 
@@ -567,10 +553,11 @@ public class Nav : MonoBehaviour
 						{
 							yield return op.Current;
 						}
+						VisibleEnvScene visibleScene = null;
 						if (envSceneRequest.activeActivity != null || envSceneRequest.activeEvent != null)
 						{
 							// Provide a scene reference to the interested activity
-							VisibleEnvScene visibleScene = this.FindVisibleEnvScene(envSceneRequest.def);
+							visibleScene = this.FindVisibleEnvScene(envSceneRequest.def);
 							if (visibleScene != null)
 							{
 								// Remove the scene from any current activities / events using it
@@ -592,6 +579,19 @@ public class Nav : MonoBehaviour
 								if (visibleScene.controller != null)
 								{
 									visibleScene.controller.SetEvent(envSceneRequest.activeEvent);
+								}
+							}
+							if (envSceneRequest.commuteDef != null)
+							{
+								this.activeCommuteDef = envSceneRequest.commuteDef;
+								
+								if (visibleScene == null)
+								{
+									visibleScene = this.FindVisibleEnvScene(envSceneRequest.def);
+								}
+								if (visibleScene != null)
+								{
+									visibleScene.controller.SetCommuteDirection(envSceneRequest.commuteDirection);
 								}
 							}
 							// NOTE: is ok to be null
@@ -810,7 +810,22 @@ public class Nav : MonoBehaviour
 				Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
 				if (scene.IsValid() && scene.isLoaded)
 				{
+					if (!envScene.background)
+					{
+						if (this.activeEnvScene != null && this.activeEnvScene.activeActivity != null)
+						{
+							this.visibleEnvScenes.Remove(this.activeEnvScene);
+							SetRootObjectsActive(this.activeEnvScene.loadedScene.scene, true);
+							this.activeEnvScene = null;
+						}
+					}
+
 					this.visibleEnvScenes.Add(visibleEnvScene);
+
+					if (!envScene.background)
+					{
+						this.activeEnvScene = visibleEnvScene;
+					}
 
 					SetRootObjectsActive(scene, true);
 

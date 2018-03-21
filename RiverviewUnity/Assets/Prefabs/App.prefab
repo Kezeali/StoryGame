@@ -107,19 +107,7 @@ MonoBehaviour:
     type: 2}
   nav: {fileID: 114650394401774564}
   plannerData: {fileID: 11400000, guid: 2eea9fa73fb9b4c4f9e277940ca300d7, type: 2}
-  defaultSave:
-    name: New
-    weeklyPlan:
-      name: 
-      sections: []
-    pc:
-      name: You
-      activeBonuses: []
-      baseStats:
-      - definition: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
-        value: 10
-      - definition: {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
-        value: 0
+  gameData: {fileID: 11400000, guid: da2642e653cc19c448e2b207d88d799a, type: 2}
   defaultSaveData: {fileID: 11400000, guid: 38951aae88785cf4e864ff802aeb357b, type: 2}
 --- !u!114 &114650394401774564
 MonoBehaviour:
@@ -133,6 +121,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bootMenuForPlayInEditor: {fileID: 11400000, guid: f1d8c551a3c69df4b8bc44d9c82d92e6,
+    type: 2}
+  maxPreloadedScenes: 10
+  commuteScenes:
+  - {fileID: 11400000, guid: 44214e8a753f0e24482fd9bf872622f6, type: 2}
+  defaultCommuteScene: {fileID: 11400000, guid: eaa4d9d27d5cb494ea0721bc9434e576,
     type: 2}
 --- !u!114 &114875822803327668
 MonoBehaviour:

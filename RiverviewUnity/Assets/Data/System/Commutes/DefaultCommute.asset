@@ -8,12 +8,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe062f2dbd9c51749bb2c43d61badfdd, type: 3}
-  m_Name: AcuityStat
+  m_Script: {fileID: 11500000, guid: 93afc9a8e67dc744f9251465c5d91764, type: 3}
+  m_Name: DefaultCommute
   m_EditorClassIdentifier: 
-  title: Acquity
-  valueFormat: 
-  baseValue: 0
-  minValue: -100
-  maxValue: 100
-  visibility: -1
+  commuteScene: {fileID: 11400000, guid: edbac21b1d70dcd46b8f1f3aa55b21c1, type: 2}
+  sceneA: {fileID: 0}
+  sceneB: {fileID: 0}

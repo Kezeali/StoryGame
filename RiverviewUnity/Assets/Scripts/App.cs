@@ -22,9 +22,13 @@ public class App : MonoBehaviour
 	private PlannerData plannerData;
 
 	[SerializeField]
+	private GameData gameData;
+
+	[SerializeField]
 	private DefaultSaveData defaultSaveData;
 
 	DataItemConverter dataItemConverter;
+	System.Func<ITypeInspector, ITypeInspector> unitySerialisationTypeInspectorConstructor;
 
 	SaveData saveData;
 
@@ -133,12 +137,16 @@ public class App : MonoBehaviour
 		this.dataItemConverter.AddDataItemRange(this.plannerData.characterStats);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.subjects);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.planActivities);
+		this.dataItemConverter.AddDataItemRange(this.gameData.roles);
+
+		this.unitySerialisationTypeInspectorConstructor = (inner) => { return new UnitySerialisationTypeInspector(inner); };
 
 		string data = System.IO.File.ReadAllText("save.txt");
 
 		var deserializer = new DeserializerBuilder()
 			.WithNamingConvention(new CamelCaseNamingConvention())
 			.WithTypeConverter(this.dataItemConverter)
+			.WithTypeInspector(this.unitySerialisationTypeInspectorConstructor)
 			.IgnoreUnmatchedProperties()
 			.Build();
 
@@ -158,6 +166,11 @@ public class App : MonoBehaviour
 		{
 			this.saveData.pc = this.defaultSaveData.saveData.pc;
 		}
+		if (this.saveData.leadNpcs == null)
+		{
+			this.saveData.leadNpcs = new List<Character>();
+		}
+		this.saveData.pc.PostLoadCleanup();
 		this.saveData.pc.CalculateStatus();
 
 		Object.Instantiate(this.menuCameraPrefab, this.transform);
@@ -235,10 +248,10 @@ public class App : MonoBehaviour
 
 	public void Save()
 	{
-		Save(this.saveData, this.dataItemConverter);
+		Save(this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 	}
 
-	public static void Save(SaveData saveData, DataItemConverter dataItemConverter)
+	public static void Save(SaveData saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> unitySerialisationTypeInspectorConstructor)
 	{
 		try
 		{
@@ -248,6 +261,7 @@ public class App : MonoBehaviour
 					.EnsureRoundtrip()
 					.EmitDefaults()
 					.WithTypeConverter(dataItemConverter)
+					.WithTypeInspector(unitySerialisationTypeInspectorConstructor)
 					.Build();
 				
 				serializer.Serialize(buffer, saveData, typeof(SaveData));

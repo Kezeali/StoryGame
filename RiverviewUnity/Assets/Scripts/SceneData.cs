@@ -9,6 +9,7 @@ namespace Cloverview
 	{
 		public SceneField scene;
 		public bool allowPreload = true;
+		public bool background = false;
 	}
 
 }

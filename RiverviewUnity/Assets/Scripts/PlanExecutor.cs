@@ -35,8 +35,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	List<EventData> preloadedEvents = new List<EventData>();
 	List<EventData> nextPreloadedEvents = new List<EventData>();
 
-	// NOTE: these are not applied to the character until the plan finishes executing. This allows the game to be saved and reloaded while the plan is being executed, and if the plan data / schema changes the character wont get or miss extra stat changes.
-	Character.Status statChangesInProgress;
+	bool executing;
 
 	public void OnEnable()
 	{
@@ -281,25 +280,47 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 
 	public void Execute(int skipTimeUnits = 0)
 	{
-		Object.DontDestroyOnLoad(this.gameObject);
-		
-		this.nav.GoTo(this.executeMenu, this.parentScene);
-		this.PreloadPlanActivities();
+		if (!this.executing)
+		{
+			Object.DontDestroyOnLoad(this.gameObject);
+			
+			this.nav.GoTo(this.executeMenu, this.parentScene);
+			this.PreloadPlanActivities();
 
-		this.StartCoroutine(this.ExecuteCoroutine(skipTimeUnits, 0));
+			this.StartCoroutine(this.ExecuteCoroutine(skipTimeUnits, 0));
+		}
 	}
 
 	IEnumerator ExecuteCoroutine(int skipTimeUnits, int instantTimeUnits)
 	{
-		var liveCast = new Cast();
+		this.executing = true;
+
+		Cast liveCast = null;
+		if (skipTimeUnits > 0)
+		{
+			liveCast = this.executorSaveData.liveCast;
+		}
+		if (liveCast == null)
+		{
+			liveCast = new Cast();
+		}
+		if (liveCast.pc == null)
+		{
+			liveCast.pc = this.saveData.pc.CreateSimulationClone();
+		}
+		if (liveCast.leadNpcs == null)
+		{
+			liveCast.leadNpcs = new List<Character>(this.saveData.leadNpcs.Count);
+			for (int npcIndex = 0; npcIndex < this.saveData.leadNpcs.Count; ++npcIndex)
+			{
+				Character realNpc = this.saveData.leadNpcs[npcIndex];
+				liveCast.leadNpcs.Add(realNpc.CreateSimulationClone());
+			}
+		}
 		this.executorSaveData.liveCast = liveCast;
 
-		liveCast.pc = this.saveData.pc.CreateSimulationClone();
-		liveCast.leadNpcs = new List<Character>(this.saveData.leadNpcs.Count);
-		for (int npcIndex = 0; npcIndex < this.saveData.leadNpcs.Count; ++npcIndex)
-		{
-			liveCast.leadNpcs.Add(this.saveData.leadNpcs[npcIndex].CreateSimulationClone());
-		}
+		Random.InitState(1234818);
+		this.executorSaveData.randomState = Random.state;
 
 		int localTimeUnitsElapsed = 0;
 		for (int sectionIndex = 0; sectionIndex < this.planSchema.sections.Length; ++sectionIndex)
@@ -354,7 +375,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 						}
 					}
 
-					IEnumerator op = this.ExecuteActivity(liveCast, slot, schemaSlot, instantSlot);
+					IEnumerator op = this.ExecuteActivity(liveCast, slot, schemaSlot, this.saveData.time + localTimeUnitsElapsed, instantSlot);
 					while (op.MoveNext())
 					{
 						if (!instantSlot)
@@ -365,6 +386,12 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				}
 
 				localTimeUnitsElapsed += schemaSlot.unitLength;
+
+				if (localTimeUnitsElapsed > skipTimeUnits)
+				{
+					this.executorSaveData.timeUnitsElapsed = localTimeUnitsElapsed;
+					yield return 0;
+				}
 
 				bool skipCommuteFrom = localTimeUnitsElapsed <= skipTimeUnits;
 				if (!skipCommuteFrom)
@@ -412,20 +439,35 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 						this.nav.FinishCommute(this.activityScenePreloadId);
 					}
 				}
-
-				if (localTimeUnitsElapsed > skipTimeUnits)
-				{
-					this.executorSaveData.timeUnitsElapsed = localTimeUnitsElapsed;
-					yield return 0;
-				}
 			}
 		}
 
-		// TODO(elliot): write final stats out to all characters
+		this.saveData.pc.ApplyStatus(liveCast.pc);
+		for (int simNpcIndex = 0; simNpcIndex < liveCast.leadNpcs.Count; ++simNpcIndex)
+		{
+			Character simNpc = liveCast.leadNpcs[simNpcIndex];
+			Character actualNpc = null;
+			for (int npcIndex = 0; npcIndex < this.saveData.leadNpcs.Count; ++npcIndex)
+			{
+				if (this.saveData.leadNpcs[npcIndex].name == simNpc.name)
+				{
+					actualNpc = this.saveData.leadNpcs[npcIndex];
+				}
+			}
+			if (actualNpc != null)
+			{
+				actualNpc.ApplyStatus(simNpc);
+			}
+		}
 
+		this.saveData.time += this.executorSaveData.timeUnitsElapsed;
+
+		this.executorSaveData.liveCast = null;
 		this.executorSaveData.timeUnitsElapsed = 0;
 
 		Debug.Log("Plan done.");
+		
+		this.executing = false;
 
 		this.UnloadAllPreloadedActivities();
 
@@ -442,7 +484,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		return result;
 	}
 
-	IEnumerator ExecuteActivity(Cast liveCast, PlanSlot slot, PlanSchemaSlot schemaSlot, bool instant)
+	IEnumerator ExecuteActivity(Cast liveCast, PlanSlot slot, PlanSchemaSlot schemaSlot, int beginTimeUnit, bool instant)
 	{
 		float secondsPerUnitTime = 2;
 		if (slot.selectedOption != null)
@@ -460,7 +502,9 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				var activeActivity = new ActiveActivity()
 				{
 					def = activity,
-					cast = liveCast
+					subjectDef = option.plannerItem.subject,
+					cast = liveCast,
+					beginTimeUnit = beginTimeUnit
 				};
 
 				Debug.LogFormat("Executing plannerItem: {0}", option.plannerItem);
@@ -514,11 +558,16 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				{
 					activeActivity.Progress();
 					activeActivity.timeUnitsSpent += 1;
+
+					liveCast.pc.UpdateStatBonuses(beginTimeUnit + activeActivity.timeUnitsSpent);
+
 					if (!instant)
 					{
 						yield return new WaitForSeconds(secondsPerUnitTime);
 					}
 				}
+
+				activeActivity.Finish();
 			}
 		}
 	}
