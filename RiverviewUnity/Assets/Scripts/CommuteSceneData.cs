@@ -15,7 +15,7 @@ namespace Cloverview
 		public SceneData sceneB;
 	}
 
-	enum CommuteDirection
+	public enum CommuteDirection
 	{
 		AtoB,
 		BtoA

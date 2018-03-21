@@ -8,6 +8,7 @@ namespace Cloverview
 	{
 		public string name;
 
+		public int time;
 		public Plan weeklyPlan;
 		public Character pc;
 		public List<Character> leadNpcs;

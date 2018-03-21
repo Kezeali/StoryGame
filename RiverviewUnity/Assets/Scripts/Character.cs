@@ -73,6 +73,7 @@ namespace Cloverview
 			{
 				// Create a default stat in case there is no current value
 				Stat result = default(Stat);
+				result.definition = statDef;
 				result.value = statDef.baseValue;
 								
 				for (int i = 0; i < this.stats.Count; ++i)
@@ -131,6 +132,7 @@ namespace Cloverview
 		}
 
 		public string name;
+		public RoleData role;
 		public List<ActiveBonus> activeBonuses;
 		public List<ActiveBonus> permanentBonuses;
 		public BaseStat[] baseStats;
@@ -158,6 +160,12 @@ namespace Cloverview
 			this.status = null;
 		}
 
+		public void PostLoadCleanup()
+		{
+			this.activeBonuses.RemoveAll(InvalidBonus);
+			this.permanentBonuses.RemoveAll(InvalidBonus);
+		}
+
 		public void CalculateStatus()
 		{
 			Status newStatus = CalculateStatus(this);
@@ -170,23 +178,41 @@ namespace Cloverview
 
 		public void AddStatBonuses(StatBonusData[] bonuses, int beginTimeUnit, int timeSpent)
 		{
-			for (int i = 0; i < bonuses.Length; ++i)
+			Debug.Assert(bonuses != null);
+			if (bonuses != null && bonuses.Length > 0)
 			{
-				var activeBonus = new ActiveBonus()
+				for (int i = 0; i < bonuses.Length; ++i)
 				{
-					beginTimeUnit = beginTimeUnit
-				};
-				CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
-				if (activeBonus.IsInfinite())
-				{
-					this.permanentBonuses.Add(activeBonus);
+					Debug.Assert(bonuses[i].stat != null);
+					if (bonuses[i].stat != null)
+					{
+						var activeBonus = new ActiveBonus()
+						{
+							definition = bonuses[i],
+							beginTimeUnit = beginTimeUnit
+						};
+						CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
+						if (activeBonus.IsInfinite())
+						{
+							this.permanentBonuses.Add(activeBonus);
+						}
+						else
+						{
+							this.activeBonuses.Add(activeBonus);
+						}
+					}
 				}
-				else
-				{
-					this.activeBonuses.Add(activeBonus);
-				}
-			}
 
+				this.CalculateStatus();
+			}
+		}
+
+		public void ApplyStatus(Character simCharacter)
+		{
+			this.permanentBonuses.Clear();
+			this.activeBonuses.Clear();
+			this.permanentBonuses.AddRange(simCharacter.permanentBonuses);
+			this.activeBonuses.AddRange(simCharacter.activeBonuses);
 			this.CalculateStatus();
 		}
 
@@ -259,26 +285,35 @@ namespace Cloverview
 				character.permanentBonuses = new List<ActiveBonus>();
 			}
 
-			ApplyStatBonuses(ref result, character.activeBonuses);
-			ApplyStatBonuses(ref result, character.permanentBonuses);
+			ApplyStatBonuses(result, character.activeBonuses);
+			ApplyStatBonuses(result, character.permanentBonuses);
 			
 			return result;
 		}
 
-		static void ApplyStatBonuses(ref Status result, List<ActiveBonus> bonuses)
+		static bool InvalidBonus(ActiveBonus bonus)
+		{
+			return bonus.definition == null;
+		}
+
+		static void ApplyStatBonuses(Status result, List<ActiveBonus> bonuses)
 		{
 			for (int activeBonusIndex = 0; activeBonusIndex < bonuses.Count; ++activeBonusIndex)
 			{
 				ActiveBonus bonus = bonuses[activeBonusIndex];
 				
-				var stat = result.GetAndRemoveStat(bonus.definition.stat);
+				Debug.Assert(bonus.definition != null);
+				if (bonus.definition != null)
+				{
+					var stat = result.GetAndRemoveStat(bonus.definition.stat);
 
-				// NOTE(elliot): this is adding the bonus value on to the existing stat value retrieved
-				stat.value += bonus.value;
-				stat.valueIncludesBonus += bonus.value;
+					// NOTE(elliot): this is adding the bonus value on to the existing stat value retrieved
+					stat.value += bonus.value;
+					stat.valueIncludesBonus += bonus.value;
 
-				// add the updated stat back to the list
-				result.stats.Add(stat);
+					// add the updated stat back to the list
+					result.stats.Add(stat);
+				}
 			}
 		}
 	}

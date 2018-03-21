@@ -28,6 +28,10 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 	public void ClearActivity()
 	{
 	}
+
+	public void SetCommuteDirection(CommuteDirection direction)
+	{
+	}
 }
 
 }
