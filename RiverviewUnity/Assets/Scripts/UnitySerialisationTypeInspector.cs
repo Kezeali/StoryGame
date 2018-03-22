@@ -20,31 +20,22 @@ public sealed class UnitySerialisationTypeInspector : TypeInspectorSkeleton
 
 	public override IEnumerable<IPropertyDescriptor> GetProperties(System.Type type, object container)
 	{
-		return innerTypeDescriptor.GetProperties(type, container)
-			.Where(p => p.GetCustomAttribute<SerializeField>() != null)
-			// .Select(p =>
-			// {
-			// 	var descriptor = new PropertyDescriptor(p);
-			// 	var member = p.GetCustomAttribute<YamlMemberAttribute>();
-			// 	if (member != null)
-			// 	{
-			// 		if (member.SerializeAs != null)
-			// 		{
-			// 			descriptor.TypeOverride = member.SerializeAs;
-			// 		}
+		// return innerTypeDescriptor.GetProperties(type, container)
+		// 	.Where(WouldBeSerialisedByUnity)
+		// 	.OrderBy(DefaultOrdering);
+		var properties = innerTypeDescriptor.GetProperties(type, container);
+		properties = properties.Where(WouldBeSerialisedByUnity);
+		return properties.OrderBy(DefaultOrdering);
+	}
 
-			// 		descriptor.Order = member.Order;
-			// 		descriptor.ScalarStyle = member.ScalarStyle;
+	static bool WouldBeSerialisedByUnity(IPropertyDescriptor p)
+	{
+		return p.Public || p.GetCustomAttribute<SerializeField>() != null;
+	}
 
-			// 		if (member.Alias != null)
-			// 		{
-			// 			descriptor.Name = member.Alias;
-			// 		}
-			// 	}
-
-			// 	return (IPropertyDescriptor)descriptor;
-			// })
-			.OrderBy(p => p.Order);
+	static int DefaultOrdering(IPropertyDescriptor p)
+	{
+		return p.Order;
 	}
 }
 
