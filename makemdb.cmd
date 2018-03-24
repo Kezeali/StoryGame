@@ -1,0 +1,1 @@
+"D:\Program Files\Unity-2017.3\Editor\Data\MonoBleedingEdge\bin\cli.bat" "D:\Program Files\Unity-2017.3\Editor\Data\MonoBleedingEdge\lib\mono\4.5\pdb2mdb.exe" "%1"
