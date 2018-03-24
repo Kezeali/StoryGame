@@ -153,12 +153,15 @@ namespace Cloverview
 		public static bool DetermineHardNo(Character.Status actorStatus, DesiredStat[] desiredStats)
 		{
 			bool result = false;
-			for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
+			if (desiredStats != null)
 			{
-				if (DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex]) == float.NegativeInfinity)
+				for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
 				{
-					result = true;
-					break;
+					if (DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex]) == float.NegativeInfinity)
+					{
+						result = true;
+						break;
+					}
 				}
 			}
 			return result;
@@ -167,9 +170,12 @@ namespace Cloverview
 		public static float Rate(Character.Status actorStatus, DesiredStat[] desiredStats)
 		{
 			float result = 0;
-			for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
+			if (desiredStats != null)
 			{
-				result += DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex]);
+				for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
+				{
+					result += DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex]);
+				}
 			}
 			return result;
 		}
