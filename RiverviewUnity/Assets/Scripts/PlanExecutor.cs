@@ -207,7 +207,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				EventData eventDef = this.availableEvents[eventDataIndex];
 				Debug.Assert(!this.nextPreloadedEvents.Contains(eventDef));
 				EventConditions conditions = eventDef.conditions;
-				if (!DesiredStat.DetermineHardNo(pc, conditions.requiredPcStats))
+				if (conditions.requiredPcStats == null || !DesiredStat.DetermineHardNo(pc, conditions.requiredPcStats))
 				{
 					this.nextPreloadedEvents.Add(eventDef);
 				}
@@ -585,30 +585,37 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 			EventData def = this.preloadedEvents[eventDataIndex];
 			EventConditions conditions = def.conditions;
 			DesiredSlot[] slotConditions = conditions.slotConditions;
-			for (int conditionIndex = 0; conditionIndex < slotConditions.Length; ++conditionIndex)
+			if (slotConditions != null)
 			{
-				bool conditionPassed = false;
-				DesiredSlot slotCondition = slotConditions[conditionIndex];
-				if (slotCondition.when == when)
+				for (int conditionIndex = 0; conditionIndex < slotConditions.Length; ++conditionIndex)
 				{
-					if (slotCondition.type == slot.slotType)
+					bool conditionPassed = false;
+					DesiredSlot slotCondition = slotConditions[conditionIndex];
+					if (slotCondition.when == when)
 					{
-						conditionPassed = true;
+						if (slotCondition.type == slot.slotType)
+						{
+							conditionPassed = true;
+						}
+						else if (slotCondition.time >= 0 && slotCondition.time > schemaSlot.unitIndex && slotCondition.time < schemaSlot.unitIndex + schemaSlot.unitLength)
+						{
+							conditionPassed = true;
+						}
 					}
-					else if (slotCondition.time >= 0 && slotCondition.time > schemaSlot.unitIndex && slotCondition.time < schemaSlot.unitIndex + schemaSlot.unitLength)
+					if (conditionPassed)
 					{
-						conditionPassed = true;
+						float randomValue = Random.value;
+						if (randomValue <= slotCondition.chance)
+						{
+							// Condition & random chance passed, select this event
+							result = def;
+							break;
+						}
 					}
 				}
-				if (conditionPassed)
+				if (result != null)
 				{
-					float randomValue = Random.value;
-					if (randomValue <= slotCondition.chance)
-					{
-						// Condition & random chance passed, select this event
-						result = def;
-						break;
-					}
+					break;
 				}
 			}
 		}

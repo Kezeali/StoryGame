@@ -815,7 +815,7 @@ public class Nav : MonoBehaviour
 						if (this.activeEnvScene != null && this.activeEnvScene.activeActivity != null)
 						{
 							this.visibleEnvScenes.Remove(this.activeEnvScene);
-							SetRootObjectsActive(this.activeEnvScene.loadedScene.scene, true);
+							SetRootObjectsActive(this.activeEnvScene.loadedScene.scene, false);
 							this.activeEnvScene = null;
 						}
 					}

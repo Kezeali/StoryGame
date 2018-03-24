@@ -11,5 +11,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5a86956968eb814aa95c07b766db260, type: 3}
   m_Name: GenericActivity
   m_EditorClassIdentifier: 
-  scene: {fileID: 11400000, guid: 9e8d67d87b3276e4baf8c8749c74a25a, type: 2}
+  scene: {fileID: 11400000, guid: edbac21b1d70dcd46b8f1f3aa55b21c1, type: 2}
   statBonuses: []
