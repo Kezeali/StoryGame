@@ -140,6 +140,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9b200a7806099d42adbf3f9b7728bb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  virtualCameras:
+  - {fileID: 1866810516}
 --- !u!4 &127721446
 Transform:
   m_ObjectHideFlags: 0
@@ -877,7 +879,7 @@ Mesh:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: pb_Mesh18996
+  m_Name: pb_Mesh17782
   serializedVersion: 8
   m_SubMeshes:
   - serializedVersion: 2
