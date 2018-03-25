@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 
 namespace Cloverview
 {
@@ -100,6 +101,8 @@ public class Nav : MonoBehaviour
 	List<VisibleEnvScene> visibleEnvScenes = new List<VisibleEnvScene>();
 	VisibleEnvScene activeEnvScene;
 	CommuteSceneData activeCommuteDef;
+
+	CinemachineBrain envCameraBrain;
 
 	SaveData saveData;
 
@@ -202,6 +205,11 @@ public class Nav : MonoBehaviour
 			// 	}
 			// }
 		}
+	}
+
+	public void Initialise(CinemachineBrain envCameraBrain)
+	{
+		this.envCameraBrain = envCameraBrain;
 	}
 
 	public void GoTo(MenuData def, string requesterId = null)
@@ -812,10 +820,9 @@ public class Nav : MonoBehaviour
 				{
 					if (!envScene.background)
 					{
-						if (this.activeEnvScene != null && this.activeEnvScene.activeActivity != null)
+						if (this.activeEnvScene != null)
 						{
-							this.visibleEnvScenes.Remove(this.activeEnvScene);
-							SetRootObjectsActive(this.activeEnvScene.loadedScene.scene, false);
+							this.HideEnvScene(this.activeEnvScene);
 							this.activeEnvScene = null;
 						}
 					}
@@ -842,6 +849,11 @@ public class Nav : MonoBehaviour
 						}
 					}
 					visibleEnvScene.controller = controller;
+
+					if (visibleEnvScene.controller != null)
+					{
+						visibleEnvScene.controller.TransitionIn();
+					}
 				}
 				else
 				{
@@ -857,6 +869,24 @@ public class Nav : MonoBehaviour
 		{
 			Debug.LogErrorFormat("Failed to make the scene at {0} visible", envScene);
 		}
+	}
+
+	void HideEnvScene(VisibleEnvScene visibleEnvScene)
+	{
+		if (visibleEnvScene.controller != null)
+		{
+			visibleEnvScene.controller.TransitionOut(this.DisableEnvScene, visibleEnvScene);
+		}
+		else
+		{
+			this.DisableEnvScene(visibleEnvScene);
+		}
+	}
+
+	void DisableEnvScene(VisibleEnvScene visibleEnvScene)
+	{
+		this.visibleEnvScenes.Remove(visibleEnvScene);
+		SetRootObjectsActive(visibleEnvScene.loadedScene.scene, false);
 	}
 
 	VisibleEnvScene FindVisibleEnvScene(SceneData def)
