@@ -17,10 +17,10 @@ TagManager:
   - 
   - PostProcessingVolumes
   - 
+  - Hidden
   - 
   - 
-  - 
-  - 
+  - EnvTransitions
   - 
   - 
   - 
