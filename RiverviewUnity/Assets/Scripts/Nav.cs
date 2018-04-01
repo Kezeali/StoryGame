@@ -71,6 +71,7 @@ public class Nav : MonoBehaviour
 	public class VisibleMenu
 	{
 		public MenuData def;
+		public MenuSceneController controller;
 		public PreloadedScene loadedScene;
 	}
 
@@ -102,7 +103,7 @@ public class Nav : MonoBehaviour
 	VisibleEnvScene activeEnvScene;
 	CommuteSceneData activeCommuteDef;
 
-	CinemachineBrain envCameraBrain;
+	CinemachineBrain[] envCameraBrain;
 
 	SaveData saveData;
 
@@ -110,6 +111,12 @@ public class Nav : MonoBehaviour
 	bool loadSave = false;
 	Scene bootScene;
 #endif
+
+	public void Awake()
+	{
+		int cameraTypes = System.Enum.GetValues(typeof(EnvCameraType)).Length;
+		this.envCameraBrain = new CinemachineBrain[cameraTypes];
+	}
 
 	public void OnEnable()
 	{
@@ -207,9 +214,16 @@ public class Nav : MonoBehaviour
 		}
 	}
 
-	public void Initialise(CinemachineBrain envCameraBrain)
+	public void SetEnvCamera(EnvCameraType type, CinemachineBrain envCameraBrain)
 	{
-		this.envCameraBrain = envCameraBrain;
+		if (this.envCameraBrain != null && this.envCameraBrain.Length > (int)type)
+		{
+			this.envCameraBrain[(int)type] = envCameraBrain;
+		}
+		else
+		{
+			Debug.LogError("EnvCamera types not initialised properly. Oops");
+		}
 	}
 
 	public void GoTo(MenuData def, string requesterId = null)
@@ -556,7 +570,8 @@ public class Nav : MonoBehaviour
 				{
 					if (envSceneRequest.operation == RequestOp.AddPreloadRequest)
 					{
-						IEnumerator op = this.GoToEnvSceneCoroutine(envSceneRequest.def, envSceneRequest.preloadRequesterId);
+						IEnumerator op =
+							this.GoToEnvSceneCoroutine(envSceneRequest.def, envSceneRequest.preloadRequesterId);
 						while (op.MoveNext())
 						{
 							yield return op.Current;
@@ -616,7 +631,7 @@ public class Nav : MonoBehaviour
 								UnloadUnreferencedScenes();
 							}
 						}
-						if (envSceneRequest.activeActivity != null)
+						if (envSceneRequest.activeActivity != null || envSceneRequest.activeEvent != null)
 						{
 							// Provide a scene reference to the interested activity
 							VisibleEnvScene visibleScene = this.FindVisibleEnvScene(envSceneRequest.def);
@@ -627,8 +642,20 @@ public class Nav : MonoBehaviour
 									visibleScene.controller.ClearActivity();
 									visibleScene.activeActivity = null;
 								}
+								if (visibleScene.activeEvent == envSceneRequest.activeEvent)
+								{
+									visibleScene.controller.ClearEvent();
+									visibleScene.activeEvent = null;
+								}
 							}
-							envSceneRequest.activeActivity.envScene = null;
+							if (envSceneRequest.activeActivity != null)
+							{
+								envSceneRequest.activeActivity.envScene = null;
+							}
+							if (envSceneRequest.activeEvent != null)
+							{
+								envSceneRequest.activeEvent.envScene = null;
+							}
 						}
 					}
 				}
@@ -775,15 +802,34 @@ public class Nav : MonoBehaviour
 						SceneManager.SetActiveScene(scene);
 
 						SetRootObjectsActive(scene, true);
+
+						// Find controller
+						MenuSceneController controller = null;
+						// TODO(elliot): FindWithTag("SceneController") ?
+						GameObject[] roots = scene.GetRootGameObjects();
+						for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
+						{
+							controller = roots[rootObjectIndex].GetComponent<MenuSceneController>();
+							if (controller != null)
+							{
+								break;
+							}
+						}
+						visibleMenu.controller = controller;
+
+						if (visibleMenu.controller != null)
+						{
+							visibleMenu.controller.TransitionIn(visibleMenu.def);
+						}
 					}
 					else
 					{
-						Debug.LogErrorFormat("Failed to load menu scene {0} (menu: {1})", resolvedDef.menuScene, resolvedDef.name);
+						Debug.LogErrorFormat("Failed to load menu scene {0} (menu {1})", resolvedDef.menuScene, resolvedDef.name);
 					}
 				}
 				else
 				{
-					Debug.LogErrorFormat("Failed to load menu scene {0} (menu: {1})", resolvedDef.menuScene, resolvedDef.name);
+					Debug.LogErrorFormat("Failed to load menu scene {0} (menu {1})", resolvedDef.menuScene, resolvedDef.name);
 				}
 
 				// Normally cleared immediately after load succeeded: clearing here in case load failed
@@ -791,9 +837,29 @@ public class Nav : MonoBehaviour
 			}
 			else
 			{
-
+				Debug.LogErrorFormat("Failed to activate menu {0}", resolvedDef.name);
 			}
 		}
+	}
+
+	// TODO(elliot): hide menus before transitioning to new menus
+	void HideMenu(VisibleMenu visibleMenu)
+	{
+		if (visibleMenu.controller != null)
+		{
+			visibleMenu.controller.TransitionOut(this.DisableMenu, visibleMenu);
+		}
+		else
+		{
+			this.DisableMenu(visibleMenu);
+		}
+	}
+
+	void DisableMenu(VisibleMenu visibleMenu)
+	{
+		// TODO(elliot): remove the popup
+		//this.popupStack.Remove(visibleMenu);
+		SetRootObjectsActive(visibleMenu.loadedScene.scene, false);
 	}
 
 	IEnumerator GoToEnvSceneCoroutine(SceneData envScene, string requesterId)
@@ -838,7 +904,7 @@ public class Nav : MonoBehaviour
 
 					// Find controller
 					EnvSceneController controller = null;
-					// TODO(elliot): FindWithTag("GameController") ?
+					// TODO(elliot): FindWithTag("SceneController") ?
 					GameObject[] roots = scene.GetRootGameObjects();
 					for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
 					{

@@ -14,3 +14,7 @@ MonoBehaviour:
   scene:
     scenePath: Assets/Scenes/blank_stage.unity
   allowPreload: 1
+  background: 0
+  cameraType: 1
+  transitionIn: 1
+  transitionOut: 1

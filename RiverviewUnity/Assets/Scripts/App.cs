@@ -3,6 +3,7 @@ using Cloverview;
 using System.Collections;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
+using Cinemachine;
 
 namespace Cloverview
 {
@@ -12,8 +13,14 @@ public class App : MonoBehaviour
 	[SerializeField]
 	private GameObject menuCameraPrefab;
 
+	[System.Serializable]
+	public struct EnvCameraPrefabDefinition
+	{
+		public EnvCameraType type;
+		public GameObject prefab;
+	}
 	[SerializeField]
-	private GameObject envCameraPrefab;
+	private EnvCameraPrefabDefinition[] envCameraPrefabs;
 
 	[SerializeField]
 	private Nav nav;
@@ -33,6 +40,8 @@ public class App : MonoBehaviour
 	SaveData saveData;
 
 	bool waitingForInit = true;
+
+	CinemachineBrain envCameraCinemachineBrain;
 
 	public static App instance;
 
@@ -128,7 +137,7 @@ public class App : MonoBehaviour
 		instance = this;
 
 		Debug.Assert(this.menuCameraPrefab != null);
-		Debug.Assert(this.envCameraPrefab != null);
+		Debug.Assert(this.envCameraPrefabs != null);
 		Debug.Assert(this.nav != null);
 		Debug.Assert(this.defaultSaveData != null);
 
@@ -141,40 +150,53 @@ public class App : MonoBehaviour
 
 		this.unitySerialisationTypeInspectorConstructor = (inner) => { return new UnitySerialisationTypeInspector(inner); };
 
-		string data = System.IO.File.ReadAllText("save.txt");
+		{
+			string data = System.IO.File.ReadAllText("save.txt");
 
-		var deserializer = new DeserializerBuilder()
-			.WithNamingConvention(new CamelCaseNamingConvention())
-			.WithTypeConverter(this.dataItemConverter)
-			.WithTypeInspector(this.unitySerialisationTypeInspectorConstructor)
-			.IgnoreUnmatchedProperties()
-			.Build();
+			var deserializer = new DeserializerBuilder()
+				.WithNamingConvention(new CamelCaseNamingConvention())
+				.WithTypeConverter(this.dataItemConverter)
+				.WithTypeInspector(this.unitySerialisationTypeInspectorConstructor)
+				.IgnoreUnmatchedProperties()
+				.Build();
 
-		try
-		{
-			this.saveData = deserializer.Deserialize<SaveData>(data);
+			try
+			{
+				this.saveData = deserializer.Deserialize<SaveData>(data);
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogException(ex);
+			}
+			if (this.saveData == null)
+			{
+				this.saveData = this.defaultSaveData.saveData;
+			}
+			if (this.saveData.pc == null)
+			{
+				this.saveData.pc = this.defaultSaveData.saveData.pc;
+			}
+			if (this.saveData.leadNpcs == null)
+			{
+				this.saveData.leadNpcs = new List<Character>();
+			}
+			this.saveData.pc.PostLoadCleanup();
+			this.saveData.pc.CalculateStatus();
 		}
-		catch (System.Exception ex)
-		{
-			Debug.LogException(ex);
-		}
-		if (this.saveData == null)
-		{
-			this.saveData = this.defaultSaveData.saveData;
-		}
-		if (this.saveData.pc == null)
-		{
-			this.saveData.pc = this.defaultSaveData.saveData.pc;
-		}
-		if (this.saveData.leadNpcs == null)
-		{
-			this.saveData.leadNpcs = new List<Character>();
-		}
-		this.saveData.pc.PostLoadCleanup();
-		this.saveData.pc.CalculateStatus();
 
+		// Init the menu camera
 		Object.Instantiate(this.menuCameraPrefab, this.transform);
-		Object.Instantiate(this.envCameraPrefab, this.transform);
+
+		// Init the env cameras and pass the instances to Nav
+		for (int i = 0; i < this.envCameraPrefabs.Length; ++i)
+		{
+			EnvCameraPrefabDefinition def = this.envCameraPrefabs[i];
+
+			GameObject envCamera = Object.Instantiate(def.prefab, this.transform);
+			var envCameraCinemachineBrain = envCamera.GetComponent<CinemachineBrain>();
+
+			this.nav.SetEnvCamera(def.type, envCameraCinemachineBrain);
+		}
 
 		// Let nav load immediately
 		this.nav.Initialise(this.saveData);

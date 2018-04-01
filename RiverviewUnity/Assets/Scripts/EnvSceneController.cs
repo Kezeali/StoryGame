@@ -6,16 +6,33 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
-public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>, IDataUser<CinemachineBrain>
+public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 {
 	public Animator sceneAnimator;
 
+	public CinemachineTargetGroup targetGroup;
+
 	public GameObject[] virtualCameras;
+
+	public Rigidbody[] physicalObjects;
+
+	public enum TransitionState
+	{
+		Uninitialised,
+		Idle,
+		In,
+		Out,
+	}
+
+	[System.NonSerialized]
+	public TransitionState state;
 
 	System.Action<Nav.VisibleEnvScene> transitioningOutCallback;
 	Nav.VisibleEnvScene transitioningOutNavScene;
 
 	CinemachineBrain cinemachineBrain;
+
+	Animator globalTransitionAnimator;
 
 	public void OnValidate()
 	{
@@ -32,6 +49,7 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>, IDataUser<
 
 	public void OnEnable()
 	{
+		this.state = TransitionState.Uninitialised;
 		App.Register<SaveData>(this);
 	}
 
@@ -39,9 +57,15 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>, IDataUser<
 	{
 	}
 
-	public void Initialise(CinemachineBrain cinemachineBrain)
+	public void SetCamera(CinemachineBrain cinemachineBrain)
 	{
 		this.cinemachineBrain = cinemachineBrain;
+		this.state = TransitionState.Idle;
+	}
+
+	public void SetGlobalTransitionAnimator(Animator globalTransitionAnimator)
+	{
+		this.globalTransitionAnimator = globalTransitionAnimator;
 	}
 
 	public void SetEvent(ActiveEvent @event)
@@ -49,6 +73,10 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>, IDataUser<
 		// TODO(elliot): pass all scene Marks to the event (to the playable director?)
 
 		// TODO(elliot): set time of day?
+	}
+
+	public void ClearEvent()
+	{
 	}
 
 	public void SetActivity(ActiveActivity activity)
@@ -66,10 +94,56 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>, IDataUser<
 	{
 	}
 
+	public void Update()
+	{
+		switch (this.state)
+		{
+			case TransitionState.Out:
+			{
+				if (this.cinemachineBrain != null && this.cinemachineBrain.IsBlending)
+				{
+					this.ApplyPhysics();
+				}
+				else
+				{
+					if (this.transitioningOutCallback != null)
+					{
+						this.transitioningOutCallback(this.transitioningOutNavScene);
+						this.transitioningOutCallback = null;
+						this.transitioningOutNavScene = null;
+					}
+					this.state = TransitionState.Idle;
+				}
+			} break;
+			case TransitionState.In:
+			{
+				if (this.cinemachineBrain != null && this.cinemachineBrain.IsBlending)
+				{
+					this.ApplyPhysics();
+				}
+				else
+				{
+					this.state = TransitionState.Idle;
+				}
+			} break;
+		}
+	}
+
+	private void ApplyPhysics()
+	{
+	}
+
 	public void TransitionIn()
 	{
 		this.transitioningOutCallback = null;
 		this.transitioningOutNavScene = null;
+
+		for (int cameraIndex = 0; cameraIndex < this.virtualCameras.Length; ++cameraIndex)
+		{
+			this.virtualCameras[cameraIndex].SetActive(true);
+		}
+
+		this.state = TransitionState.In;
 	}
 
 	public void TransitionOut(System.Action<Nav.VisibleEnvScene> completionCallback = null, Nav.VisibleEnvScene param = null)
@@ -82,7 +156,7 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>, IDataUser<
 			this.virtualCameras[cameraIndex].SetActive(false);
 		}
 
-		// TODO(elliot): hook up to the env camera brain and determine movement velocity
+		this.state = TransitionState.Out;
 	}
 }
 
