@@ -13,6 +13,9 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	string id;
 
 	[SerializeField]
+	float defaultSecondsPerUnitTime;
+
+	[SerializeField]
 	MenuData executeMenu;
 
 	[SerializeField]
@@ -24,6 +27,9 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	[ReadOnly]
 	public string parentScene;
 
+	[System.NonSerialized]
+	public float executingSecondsPerUnitTime;
+
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
 	Nav nav;
@@ -32,10 +38,17 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	string activityScenePreloadId;
 	List<PlanActivityData> preloadedActivities = new List<PlanActivityData>();
 	List<PlanActivityData> nextPreloadedActivities = new List<PlanActivityData>();
-	List<EventData> preloadedEvents = new List<EventData>();
-	List<EventData> nextPreloadedEvents = new List<EventData>();
+	List<EventData> filteredEvents = new List<EventData>();
+	List<EventData> nextFilteredEvents = new List<EventData>();
 
 	bool executing;
+
+	public const float MIN_SECONDS_PER_UNIT_TIME =  (1.0f / 120.0f);
+
+	public void Reset()
+	{
+		this.defaultSecondsPerUnitTime = 2;
+	}
 
 	public void OnEnable()
 	{
@@ -143,6 +156,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 			for (int sectionIndex = 0; sectionIndex < this.plan.sections.Length; ++sectionIndex)
 			{
 				PlanSection section = this.plan.sections[sectionIndex];
+				PlanSlot previousSlot = null;
 				for (int slotIndex = 0; slotIndex < section.slots.Length; ++slotIndex)
 				{
 					PlanSlot slot = section.slots[slotIndex];
@@ -153,7 +167,22 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 						{
 							this.nextPreloadedActivities.Add(activity);
 						}
+
+						if (previousSlot != null)
+						{
+							// TODO(elliot): preload commute scene from previous slot to this slot
+							//this.nextPreloadedCommutes.Add(new ExpectedCommute(from, to));
+						}
+						else
+						{
+							// TODO(elliot): preload commute from home to first slot
+						}
 					}
+					previousSlot = slot;
+				}
+				if (previousSlot != null)
+				{
+					// TODO(elliot): Preload commute from final slot to home
 				}
 			}
 			// Remove preload requests for scenes that are no longer in the plan, and add requests for scenes that now are
@@ -200,47 +229,26 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		{
 			Character pc = this.saveData.pc;
 
-			this.nextPreloadedEvents.Clear();
+			this.nextFilteredEvents.Clear();
 
 			for (int eventDataIndex = 0; eventDataIndex < this.availableEvents.Length; ++eventDataIndex)
 			{
 				EventData eventDef = this.availableEvents[eventDataIndex];
-				Debug.Assert(!this.nextPreloadedEvents.Contains(eventDef));
+				Debug.Assert(!this.nextFilteredEvents.Contains(eventDef));
 				EventConditions conditions = eventDef.conditions;
 				if (conditions.requiredPcStats == null || !DesiredStat.DetermineHardNo(pc, conditions.requiredPcStats))
 				{
-					this.nextPreloadedEvents.Add(eventDef);
+					this.nextFilteredEvents.Add(eventDef);
 				}
 			}
 			// TODO(elliot): cache the sorter to avoid extra garbage creation
-			this.nextPreloadedEvents.Sort(new EventDataSorter() { pc = pc });
+			this.nextFilteredEvents.Sort(new EventDataSorter() { pc = pc });
 
-			// Remove preload requests for events that are no longer available, and add requests for events that now are
-			// for (int eventIndex = 0; eventIndex < this.preloadedEvents.Count; ++eventIndex)
-			// {
-			// 	EventData eventDef = this.preloadedEvents[eventIndex];
-			// 	if (!this.nextPreloadedEvents.Contains(eventDef))
-			// 	{
-			// 		this.nav.RemovePreloadRequest(eventDef.scene, this.activityScenePreloadId);
-			// 	}
-			// }
-			// for (int eventIndex = 0; eventIndex < this.nextPreloadedEvents.Count; ++eventIndex)
-			// {
-			// 	EventData eventDef = this.nextPreloadedEvents[eventIndex];
-			// 	if (!this.preloadedEvents.Contains(eventDef))
-			// 	{
-			// 		this.nav.Preload(eventDef.scene, this.activityScenePreloadId);
-			// 	}
-			// }
-			var temp = this.preloadedEvents;
-			this.preloadedEvents = this.nextPreloadedEvents;
-			this.nextPreloadedEvents = temp;
+			var temp = this.filteredEvents;
+			this.filteredEvents = this.nextFilteredEvents;
+			this.nextFilteredEvents = temp;
 
-			this.nextPreloadedEvents.Clear();
-		}
-		else
-		{
-			this.UnloadAllPreloadedActivities();
+			this.nextFilteredEvents.Clear();
 		}
 	}
 
@@ -249,7 +257,6 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		public Character pc;
 		public int Compare(EventData a, EventData b)
 		{
-			// NOTE(elliot): assumes neither event has any hard-nos
 			if (a.conditions.priority < b.conditions.priority)
 			{
 				return -1;
@@ -282,18 +289,18 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	{
 		if (!this.executing)
 		{
-			Object.DontDestroyOnLoad(this.gameObject);
-			
 			this.nav.GoTo(this.executeMenu, this.parentScene);
 			this.PreloadPlanActivities();
 
-			this.StartCoroutine(this.ExecuteCoroutine(skipTimeUnits, 0));
+			this.StartCoroutine(this.ExecuteCoroutine(this.defaultSecondsPerUnitTime, skipTimeUnits, 0));
 		}
 	}
 
-	IEnumerator ExecuteCoroutine(int skipTimeUnits, int instantTimeUnits)
+	IEnumerator ExecuteCoroutine(float secondsPerUnitTime, int skipTimeUnits, int instantTimeUnits)
 	{
 		this.executing = true;
+
+		this.executingSecondsPerUnitTime = secondsPerUnitTime;
 
 		Cast liveCast = null;
 		if (skipTimeUnits > 0)
@@ -343,14 +350,14 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 					bool skipCommuteTo = localTimeUnitsElapsed <= skipTimeUnits;
 					if (!skipCommuteTo)
 					{
-						EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.Before);
-						if (selectedEvent != null)
+						SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.Before);
+						if (selectedEvent.def != null)
 						{
-							Debug.LogFormat("Executing event {0}", selectedEvent);
+							Debug.LogFormat("Executing event {0}", selectedEvent.def);
 
 							ActiveEvent activeEvent = new ActiveEvent()
 							{
-								def = selectedEvent,
+								def = selectedEvent.def,
 								cast = liveCast
 							};
 
@@ -375,7 +382,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 						}
 					}
 
-					IEnumerator op = this.ExecuteActivity(liveCast, slot, schemaSlot, this.saveData.time + localTimeUnitsElapsed, instantSlot);
+					IEnumerator op = this.ExecuteActivity(liveCast, slot, schemaSlot, this.saveData.time + localTimeUnitsElapsed, instantSlot ? 0 : secondsPerUnitTime);
 					while (op.MoveNext())
 					{
 						if (!instantSlot)
@@ -396,14 +403,14 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 				bool skipCommuteFrom = localTimeUnitsElapsed <= skipTimeUnits;
 				if (!skipCommuteFrom)
 				{
-					EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.After);
-					if (selectedEvent != null)
+					SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.After);
+					if (selectedEvent.def != null)
 					{
-						Debug.LogFormat("Executing event {0}", selectedEvent);
+						Debug.LogFormat("Executing event {0}", selectedEvent.def);
 
 						ActiveEvent activeEvent = new ActiveEvent()
 						{
-							def = selectedEvent,
+							def = selectedEvent.def,
 							cast = liveCast
 						};
 
@@ -484,15 +491,27 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		return result;
 	}
 
-	IEnumerator ExecuteActivity(Cast liveCast, PlanSlot slot, PlanSchemaSlot schemaSlot, int beginTimeUnit, bool instant)
+	IEnumerator ExecuteActivity(Cast liveCast, PlanSlot slot, PlanSchemaSlot schemaSlot, int beginTimeUnit, float secondsPerUnitTime)
 	{
-		float secondsPerUnitTime = 2;
+		bool instant = secondsPerUnitTime < MIN_SECONDS_PER_UNIT_TIME;
 		if (slot.selectedOption != null)
 		{
 			int slotLengthTimeUnits = schemaSlot.unitLength;
 			int timeUnitsBeforeEvent = slotLengthTimeUnits / 2;
 
-			EventData selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.During);
+			SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, EventSide.During);
+
+			// NOTE(elliot): if a specific time was specified, rather than a slot type, this attempts to make the event occur at that time in the execution
+			if (selectedEvent.def != null)
+			{
+				if (selectedEvent.triggeredCondition.time >= 0)
+				{
+					int desiredTimeUnitsBeforeEvent = selectedEvent.triggeredCondition.time - beginTimeUnit;
+					int maxTimeUnitsBeforeEvent = slotLengthTimeUnits > 0 ? slotLengthTimeUnits-1 : 0;
+
+					timeUnitsBeforeEvent = Mathf.Clamp(desiredTimeUnitsBeforeEvent, 0, maxTimeUnitsBeforeEvent);
+				}
+			}
 
 			PlanOption option = slot.selectedOption;
 			Debug.Assert(option.plannerItem != null);
@@ -525,13 +544,13 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 					}
 				}
 
-				if (selectedEvent != null)
+				if (selectedEvent.def != null)
 				{
-					Debug.LogFormat("Executing event {0}", selectedEvent);
+					Debug.LogFormat("Executing event {0}", selectedEvent.def);
 
 					ActiveEvent activeEvent = new ActiveEvent()
 					{
-						def = selectedEvent,
+						def = selectedEvent.def,
 						cast = liveCast
 					};
 
@@ -572,17 +591,23 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		}
 	}
 
-	EventData SelectEventFor(PlanSlot slot, PlanSchemaSlot schemaSlot, EventSide when)
+	struct SelectedEvent
+	{
+		public EventData def;
+		public DesiredSlot triggeredCondition; 
+	}
+
+	SelectedEvent SelectEventFor(PlanSlot slot, PlanSchemaSlot schemaSlot, EventSide when)
 	{
 		this.FilterAvailableEvents();
 
 		Random.state = this.executorSaveData.randomState;
 
 		// NOTE(elliot): events should be sorted by priority at this point, so higher priority events will get a chance to go first
-		EventData result = null;
-		for (int eventDataIndex = 0; eventDataIndex < this.preloadedEvents.Count; ++eventDataIndex)
+		SelectedEvent result = new SelectedEvent();
+		for (int eventDataIndex = 0; eventDataIndex < this.filteredEvents.Count; ++eventDataIndex)
 		{
-			EventData def = this.preloadedEvents[eventDataIndex];
+			EventData def = this.filteredEvents[eventDataIndex];
 			EventConditions conditions = def.conditions;
 			DesiredSlot[] slotConditions = conditions.slotConditions;
 			if (slotConditions != null)
@@ -608,12 +633,13 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 						if (randomValue <= slotCondition.chance)
 						{
 							// Condition & random chance passed, select this event
-							result = def;
+							result.def = def;
+							result.triggeredCondition = slotCondition;
 							break;
 						}
 					}
 				}
-				if (result != null)
+				if (result.def != null)
 				{
 					break;
 				}

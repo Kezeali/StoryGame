@@ -18,9 +18,12 @@ namespace Cloverview
 		public StatBonusData[] statBonuses;
 	}
 
+	// NOTE(elliot): events are sorted as follows:
+	//  1) priority -- Higher priority events which can occur will /always/ occur before lower priority events
+
 	public enum EventPriority
 	{
-		Higest,
+		Higest, // Plot events
 		High,
 		Normal,
 		Low,

@@ -503,6 +503,8 @@ public class Nav : MonoBehaviour
 				{
 					if (envSceneRequest.operation == RequestOp.AddPreloadRequest)
 					{
+						// TODO(elliot): remove this condition here and still add the preload request to the PreloadedScene no matter how many scenes are already loaded, but don't actually load the scene until a GoTo request is received for it, or the loaded scene count drops
+						// TODO(elliot): also, use an actual memory usage limit rather than this semi-arbitary loaded scene count
 						if (this.preloadedScenes.Count <= maxLoadedScenes)
 						{
 							PreloadedScene preloadedScene =
