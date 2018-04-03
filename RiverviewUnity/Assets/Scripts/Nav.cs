@@ -23,6 +23,9 @@ public class Nav : MonoBehaviour
 	[SerializeField]
 	private CommuteSceneData defaultCommuteScene;
 
+	[SerializeField]
+	private Animator globalTransitionAnimator;
+
 	private enum RequestOp
 	{
 		AddPreloadRequest,
@@ -224,6 +227,16 @@ public class Nav : MonoBehaviour
 		{
 			Debug.LogError("EnvCamera types not initialised properly. Oops");
 		}
+	}
+
+	CinemachineBrain GetEnvCamera(EnvCameraType type)
+	{
+		CinemachineBrain result = null;
+		if (this.envCameraBrain != null && this.envCameraBrain.Length > (int)type)
+		{
+			result = this.envCameraBrain[(int)type];
+		}
+		return result;
 	}
 
 	public void GoTo(MenuData def, string requesterId = null)
@@ -920,6 +933,9 @@ public class Nav : MonoBehaviour
 
 					if (visibleEnvScene.controller != null)
 					{
+						CinemachineBrain cam = this.GetEnvCamera(envScene.cameraType);
+						visibleEnvScene.controller.SetCamera(cam);
+						visibleEnvScene.controller.SetGlobalTransitionAnimator(this.globalTransitionAnimator);
 						visibleEnvScene.controller.TransitionIn();
 					}
 				}
