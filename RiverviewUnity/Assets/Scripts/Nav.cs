@@ -24,7 +24,7 @@ public class Nav : MonoBehaviour
 	private CommuteSceneData defaultCommuteScene;
 
 	[SerializeField]
-	private Animator globalTransitionAnimator;
+	private Animator genericTransitionAnimator;
 
 	private enum RequestOp
 	{
@@ -232,11 +232,24 @@ public class Nav : MonoBehaviour
 	CinemachineBrain GetEnvCamera(EnvCameraType type)
 	{
 		CinemachineBrain result = null;
+		Debug.Assert(this.envCameraBrain != null);
 		if (this.envCameraBrain != null && this.envCameraBrain.Length > (int)type)
 		{
 			result = this.envCameraBrain[(int)type];
 		}
 		return result;
+	}
+
+	void ActivateEnvCamera(EnvCameraType type)
+	{
+		Debug.Assert(this.envCameraBrain != null);
+		if (this.envCameraBrain != null)
+		{
+			for (int i = 0; i < this.envCameraBrain.Length; ++i)
+			{
+				this.envCameraBrain[i].gameObject.SetActive(i == (int)type);
+			}
+		}
 	}
 
 	public void GoTo(MenuData def, string requesterId = null)
@@ -877,8 +890,18 @@ public class Nav : MonoBehaviour
 		SetRootObjectsActive(visibleMenu.loadedScene.scene, false);
 	}
 
+	VisibleEnvScene waitingForSceneToBeDisabled;
+
 	IEnumerator GoToEnvSceneCoroutine(SceneData envScene, string requesterId)
 	{
+		if (!envScene.background)
+		{
+			Debug.Assert(this.waitingForSceneToBeDisabled == null);
+			if (this.waitingForSceneToBeDisabled != null)
+			{
+				yield break;
+			}
+		}
 		VisibleEnvScene visibleEnvScene = this.FindOrMakeVisibleEnvScene(envScene, requesterId);
 		if (visibleEnvScene != null)
 		{
@@ -887,6 +910,18 @@ public class Nav : MonoBehaviour
 			if (preloadedScene.loadOp != null
 				|| (preloadedScene.scene.IsValid() && preloadedScene.scene.isLoaded))
 			{
+				// NOTE(elliot): only one non-background env scene can be active at a time
+				this.waitingForSceneToBeDisabled = null;
+				if (!envScene.background)
+				{
+					// TODO(elliot): block input until transition finishes
+					if (this.activeEnvScene != null)
+					{
+						this.waitingForSceneToBeDisabled = this.activeEnvScene;
+						this.HideEnvScene(this.activeEnvScene);
+					}
+				}
+
 				if (preloadedScene.loadOp != null && !preloadedScene.loadOp.isDone)
 				{
 					preloadedScene.loadOp.allowSceneActivation = true;
@@ -896,18 +931,18 @@ public class Nav : MonoBehaviour
 					}
 				}
 
+				// Wait for the active scene to be disabled
+				if (!envScene.background)
+				{
+					while (this.activeEnvScene != null && this.activeEnvScene == this.waitingForSceneToBeDisabled)
+					{
+						yield return 0;
+					}
+				}
+
 				Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
 				if (scene.IsValid() && scene.isLoaded)
 				{
-					if (!envScene.background)
-					{
-						if (this.activeEnvScene != null)
-						{
-							this.HideEnvScene(this.activeEnvScene);
-							this.activeEnvScene = null;
-						}
-					}
-
 					this.visibleEnvScenes.Add(visibleEnvScene);
 
 					if (!envScene.background)
@@ -933,20 +968,30 @@ public class Nav : MonoBehaviour
 
 					if (visibleEnvScene.controller != null)
 					{
-						CinemachineBrain cam = this.GetEnvCamera(envScene.cameraType);
-						visibleEnvScene.controller.SetCamera(cam);
-						visibleEnvScene.controller.SetGlobalTransitionAnimator(this.globalTransitionAnimator);
-						visibleEnvScene.controller.TransitionIn();
+						if (!envScene.background)
+						{
+							// NOTE(elliot): the active env scene defines the active env camera type
+							this.ActivateEnvCamera(envScene.cameraType);
+							CinemachineBrain cam = this.GetEnvCamera(envScene.cameraType);
+							visibleEnvScene.controller.SetCamera(cam);
+							visibleEnvScene.controller.SetGlobalTransitionAnimator(this.genericTransitionAnimator);
+							visibleEnvScene.controller.TransitionIn(envScene);
+
+							while (visibleEnvScene.controller.state == EnvSceneController.TransitionState.In)
+							{
+								yield return 0;
+							}
+						}
 					}
 				}
 				else
 				{
-					Debug.LogErrorFormat("Failed to load env scene {0} (requester: {1})", envScene, requesterId);
+					Debug.LogErrorFormat("Failed to load env scene {0}", envScene);
 				}
 			}
 			else
 			{
-				Debug.LogErrorFormat("Failed to load env scene {0} (requester {1})", envScene, requesterId);
+				Debug.LogErrorFormat("Failed to load env scene {0}", envScene);
 			}
 		}
 		else
@@ -957,7 +1002,7 @@ public class Nav : MonoBehaviour
 
 	void HideEnvScene(VisibleEnvScene visibleEnvScene)
 	{
-		if (visibleEnvScene.controller != null)
+		if (!visibleEnvScene.def.background && visibleEnvScene.controller != null)
 		{
 			visibleEnvScene.controller.TransitionOut(this.DisableEnvScene, visibleEnvScene);
 		}
@@ -969,6 +1014,10 @@ public class Nav : MonoBehaviour
 
 	void DisableEnvScene(VisibleEnvScene visibleEnvScene)
 	{
+		if (visibleEnvScene == this.activeEnvScene)
+		{
+			this.activeEnvScene = null;
+		}
 		this.visibleEnvScenes.Remove(visibleEnvScene);
 		SetRootObjectsActive(visibleEnvScene.loadedScene.scene, false);
 	}

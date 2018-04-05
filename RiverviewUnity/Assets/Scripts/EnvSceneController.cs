@@ -32,7 +32,12 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 
 	CinemachineBrain cinemachineBrain;
 
-	Animator globalTransitionAnimator;
+	Animator genericTransitionAnimator;
+	
+	SceneData sceneDef;
+	Animator transitionAnimator;
+	int transitionLayerIndex;
+	int transitionAnimationStateId;
 
 	public void OnValidate()
 	{
@@ -63,9 +68,9 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 		this.state = TransitionState.Idle;
 	}
 
-	public void SetGlobalTransitionAnimator(Animator globalTransitionAnimator)
+	public void SetGlobalTransitionAnimator(Animator genericTransitionAnimator)
 	{
-		this.globalTransitionAnimator = globalTransitionAnimator;
+		this.genericTransitionAnimator = genericTransitionAnimator;
 	}
 
 	public void SetEvent(ActiveEvent @event)
@@ -133,7 +138,7 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 	{
 	}
 
-	public void TransitionIn()
+	public void TransitionIn(SceneData def)
 	{
 		this.transitioningOutCallback = null;
 		this.transitioningOutNavScene = null;
@@ -142,6 +147,25 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 		{
 			this.virtualCameras[cameraIndex].SetActive(true);
 		}
+
+		string transitionAnimationName = string.IsNullOrEmpty(def.transitionInNameOverride) ? def.name : def.transitionInNameOverride;
+
+		this.transitionAnimator = null;
+		switch (def.transitionIn)
+		{
+			case SceneTransitionType.Generic:
+				this.transitionAnimator = this.genericTransitionAnimator;
+				break;
+			case SceneTransitionType.SceneController:
+				this.transitionAnimator = this.sceneAnimator;
+				break;
+		}
+
+		this.transitionAnimator.Play("ResetTransition");
+		this.transitionAnimator.Update(0f);
+		this.transitionAnimator.Play(transitionAnimationName);
+
+		this.sceneDef = def;
 
 		this.state = TransitionState.In;
 	}
@@ -154,6 +178,22 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 		for (int cameraIndex = 0; cameraIndex < this.virtualCameras.Length; ++cameraIndex)
 		{
 			this.virtualCameras[cameraIndex].SetActive(false);
+		}
+
+		if (this.sceneDef != null)
+		{
+			SceneData def = this.sceneDef;
+			string transitionAnimationName = string.IsNullOrEmpty(def.transitionOutNameOverride) ? def.name : def.transitionOutNameOverride;
+
+			switch (def.transitionOut)
+			{
+				case SceneTransitionType.Generic:
+					this.transitionAnimator = this.genericTransitionAnimator;
+					break;
+				case SceneTransitionType.SceneController:
+					this.transitionAnimator = this.sceneAnimator;
+					break;
+			}
 		}
 
 		this.state = TransitionState.Out;

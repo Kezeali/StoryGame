@@ -11,6 +11,13 @@ namespace Cloverview
 		Orthographic
 	}
 
+	public enum SceneTransitionType
+	{
+		None,
+		SceneController,
+		Generic,
+	}
+
 	[CreateAssetMenu(fileName="Scene.asset", menuName="Cloverview/System/Scene Definition")]
 	public class SceneData : ScriptableObject
 	{
@@ -18,6 +25,12 @@ namespace Cloverview
 		public bool allowPreload = true;
 		public bool background = false;
 		public EnvCameraType cameraType;
+		public SceneTransitionType transitionIn = SceneTransitionType.SceneController;
+		public SceneTransitionType transitionOut = SceneTransitionType.SceneController;
+		[Tooltip("Optional override for the transition animation. The default value is this scene definition's name.")]
+		public string transitionInNameOverride;
+		[Tooltip("Optional override for the transition animation. The default value is this scene definition's name.")]
+		public string transitionOutNameOverride;
 	}
 
 }
