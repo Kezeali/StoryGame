@@ -16,5 +16,7 @@ MonoBehaviour:
   allowPreload: 1
   background: 0
   cameraType: 1
-  transitionIn: 1
-  transitionOut: 1
+  transitionIn: 0
+  transitionOut: 0
+  transitionInNameOverride: 
+  transitionOutNameOverride: 

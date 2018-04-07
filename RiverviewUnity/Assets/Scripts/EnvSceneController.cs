@@ -161,9 +161,12 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 				break;
 		}
 
-		this.transitionAnimator.Play("ResetTransition");
-		this.transitionAnimator.Update(0f);
-		this.transitionAnimator.Play(transitionAnimationName);
+		if (this.transitionAnimator != null)
+		{
+			this.transitionAnimator.Play("ResetTransition");
+			this.transitionAnimator.Update(0f);
+			this.transitionAnimator.Play(transitionAnimationName);
+		}
 
 		this.sceneDef = def;
 
@@ -193,6 +196,13 @@ public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
 				case SceneTransitionType.SceneController:
 					this.transitionAnimator = this.sceneAnimator;
 					break;
+			}
+
+			if (this.transitionAnimator != null)
+			{
+				this.transitionAnimator.Play("ResetTransition");
+				this.transitionAnimator.Update(0f);
+				this.transitionAnimator.Play(transitionAnimationName);
 			}
 		}
 

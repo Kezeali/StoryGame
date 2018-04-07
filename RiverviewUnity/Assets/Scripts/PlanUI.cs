@@ -30,10 +30,10 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 	[SerializeField]
 	private PlanSectionUI[] uiSections;
 
-	private Plan plan;
-	private List<GameObject> optionUIs = new List<GameObject>();
+	Plan plan;
+	List<GameObject> optionUIs = new List<GameObject>();
 
-	private PlanSlotUI selectedSlot;
+	PlanSlotUI selectedSlot;
 
 	public void OnEnable()
 	{
@@ -233,7 +233,10 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 			}
 		}
 
-		this.planExecutor.Initialise(this.plan, this.planSchema);
+		if (this.planExecutor != null)
+		{
+			this.planExecutor.Initialise(this.plan, this.planSchema);
+		}
 	}
 
 	public void Clear()
@@ -278,7 +281,10 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 
 	public void Execute()
 	{
-		this.planExecutor.Execute();
+		if (this.planExecutor != null)
+		{
+			this.planExecutor.Execute();
+		}
 	}
 }
 

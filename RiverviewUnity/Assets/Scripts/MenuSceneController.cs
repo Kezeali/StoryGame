@@ -24,8 +24,6 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 	System.Action<Nav.VisibleMenu> transitioningOutCallback;
 	Nav.VisibleMenu transitioningOutNavScene;
 
-	int transitionAnimationStateId;
-
 	public void OnEnable()
 	{
 		this.state = TransitionState.Uninitialised;
@@ -76,7 +74,14 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 
 		this.state = TransitionState.In;
 
-		this.transitionAnimationStateId = Animator.StringToHash(def.name);
+		string transitionAnimationName = def.name;
+
+		if (this.transitionAnimator != null)
+		{
+			this.transitionAnimator.Play("ResetTransition");
+			this.transitionAnimator.Update(0f);
+			this.transitionAnimator.Play(transitionAnimationName);
+		}
 	}
 
 	public void TransitionOut(System.Action<Nav.VisibleMenu> completionCallback = null, Nav.VisibleMenu param = null)
@@ -85,6 +90,19 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 		this.transitioningOutNavScene = param;
 
 		this.state = TransitionState.Out;
+
+		if (param != null)
+		{
+			MenuData def = param.def;
+			string transitionAnimationName = def.name;
+
+			if (this.transitionAnimator != null)
+			{
+				this.transitionAnimator.Play("ResetTransition");
+				this.transitionAnimator.Update(0f);
+				this.transitionAnimator.Play(transitionAnimationName);
+			}
+		}
 	}
 }
 

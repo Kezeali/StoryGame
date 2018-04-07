@@ -10,7 +10,7 @@ namespace Cloverview
 public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, INavigator
 {
 	[SerializeField]
-	string id;
+	public string id;
 
 	[SerializeField]
 	float defaultSecondsPerUnitTime;
@@ -42,6 +42,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	List<EventData> nextFilteredEvents = new List<EventData>();
 
 	bool executing;
+	List<PlanExecutor> others = new List<PlanExecutor>(5);
 
 	public const float MIN_SECONDS_PER_UNIT_TIME =  (1.0f / 120.0f);
 
@@ -52,12 +53,14 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 
 	public void OnEnable()
 	{
+		this.RefreshOthers();
 		App.Register<SaveData>(this);
 		App.Register<Nav>(this);
 	}
 
 	public void OnDisable()
 	{
+		this.others.Clear();
 		if (this.nav != null)
 		{
 			this.UnloadAllPreloadedActivities();
@@ -67,6 +70,24 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	public void OnApplicationQuit()
 	{
 		this.nav = null;
+	}
+
+	void RefreshOthers()
+	{
+		this.others.Clear();
+		GameObject[] existingExecutors = GameObject.FindGameObjectsWithTag("PlanExecutor");
+		for (int i = 0; i < existingExecutors.Length; ++i)
+		{
+			PlanExecutor otherExecutor = existingExecutors[i].GetComponent<PlanExecutor>();
+			if (otherExecutor != null)
+			{
+				this.others.Add(otherExecutor);
+			}
+			else
+			{
+				Debug.LogErrorFormat("Non PlanExecutor taged with PlanExecutor tag: {0}", existingExecutors[i].name);
+			}
+		}
 	}
 
 	public void Initialise(SaveData saveData)
@@ -117,9 +138,26 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		return false;
 	}
 
+	bool OthersExecuting()
+	{
+		bool result = false;
+		for (int i = 0; i < this.others.Count; ++i)
+		{
+			if (this.others[i] != null && this.others[i].executing)
+			{
+				result = true;
+				break;
+			}
+		}
+		return result;
+	}
+
 	bool ExecuteIfReady()
 	{
-		if (this.DataReady() && this.isActiveAndEnabled && this.executorSaveData.timeUnitsElapsed > 0)
+		if (!this.OthersExecuting() &&
+			this.DataReady() &&
+			this.isActiveAndEnabled &&
+			this.executorSaveData.timeUnitsElapsed > 0)
 		{
 			this.Execute(this.executorSaveData.timeUnitsElapsed);
 			return true;
@@ -289,16 +327,29 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	{
 		if (!this.executing)
 		{
-			this.nav.GoTo(this.executeMenu, this.parentScene);
-			this.PreloadPlanActivities();
-
-			this.StartCoroutine(this.ExecuteCoroutine(this.defaultSecondsPerUnitTime, skipTimeUnits, 0));
+			if (!this.OthersExecuting())
+			{
+				this.StartCoroutine(this.ExecuteCoroutine(this.defaultSecondsPerUnitTime, skipTimeUnits, 0));
+			}
+			else
+			{
+				Debug.LogWarningFormat("Tried to execute while another executor ({0}) executing!", "TODO(elliot): get name");
+			}
+		}
+		else
+		{
+			Debug.LogWarningFormat("Tried to execute again while {0} already executing!", this.id);
 		}
 	}
 
 	IEnumerator ExecuteCoroutine(float secondsPerUnitTime, int skipTimeUnits, int instantTimeUnits)
 	{
 		this.executing = true;
+
+		Object.DontDestroyOnLoad(this.gameObject);
+				
+		this.nav.GoTo(this.executeMenu, this.parentScene);
+		this.PreloadPlanActivities();
 
 		this.executingSecondsPerUnitTime = secondsPerUnitTime;
 
@@ -479,6 +530,8 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		this.UnloadAllPreloadedActivities();
 
 		this.nav.GoTo(this.backMenu, this.parentScene);
+
+		Object.Destroy(this.gameObject);
 	}
 
 	static PlanActivityData GetActivity(PlanSlot slot)
