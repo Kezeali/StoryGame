@@ -11,7 +11,10 @@ namespace Cloverview
 public class App : MonoBehaviour
 {
 	[SerializeField]
-	private GameObject menuCameraPrefab;
+	GameObject menuCameraPrefab;
+
+	[SerializeField]
+	GameObject envTransitionCameraPrefab;
 
 	[System.Serializable]
 	public struct EnvCameraPrefabDefinition
@@ -20,19 +23,19 @@ public class App : MonoBehaviour
 		public GameObject prefab;
 	}
 	[SerializeField]
-	private EnvCameraPrefabDefinition[] envCameraPrefabs;
+	EnvCameraPrefabDefinition[] envCameraPrefabs;
 
 	[SerializeField]
-	private Nav nav;
+	Nav nav;
 
 	[SerializeField]
-	private PlannerData plannerData;
+	PlannerData plannerData;
 
 	[SerializeField]
-	private GameData gameData;
+	GameData gameData;
 
 	[SerializeField]
-	private DefaultSaveData defaultSaveData;
+	DefaultSaveData defaultSaveData;
 
 	DataItemConverter dataItemConverter;
 	System.Func<ITypeInspector, ITypeInspector> unitySerialisationTypeInspectorConstructor;
@@ -137,6 +140,7 @@ public class App : MonoBehaviour
 		instance = this;
 
 		Debug.Assert(this.menuCameraPrefab != null);
+		Debug.Assert(this.envTransitionCameraPrefab != null);
 		Debug.Assert(this.envCameraPrefabs != null);
 		Debug.Assert(this.nav != null);
 		Debug.Assert(this.defaultSaveData != null);
@@ -184,9 +188,9 @@ public class App : MonoBehaviour
 			this.saveData.pc.CalculateStatus();
 		}
 
-		// Init the menu camera
+		// NOTE(elliot): Cameras are created here!
 		Object.Instantiate(this.menuCameraPrefab, this.transform);
-
+		Object.Instantiate(this.envTransitionCameraPrefab, this.transform);
 		// Init the env cameras and pass the instances to Nav
 		for (int i = 0; i < this.envCameraPrefabs.Length; ++i)
 		{
@@ -194,6 +198,7 @@ public class App : MonoBehaviour
 
 			GameObject envCamera = Object.Instantiate(def.prefab, this.transform);
 			var envCameraCinemachineBrain = envCamera.GetComponent<CinemachineBrain>();
+			envCamera.SetActive(false);
 
 			this.nav.SetEnvCamera(def.type, envCameraCinemachineBrain);
 		}
