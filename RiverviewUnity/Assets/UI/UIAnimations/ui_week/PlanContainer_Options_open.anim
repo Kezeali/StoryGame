@@ -29,7 +29,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_IsActive
-    path: Options/Scroll View
+    path: Plan Container/Options/Scroll View
     classID: 1
     script: {fileID: 0}
   - curve:
@@ -45,7 +45,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_AnchoredPosition.x
-    path: Options/Scroll View
+    path: Plan Container/Options/Scroll View
     classID: 224
     script: {fileID: 0}
   - curve:
@@ -61,7 +61,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_SizeDelta.x
-    path: Options/Scroll View
+    path: Plan Container/Options/Scroll View
     classID: 224
     script: {fileID: 0}
   m_PPtrCurves: []
@@ -128,7 +128,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_IsActive
-    path: Options/Scroll View
+    path: Plan Container/Options/Scroll View
     classID: 1
     script: {fileID: 0}
   - curve:
@@ -144,7 +144,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_AnchoredPosition.x
-    path: Options/Scroll View
+    path: Plan Container/Options/Scroll View
     classID: 224
     script: {fileID: 0}
   - curve:
@@ -160,7 +160,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_SizeDelta.x
-    path: Options/Scroll View
+    path: Plan Container/Options/Scroll View
     classID: 224
     script: {fileID: 0}
   m_EulerEditorCurves: []
