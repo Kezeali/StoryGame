@@ -33,10 +33,17 @@ public class Nav : MonoBehaviour
 		GoTo
 	}
 
+	private enum GoToOp
+	{
+		Open,
+		Close
+	}
+
 	private class MenuSceneToLoad
 	{
 		public MenuData def;
 		public string preloadRequesterId;
+		public GoToOp operation;
 	}
 
 	private class EnvSceneToLoad
@@ -260,7 +267,8 @@ public class Nav : MonoBehaviour
 		var item = new MenuSceneToLoad()
 		{
 			def = def,
-			preloadRequesterId = requesterId
+			preloadRequesterId = requesterId,
+			operation = GoToOp.Open
 		};
 
 		this.menuToGoToQueue.Enqueue(item);
@@ -268,6 +276,26 @@ public class Nav : MonoBehaviour
 		if (!this.processingGoToQueue)
 		{
 			this.StartCoroutine(this.ProcessGoToQueueCoroutine());
+		}
+	}
+
+	public void CloseActiveMenu()
+	{
+		if (this.activeMenu != null && this.activeMenu.def != null)
+		{
+			var item = new MenuSceneToLoad()
+			{
+				def = this.activeMenu.def,
+				preloadRequesterId = "",
+				operation = GoToOp.Close
+			};
+
+			this.menuToGoToQueue.Enqueue(item);
+
+			if (!this.processingGoToQueue)
+			{
+				this.StartCoroutine(this.ProcessGoToQueueCoroutine());
+			}
 		}
 	}
 
@@ -394,20 +422,6 @@ public class Nav : MonoBehaviour
 		if (this.activeCommuteDef != null)
 		{
 			this.RemovePreloadRequest(this.activeCommuteDef.commuteScene, requesterId);
-		}
-	}
-
-	public void ClosePopup(MenuData def)
-	{
-		if (popupStack.Count > 0)
-		{
-			VisibleMenu topPopup = popupStack[popupStack.Count-1];
-			if (topPopup.def == def)
-			{
-				popupStack.RemoveAt(popupStack.Count-1);
-				SetRootObjectsActive(topPopup.loadedScene.scene, false);
-				OnSceneHidden(topPopup.loadedScene);
-			}
 		}
 	}
 
@@ -697,10 +711,17 @@ public class Nav : MonoBehaviour
 
 				if (menuToLoad.def != null)
 				{
-					IEnumerator op = this.GoToCoroutine(menuToLoad.def, menuToLoad.preloadRequesterId);
-					while (op.MoveNext())
+					if (menuToLoad.operation == GoToOp.Open)
 					{
-						yield return op.Current;
+						IEnumerator op = this.GoToCoroutine(menuToLoad.def, menuToLoad.preloadRequesterId);
+						while (op.MoveNext())
+						{
+							yield return op.Current;
+						}
+					}
+					else if (menuToLoad.operation == GoToOp.Close)
+					{
+						// TODO(elliot): close the given menu
 					}
 				}
 			}
@@ -813,6 +834,8 @@ public class Nav : MonoBehaviour
 					{
 						this.activeMenu = visibleMenu;
 
+						Debug.LogFormat("Active menu is now {0}", this.activeMenu.def);
+
 						// Add / move this popup to the top of the stack
 						int existingPopupIndex = this.popupStack.IndexOf(visibleMenu);
 						if (existingPopupIndex == -1)
@@ -885,11 +908,11 @@ public class Nav : MonoBehaviour
 	{
 		if (visibleMenu.controller != null)
 		{
-			visibleMenu.controller.TransitionOut(this.DisableMenu, visibleMenu);
+			visibleMenu.controller.TransitionOut(this.DeactivateMenu, visibleMenu);
 		}
 		else
 		{
-			this.DisableMenu(visibleMenu);
+			this.DeactivateMenu(visibleMenu);
 		}
 	}
 
@@ -947,20 +970,27 @@ public class Nav : MonoBehaviour
 		return popup.def != def;
 	}
 
-	void DisableMenu(VisibleMenu visibleMenu)
+	void DeactivateMenu(VisibleMenu visibleMenu)
 	{
+		Debug.Assert(visibleMenu != null);
+	#if UNITY_EDITOR
+		if (visibleMenu != null)
+		{
+			Debug.LogFormat("Menu deactivated {0}", visibleMenu.def);
+		}
+	#endif
 		int index = this.popupStack.IndexOf(visibleMenu);
 		DeactivatePopupAt(index);
 	}
 
-	VisibleEnvScene waitingForSceneToBeDisabled;
+	VisibleEnvScene waitingForSceneToBeDeactivated;
 
 	IEnumerator GoToEnvSceneCoroutine(SceneData envScene, string requesterId)
 	{
 		if (!envScene.background)
 		{
-			Debug.Assert(this.waitingForSceneToBeDisabled == null);
-			if (this.waitingForSceneToBeDisabled != null)
+			Debug.Assert(this.waitingForSceneToBeDeactivated == null);
+			if (this.waitingForSceneToBeDeactivated != null)
 			{
 				yield break;
 			}
@@ -974,13 +1004,14 @@ public class Nav : MonoBehaviour
 				|| (preloadedScene.scene.IsValid() && preloadedScene.scene.isLoaded))
 			{
 				// NOTE(elliot): only one non-background env scene can be active at a time
-				this.waitingForSceneToBeDisabled = null;
+				this.waitingForSceneToBeDeactivated = null;
 				if (!envScene.background)
 				{
 					// TODO(elliot): block input until transition finishes
 					if (this.activeEnvScene != null)
 					{
-						this.waitingForSceneToBeDisabled = this.activeEnvScene;
+						this.waitingForSceneToBeDeactivated = this.activeEnvScene;
+						Debug.LogFormat("Waiting for {0} to be deactivated", this.waitingForSceneToBeDeactivated.def);
 						this.TransitionEnvSceneOut(this.activeEnvScene);
 					}
 				}
@@ -997,10 +1028,11 @@ public class Nav : MonoBehaviour
 				// Wait for the existing foreground scene to be deactivated
 				if (!envScene.background)
 				{
-					while (this.activeEnvScene != null && this.activeEnvScene == this.waitingForSceneToBeDisabled)
+					while (this.activeEnvScene != null && this.activeEnvScene == this.waitingForSceneToBeDeactivated)
 					{
 						yield return 0;
 					}
+					this.waitingForSceneToBeDeactivated = null;
 				}
 
 				Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
@@ -1077,6 +1109,13 @@ public class Nav : MonoBehaviour
 
 	void DeactivateEnvScene(VisibleEnvScene visibleEnvScene)
 	{
+		Debug.Assert(visibleEnvScene != null);
+	#if UNITY_EDITOR
+		if (visibleEnvScene != null)
+		{
+			Debug.LogFormat("Disabled env {0}", visibleEnvScene.def);
+		}
+	#endif
 		if (visibleEnvScene == this.activeEnvScene)
 		{
 			this.activeEnvScene = null;
@@ -1281,6 +1320,8 @@ public class Nav : MonoBehaviour
 		Debug.Assert(hiddenScene != null);
 		if (hiddenScene != null)
 		{
+			Debug.LogFormat("Scene hidden {0}", hiddenScene.scenePath);
+
 			for (int i = 0; i < this.preloadedScenes.Count; ++i)
 			{
 				PreloadedScene otherPreloadedScene = this.preloadedScenes[i];
@@ -1330,6 +1371,7 @@ public class Nav : MonoBehaviour
 
 	static void SetRootObjectsActive(Scene scene, bool active)
 	{
+		Debug.LogFormat("Setting scene active {0} = {1}", scene.path, active);
 		GameObject[] roots = scene.GetRootGameObjects();
 		for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
 		{
