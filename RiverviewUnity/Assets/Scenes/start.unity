@@ -370,6 +370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   transitionAnimator: {fileID: 343122635}
+  transitionAnimationLayerName: Transitions
 --- !u!4 &807772957
 Transform:
   m_ObjectHideFlags: 0
@@ -530,7 +531,7 @@ MonoBehaviour:
     m_TypeName: Cloverview.Clickable+ButtonClickedEvent, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   preload: 1
-  destination: {fileID: 11400000, guid: c4f7f7688b050c14485bbef3c139970c, type: 2}
+  destination: {fileID: 11400000, guid: d3a72f4e85283174aab3496559e8a0fb, type: 2}
   parentScene: 
 --- !u!114 &2093306375
 MonoBehaviour:
