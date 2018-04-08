@@ -9,6 +9,7 @@ namespace Cloverview
 public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 {
 	public Animator transitionAnimator;
+	public string transitionAnimationLayerName = "Transitions";
 
 	public enum TransitionState
 	{
@@ -23,10 +24,16 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 
 	System.Action<Nav.VisibleMenu> transitioningOutCallback;
 	Nav.VisibleMenu transitioningOutNavScene;
+	int transitionAnimationLayer = -1;
+	int transitionAnimationNameHash = 0;
 
 	public void OnEnable()
 	{
 		this.state = TransitionState.Uninitialised;
+		if (this.transitionAnimationLayer == -1 && this.transitionAnimator != null)
+		{
+			this.transitionAnimationLayer = this.transitionAnimator.GetLayerIndex(this.transitionAnimationLayerName);
+		}
 		App.Register<SaveData>(this);
 	}
 
@@ -40,10 +47,16 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 		{
 			case TransitionState.Out:
 			{
-				if (this.transitionAnimator != null && this.transitionAnimator)
+				bool stillGoing = false;
+				if (this.transitionAnimator != null)
 				{
+					AnimatorStateInfo stateInfo = this.transitionAnimator.GetCurrentAnimatorStateInfo(this.transitionAnimationLayer);
+					if (stateInfo.shortNameHash == this.transitionAnimationNameHash && stateInfo.normalizedTime < 1.0f)
+					{
+						stillGoing = true;
+					}
 				}
-				else
+				if (!stillGoing)
 				{
 					if (this.transitioningOutCallback != null)
 					{
@@ -56,10 +69,16 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 			} break;
 			case TransitionState.In:
 			{
-				if (this.transitionAnimator != null && this.transitionAnimator)
+				bool stillGoing = false;
+				if (this.transitionAnimator != null)
 				{
+					AnimatorStateInfo stateInfo = this.transitionAnimator.GetCurrentAnimatorStateInfo(this.transitionAnimationLayer);
+					if (stateInfo.shortNameHash == this.transitionAnimationNameHash && stateInfo.normalizedTime < 1.0f)
+					{
+						stillGoing = true;
+					}
 				}
-				else
+				if (!stillGoing)
 				{
 					this.state = TransitionState.Idle;
 				}
@@ -74,13 +93,15 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 
 		this.state = TransitionState.In;
 
-		string transitionAnimationName = def.name;
-
 		if (this.transitionAnimator != null)
 		{
-			this.transitionAnimator.Play("ResetTransition");
+			string transitionAnimationName = def.name + "In";
+
+			this.transitionAnimationNameHash = Animator.StringToHash(transitionAnimationName);
+
+			this.transitionAnimator.Play("ResetTransition", this.transitionAnimationLayer);
 			this.transitionAnimator.Update(0f);
-			this.transitionAnimator.Play(transitionAnimationName);
+			this.transitionAnimator.Play(this.transitionAnimationNameHash, this.transitionAnimationLayer);
 		}
 	}
 
@@ -94,13 +115,16 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 		if (param != null)
 		{
 			MenuData def = param.def;
-			string transitionAnimationName = def.name;
 
 			if (this.transitionAnimator != null)
 			{
-				this.transitionAnimator.Play("ResetTransition");
+				string transitionAnimationName = def.name + "Out";
+
+				this.transitionAnimationNameHash = Animator.StringToHash(transitionAnimationName);
+
+				this.transitionAnimator.Play("ResetTransition", this.transitionAnimationLayer);
 				this.transitionAnimator.Update(0f);
-				this.transitionAnimator.Play(transitionAnimationName);
+				this.transitionAnimator.Play(this.transitionAnimationNameHash, this.transitionAnimationLayer);
 			}
 		}
 	}
