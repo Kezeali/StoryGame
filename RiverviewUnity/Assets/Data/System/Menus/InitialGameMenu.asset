@@ -16,3 +16,4 @@ MonoBehaviour:
   envScene: {fileID: 11400000, guid: 493a982d533c6af4b94012d684e3c948, type: 2}
   type: 1
   allowPreload: 1
+  transitionAs: {fileID: 11400000, guid: d3a72f4e85283174aab3496559e8a0fb, type: 2}

@@ -29,6 +29,7 @@ namespace Cloverview
 		public SceneData envScene;
 		public MenuType type;
 		public bool allowPreload;
+		public MenuData transitionAs;
 
 		public void Reset()
 		{
