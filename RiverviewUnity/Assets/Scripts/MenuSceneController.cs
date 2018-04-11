@@ -95,7 +95,8 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 
 		if (this.transitionAnimator != null)
 		{
-			string transitionAnimationName = def.name + "In";
+			MenuData transitionMenuDef = def.transitionAs != null ? def.transitionAs : def;
+			string transitionAnimationName = transitionMenuDef.name + "In";
 
 			this.transitionAnimationNameHash = Animator.StringToHash(transitionAnimationName);
 
@@ -118,7 +119,8 @@ public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
 
 			if (this.transitionAnimator != null)
 			{
-				string transitionAnimationName = def.name + "Out";
+				MenuData transitionMenuDef = def.transitionAs != null ? def.transitionAs : def;
+				string transitionAnimationName = transitionMenuDef.name + "Out";
 
 				this.transitionAnimationNameHash = Animator.StringToHash(transitionAnimationName);
 
