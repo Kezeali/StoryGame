@@ -124,6 +124,117 @@ public class App : MonoBehaviour
 		}
 	}
 
+	List<PlanExecutor> executingExecutors = new List<PlanExecutor>();
+	struct PlanExecutorUser
+	{
+		public string executorId;
+		public IDataUser<PlanExecutor> user;
+	}
+	List<PlanExecutorUser> planExecutorUsers = new List<PlanExecutorUser>();
+	public void AddExecutor(PlanExecutor executor)
+	{
+		if (executor == null)
+		{
+			return;
+		}
+		bool foundExisting = false;
+		for (int i = 0; i < this.executingExecutors.Count; ++i)
+		{
+			if (this.executingExecutors[i] != null)
+			{
+				if (this.executingExecutors[i].id == executor.id)
+				{
+					foundExisting = true;
+					break;
+				}
+			}
+		}
+		if (!foundExisting)
+		{
+			this.executingExecutors.Add(executor);
+			for (int i = this.planExecutorUsers.Count-1; i >= 0; --i)
+			{
+				if (this.planExecutorUsers[i].user != null)
+				{
+					if (this.planExecutorUsers[i].executorId == executor.id)
+					{
+						this.planExecutorUsers[i].user.Initialise(executor);
+						this.planExecutorUsers.RemoveAt(i);
+					}
+				}
+			}
+		}
+		else
+		{
+			Debug.LogErrorFormat("Tried to add plan executor with duplicate ID {0}", executor.id);
+		}
+	}
+
+	public void RemoveExecutor(PlanExecutor executor)
+	{
+		for (int i = this.executingExecutors.Count-1; i >= 0 ; --i)
+		{
+			if (this.executingExecutors[i] != null)
+			{
+				if (this.executingExecutors[i] == executor)
+				{
+					this.executingExecutors.RemoveAt(i);
+				}
+			}
+		}
+	}
+
+	public void GetExecutor(string id, IDataUser<PlanExecutor> user)
+	{
+		PlanExecutor executor = null;
+		for (int i = 0; i < this.executingExecutors.Count; ++i)
+		{
+			if (this.executingExecutors[i] != null)
+			{
+				if (this.executingExecutors[i].id == id)
+				{
+					executor = this.executingExecutors[i];
+					break;
+				}
+			}
+		}
+		if (executor != null)
+		{
+			user.Initialise(executor);
+		}
+		else
+		{
+			PlanExecutorUser entry = new PlanExecutorUser()
+			{
+				executorId = id,
+				user = user
+			};
+			this.planExecutorUsers.Add(entry);
+		}
+	}
+
+	public void CancelRequestForExecutor(string id, IDataUser<PlanExecutor> user)
+	{
+		for (int i = this.planExecutorUsers.Count-1; i >= 0; --i)
+		{
+			if (this.planExecutorUsers[i].executorId == id && this.planExecutorUsers[i].user == user)
+			{
+					this.planExecutorUsers.RemoveAt(i);
+			}
+		}
+	}
+
+	void TidyUpExecutors()
+	{
+		for (int i = this.executingExecutors.Count-1; i >= 0 ; --i)
+		{
+			if (this.executingExecutors[i] == null)
+			{
+				this.executingExecutors.RemoveAt(i);
+			}
+		}
+	}
+
 	public void Awake()
 	{
 	#if !UNITY_EDITOR
@@ -213,6 +324,11 @@ public class App : MonoBehaviour
 		this.waitingForInit = false;
 
 		Save();
+	}
+
+	public void OnDestroy()
+	{
+		dataUserCollections.Clear();
 	}
 
 	public void Initialise()
