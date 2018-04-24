@@ -721,7 +721,7 @@ public class Nav : MonoBehaviour
 					}
 					else if (menuToLoad.operation == GoToOp.Close)
 					{
-						// TODO(elliot): close the given menu
+						
 					}
 				}
 			}
@@ -919,6 +919,12 @@ public class Nav : MonoBehaviour
 	VisibleMenu PopTopPopup()
 	{
 		VisibleMenu newTopPopup = null;
+		
+		// Select prev popup
+		if (this.popupStack.Count > 1)
+		{
+			newTopPopup = this.popupStack[this.popupStack.Count-2];
+		}
 
 		if (this.popupStack.Count > 0)
 		{
@@ -927,11 +933,6 @@ public class Nav : MonoBehaviour
 			TransitionMenuOut(menuPopped);
 		}
 
-		// Select prev popup
-		if (this.popupStack.Count > 0)
-		{
-			newTopPopup = this.popupStack[this.popupStack.Count-1];
-		}
 		return newTopPopup;
 	}
 
