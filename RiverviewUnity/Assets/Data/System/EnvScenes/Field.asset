@@ -15,7 +15,7 @@ MonoBehaviour:
     scenePath: Assets/Scenes/field.unity
   allowPreload: 1
   background: 0
-  cameraType: 1
+  cameraType: 3
   transitionIn: 0
   transitionOut: 0
   transitionInNameOverride: 

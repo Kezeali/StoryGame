@@ -15,8 +15,8 @@ MonoBehaviour:
     scenePath: Assets/Scenes/bedroom.unity
   allowPreload: 1
   background: 0
-  cameraType: 0
-  transitionIn: 0
-  transitionOut: 0
+  cameraType: 1
+  transitionIn: 1
+  transitionOut: 1
   transitionInNameOverride: 
   transitionOutNameOverride: 

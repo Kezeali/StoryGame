@@ -16,32 +16,32 @@ MonoBehaviour:
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 88e123a6ab79df94f84a1f5187174cb1, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
   - m_name: Algebra
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
   - m_name: Calculus
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
   - m_name: Trigonometry
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
   - m_name: Statistics
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
   - m_name: General Study
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
   - m_name: Soccer
     timeUnits: 1
     validSlots: 3
@@ -51,12 +51,12 @@ MonoBehaviour:
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: be5c5c2420862f74995551c1a61d5fa6, type: 2}
   - m_name: Track
     timeUnits: 1
     validSlots: 1
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
-    activity: {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+    activity: {fileID: 11400000, guid: be5c5c2420862f74995551c1a61d5fa6, type: 2}
   - m_name: Nap
     timeUnits: 1
     validSlots: 2
@@ -73,5 +73,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f67516e0789ce6a48aba1bfeb48a7182, type: 2}
   planActivities:
   - {fileID: 11400000, guid: 1de322c03136ad449a4c9f8d1f0c8a10, type: 2}
+  - {fileID: 11400000, guid: 8bf6de05ed8e6504a815c9ce8448d852, type: 2}
+  - {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
   - {fileID: 11400000, guid: 16edde81760140f4d8ebaa5b300d1c28, type: 2}
-  qualities: []
+  qualities:
+  - {fileID: 11400000, guid: b0dbe1522841ba54ea5e90f5e6ba08b3, type: 2}
