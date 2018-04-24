@@ -2,16 +2,17 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using System.Collections.Generic;
 
 namespace Cloverview
 {
 
-class ProcessSceneToAllowPreload : IProcessScene
+class ProcessSceneToAllowPreload : IProcessSceneWithReport
 {
 	public int callbackOrder { get { return 1; } }
 
-	public void OnProcessScene(Scene scene)
+	public void OnProcessScene(Scene scene, BuildReport report)
 	{
 		Debug.Log("ProcessSceneToAllowPreload.OnProcessScene " + scene.path);
 
