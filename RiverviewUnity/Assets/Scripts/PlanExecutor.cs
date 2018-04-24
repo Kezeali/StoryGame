@@ -19,7 +19,8 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	MenuData executeMenu;
 
 	[SerializeField]
-	MenuData backMenu;
+	[UnityEngine.Serialization.FormerlySerializedAs("backMenu")]
+	MenuData defaultBackMenu;
 
 	[SerializeField]
 	EventData[] availableEvents;
@@ -30,6 +31,7 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 	[System.NonSerialized]
 	public float executingSecondsPerUnitTime;
 
+	MenuData backMenu;
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
 	Nav nav;
@@ -347,7 +349,17 @@ public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, 
 		this.executing = true;
 
 		Object.DontDestroyOnLoad(this.gameObject);
-				
+		
+		// Save the menu to return to
+		if (this.nav.activeMenu != null && this.nav.activeMenu.def != null)
+		{
+			this.backMenu = this.nav.activeMenu.def;
+		}
+		else
+		{
+			this.backMenu = this.defaultBackMenu;
+		}
+
 		this.nav.GoTo(this.executeMenu, this.parentScene);
 		this.PreloadPlanActivities();
 

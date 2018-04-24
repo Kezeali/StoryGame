@@ -105,7 +105,8 @@ public class Nav : MonoBehaviour
 	List<PreloadedScene> preloadedScenes = new List<PreloadedScene>();
 
 	VisibleMenu nextActiveMenu;
-	VisibleMenu activeMenu;
+	[System.NonSerialized]
+	public VisibleMenu activeMenu;
 	List<VisibleMenu> popupStack = new List<VisibleMenu>();
 	Stack<MenuData> breadcrumbs = new Stack<MenuData>();
 
