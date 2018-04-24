@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Name: School_Class
   m_EditorClassIdentifier: 
   scene:
-    scenePath: Assets/Scenes/field.unity
+    scenePath: Assets/Scenes/school_class.unity
   allowPreload: 1
   background: 0
-  cameraType: 1
+  cameraType: 3
   transitionIn: 0
   transitionOut: 0
   transitionInNameOverride: 

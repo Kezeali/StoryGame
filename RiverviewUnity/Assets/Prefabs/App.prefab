@@ -108,6 +108,7 @@ Animator:
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!114 &114233490680148140
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -163,17 +164,16 @@ MonoBehaviour:
   envTransitionCameraPrefab: {fileID: 1826682069673036, guid: 7e148e9e8f21d8b4bacbd042bc862c53,
     type: 2}
   envCameraPrefabs:
-  - type: 0
-    prefab: {fileID: 1826682069673036, guid: 99d25c842e425f44a9a64ade14828a65, type: 2}
   - type: 1
     prefab: {fileID: 1826682069673036, guid: 99d25c842e425f44a9a64ade14828a65, type: 2}
   - type: 2
+    prefab: {fileID: 1826682069673036, guid: 99d25c842e425f44a9a64ade14828a65, type: 2}
+  - type: 3
     prefab: {fileID: 1826682069673036, guid: 019c17437a29d4a42b0b57525c8570f0, type: 2}
   nav: {fileID: 114650394401774564}
   plannerData: {fileID: 11400000, guid: 2eea9fa73fb9b4c4f9e277940ca300d7, type: 2}
   gameData: {fileID: 11400000, guid: da2642e653cc19c448e2b207d88d799a, type: 2}
   defaultSaveData: {fileID: 11400000, guid: 38951aae88785cf4e864ff802aeb357b, type: 2}
-  planExecutors: []
 --- !u!114 &114650394401774564
 MonoBehaviour:
   m_ObjectHideFlags: 1
