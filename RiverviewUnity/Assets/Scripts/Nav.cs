@@ -437,31 +437,32 @@ public class Nav : MonoBehaviour
 			&& def.type != MenuType.Back && def.type != MenuType.ClosePopup)
 		{
 			// Validate the requester id: must be a visible scene
+			PreloadedScene loadedScene = this.FindLoadedScene(requesterId);
+			if (loadedScene == null || !this.IsVisible(loadedScene))
 			{
-				PreloadedScene loadedScene = this.FindLoadedScene(requesterId);
-				if (loadedScene == null || !this.IsVisible(loadedScene))
-				{
-					Debug.LogWarningFormat("Invalid requester {0} tried to preload menu {1}. Preload requesters for menus must be loaded menus themselves.", requesterId, def.name);
-					requesterId = null;
-				}
+				Debug.LogWarningFormat("Invalid requester {0} tried to preload menu {1}. Preload requesters for menus must be loaded menus themselves.", requesterId, def.name);
+				requesterId = null;
 			}
-
-			var item = new MenuSceneToLoad()
-			{
-				def = def,
-				preloadRequesterId = requesterId
-			};
 
 			if (def.envScene != null)
 			{
 				this.Preload(def.envScene, def.menuScene.scenePath);
 			}
 
-			this.menuToLoadQueue.Enqueue(item);
-
-			if (!this.processingQueue)
+			if (requesterId != null)
 			{
-				this.StartCoroutine(this.ProcessQueueCoroutine());
+				var item = new MenuSceneToLoad()
+				{
+					def = def,
+					preloadRequesterId = requesterId
+				};
+
+				this.menuToLoadQueue.Enqueue(item);
+
+				if (!this.processingQueue)
+				{
+					this.StartCoroutine(this.ProcessQueueCoroutine());
+				}
 			}
 		}
 	}
@@ -740,6 +741,8 @@ public class Nav : MonoBehaviour
 			yield return 0;
 		}
 
+		Debug.Assert(this.nextActiveMenu == null);
+
 		// TODO(elliot): block input until transition finishes
 
 		VisibleMenu defaultVisibleMenu = null;
@@ -779,7 +782,7 @@ public class Nav : MonoBehaviour
 			yield break;
 		}
 
-		// NOTE(elliot): queuing up the next active menu here before yielding, if a close / back operation was executed above
+		// NOTE(elliot): if a close / back operation was executed above it will have set defaultVisibleMenu to semething other than null. in this case, must be set here before yielding to allow the dependant env scene to be stay activated
 		this.nextActiveMenu = defaultVisibleMenu;
 
 		// Show the environment scene
@@ -822,12 +825,28 @@ public class Nav : MonoBehaviour
 						}
 					}
 
-					// Wait for any existing active menu to be deactivated
-					while (this.activeMenu != null && this.activeMenu == this.nextActiveMenu && this.nextActiveMenu != null)
+					if (this.activeMenu != null &&
+						(this.activeMenu.controller == null || this.activeMenu.controller.state != MenuSceneController.TransitionState.Out))
 					{
-						yield return 0;
+						// Active menu doesn't need to transition out (i.e. this menu is an overlay or the same menu)
+						this.activeMenu = null;
+					}
+					else
+					{
+						// Wait for any existing active menu to be cleared (after transitioning out)
+						while (this.activeMenu != null)
+						{
+							yield return 0;
+						}
 					}
 
+					if (this.nextActiveMenu != visibleMenu)
+					{
+						Debug.LogErrorFormat("Multiple menus were loaded simultaniously, resulting in a race.");
+						yield break;
+					}
+
+					// NOTE(elliot): intentionally setting nextActiveMenu to null here regardless of wheter the next scene loaded successfully. local var visibleMenu is used to set the current active menu
 					this.nextActiveMenu = null;
 
 					Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
@@ -835,7 +854,7 @@ public class Nav : MonoBehaviour
 					{
 						this.activeMenu = visibleMenu;
 
-						Debug.LogFormat("Active menu is now {0}", this.activeMenu.def);
+						Debug.LogFormat("Active menu is now {0}.", this.activeMenu.def);
 
 						// Add / move this popup to the top of the stack
 						int existingPopupIndex = this.popupStack.IndexOf(visibleMenu);
@@ -887,21 +906,46 @@ public class Nav : MonoBehaviour
 					}
 					else
 					{
-						Debug.LogErrorFormat("Failed to load menu scene {0} (menu {1})", resolvedDef.menuScene, resolvedDef.name);
+						Debug.LogErrorFormat("Failed to load menu scene {0} (menu {1}).", resolvedDef.menuScene, resolvedDef.name);
 					}
 				}
 				else
 				{
-					Debug.LogErrorFormat("Failed to load menu scene {0} (menu {1})", resolvedDef.menuScene, resolvedDef.name);
+					Debug.LogErrorFormat("Failed to load menu scene {0} (menu {1}).", resolvedDef.menuScene, resolvedDef.name);
 				}
-
-				// Normally cleared immediately after load succeeded: clearing here in case load failed
-				this.nextActiveMenu = null;
 			}
 			else
 			{
-				Debug.LogErrorFormat("Failed to activate menu {0}", resolvedDef.name);
+				Debug.LogErrorFormat("Failed to activate menu {0}.", resolvedDef.name);
 			}
+		}
+		// Normally cleared immediately after load succeeded: clearing here in case load failed
+		this.nextActiveMenu = null;
+
+		if (this.activeMenu == null)
+		{
+			// TODO(elliot): fall back on another menu
+			//Debug.LogWarning("Falling back on default menu.");
+		}
+	}
+
+	void TransitionMenuOutWithoutDeactivating(VisibleMenu visibleMenu)
+	{
+		if (visibleMenu.controller != null)
+		{
+			visibleMenu.controller.TransitionOut(this.OnTransitionOutFinished, visibleMenu);
+		}
+		else
+		{
+			this.OnTransitionOutFinished(visibleMenu);
+		}
+	}
+
+	void OnTransitionOutFinished(VisibleMenu visibleMenu)
+	{
+		if (visibleMenu == this.activeMenu)
+		{
+			this.activeMenu = null;
 		}
 	}
 
@@ -1009,7 +1053,6 @@ public class Nav : MonoBehaviour
 				this.waitingForSceneToBeDeactivated = null;
 				if (!envScene.background)
 				{
-					// TODO(elliot): block input until transition finishes
 					if (this.activeEnvScene != null)
 					{
 						this.waitingForSceneToBeDeactivated = this.activeEnvScene;

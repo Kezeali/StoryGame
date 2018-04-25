@@ -18,7 +18,8 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 	private PlanOptionUI defaultFilledSlotPrefab;
 
 	[SerializeField]
-	private PlanExecutor planExecutor;
+	[UnityEngine.Serialization.FormerlySerializedAs("planExecutor")]
+	private PlanExecutor planExecutorPrefab;
 
 	[SerializeField]
 	private Animator planUiAnimator;
@@ -34,6 +35,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 	List<GameObject> optionUIs = new List<GameObject>();
 
 	PlanSlotUI selectedSlot;
+	PlanExecutor planExecutor;
 
 	public void OnEnable()
 	{
@@ -233,6 +235,10 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 			}
 		}
 
+		if (this.planExecutor == null)
+		{
+			this.planExecutor = Object.Instantiate(this.planExecutorPrefab);
+		}
 		if (this.planExecutor != null)
 		{
 			this.planExecutor.Initialise(this.plan, this.planSchema);
@@ -284,6 +290,7 @@ public class PlanUI : MonoBehaviour, IDataUser<SaveData>
 		if (this.planExecutor != null)
 		{
 			this.planExecutor.Execute();
+			this.planExecutor = null;
 		}
 	}
 }

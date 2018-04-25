@@ -637,7 +637,7 @@ RectTransform:
   - {fileID: 2093306372}
   - {fileID: 519073418}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -713,7 +713,8 @@ MonoBehaviour:
   planOptionSelectorUI: {fileID: 1497837959}
   defaultFilledSlotPrefab: {fileID: 114094483307811976, guid: d09756ecb72f93645844e81150c3b5e5,
     type: 2}
-  planExecutor: {fileID: 1365460848}
+  planExecutor: {fileID: 114723216548656092, guid: b3ac209cf68367f4eae5b5a66cc5d07c,
+    type: 2}
   planUiAnimator: {fileID: 343122635}
   planSchema:
     name: 
@@ -2530,7 +2531,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000055761448, y: -0.000009383737}
+  m_AnchoredPosition: {x: -0.000055761448, y: 0.00005172819}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &902383962
@@ -3663,7 +3664,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2118207278}
   m_HandleRect: {fileID: 2118207277}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -4134,58 +4135,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4202885745224482, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 45d3adbb057743f4791e87bafdd68ee6, type: 2}
   m_IsPrefabParent: 0
---- !u!1 &1365460846
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1365460847}
-  - component: {fileID: 1365460848}
-  m_Layer: 5
-  m_Name: GeneralWeeklyExecutor
-  m_TagString: PlanExecutor
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1365460847
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1365460846}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1365460848
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1365460846}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a94de6ee800327b4696da65c557730b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  id: GeneralWeekly
-  defaultSecondsPerUnitTime: 1
-  executeMenu: {fileID: 11400000, guid: 3a182ad9387bd7e4bb7e1a67ea017de3, type: 2}
-  defaultBackMenu: {fileID: 11400000, guid: 3db9e5f8f95f1a84d85ab003971a97c5, type: 2}
-  availableEvents:
-  - {fileID: 11400000, guid: d139e2505083b4f4e921c236df28f851, type: 2}
-  parentScene: 
 --- !u!1 &1391846464
 GameObject:
   m_ObjectHideFlags: 0
