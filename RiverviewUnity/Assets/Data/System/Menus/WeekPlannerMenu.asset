@@ -14,5 +14,6 @@ MonoBehaviour:
   menuScene:
     scenePath: Assets/Scenes/ui_week.unity
   envScene: {fileID: 11400000, guid: 9e8d67d87b3276e4baf8c8749c74a25a, type: 2}
-  type: 2
+  type: 1
   allowPreload: 1
+  transitionAs: {fileID: 0}
