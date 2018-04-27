@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 namespace Cloverview
 {
 
-public class AutoNavigate : MonoBehaviour, IDataUser<Nav>, INavigator
+public class AutoNavigate : MonoBehaviour, IServiceUser<Nav>, INavigator
 {
 	[Header("Menu Navigation")]
 	public MenuData destination;

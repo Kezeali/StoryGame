@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Cloverview;
 
-public class PlanOptionSelectorUI : MonoBehaviour, IDataUser<PlannerData>
+public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerData>
 {
 	[SerializeField]
 	private PlanUI planUI;

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
-public class EnvSceneController : MonoBehaviour, IDataUser<SaveData>
+public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 {
 	public Animator sceneAnimator;
 

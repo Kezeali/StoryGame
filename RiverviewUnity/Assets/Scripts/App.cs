@@ -48,24 +48,24 @@ public class App : MonoBehaviour
 
 	public static App instance;
 
-	private class DataUserCollection<DataT>
+	private class ServiceUserCollection<ServiceT>
 	{
-		List<IDataUser<DataT>> toInitialise = new List<IDataUser<DataT>>();
-		List<IDataUser<DataT>> initialised = new List<IDataUser<DataT>>();
+		List<IServiceUser<ServiceT>> toInitialise = new List<IServiceUser<ServiceT>>();
+		List<IServiceUser<ServiceT>> initialised = new List<IServiceUser<ServiceT>>();
 
-		public void Add(IDataUser<DataT> dataUser)
+		public void Add(IServiceUser<ServiceT> user)
 		{
-			Remove(dataUser);
-			this.toInitialise.Add(dataUser);
+			Remove(user);
+			this.toInitialise.Add(user);
 		}
 
-		public void Remove(IDataUser<DataT> dataUser)
+		public void Remove(IServiceUser<ServiceT> user)
 		{
-			this.initialised.Remove(dataUser);
-			this.toInitialise.Remove(dataUser);
+			this.initialised.Remove(user);
+			this.toInitialise.Remove(user);
 		}
 
-		public void Initialise(DataT data)
+		public void Initialise(ServiceT data)
 		{
 			for (int i = 0; i < this.toInitialise.Count; ++i)
 			{
@@ -86,24 +86,24 @@ public class App : MonoBehaviour
 		}
 	}
 
-	static Dictionary<System.Type, object> dataUserCollections = new Dictionary<System.Type, object>();
+	static Dictionary<System.Type, object> userCollections = new Dictionary<System.Type, object>();
 
-	public static void Register<DataT>(IDataUser<DataT> dataUser)
+	public static void Register<ServiceT>(IServiceUser<ServiceT> user)
 	{
-		DataUserCollection<DataT> collection = null;
+		ServiceUserCollection<ServiceT> collection = null;
 		object value;
-		if (!dataUserCollections.TryGetValue(typeof(DataT), out value))
+		if (!userCollections.TryGetValue(typeof(ServiceT), out value))
 		{
-			collection = new DataUserCollection<DataT>();
-			dataUserCollections.Add(typeof(DataT), collection);
+			collection = new ServiceUserCollection<ServiceT>();
+			userCollections.Add(typeof(ServiceT), collection);
 		}
 		else
 		{
-			collection = value as DataUserCollection<DataT>;
+			collection = value as ServiceUserCollection<ServiceT>;
 		}
-		collection.Add(dataUser);
+		collection.Add(user);
 
-		Debug.LogFormat("Data user added: {0}", dataUser);
+		Debug.LogFormat("Data user added: {0}", user);
 
 		if (instance != null)
 		{
@@ -111,16 +111,16 @@ public class App : MonoBehaviour
 		}
 	}
 
-	public static void Deregister<DataT>(IDataUser<DataT> dataUser)
+	public static void Deregister<ServiceT>(IServiceUser<ServiceT> user)
 	{
-		DataUserCollection<DataT> collection = null;
+		ServiceUserCollection<ServiceT> collection = null;
 		object value;
-		if (dataUserCollections.TryGetValue(typeof(DataT), out value))
+		if (userCollections.TryGetValue(typeof(ServiceT), out value))
 		{
-			collection = value as DataUserCollection<DataT>;
-			collection.Remove(dataUser);
+			collection = value as ServiceUserCollection<ServiceT>;
+			collection.Remove(user);
 
-			Debug.LogFormat("Data user removed: {0}", dataUser);
+			Debug.LogFormat("Data user removed: {0}", user);
 		}
 	}
 
@@ -128,7 +128,7 @@ public class App : MonoBehaviour
 	struct PlanExecutorUser
 	{
 		public string executorId;
-		public IDataUser<PlanExecutor> user;
+		public IServiceUser<PlanExecutor> user;
 	}
 	List<PlanExecutorUser> planExecutorUsers = new List<PlanExecutorUser>();
 	public void AddExecutor(PlanExecutor executor)
@@ -184,7 +184,7 @@ public class App : MonoBehaviour
 		}
 	}
 
-	public void GetExecutor(string id, IDataUser<PlanExecutor> user)
+	public void GetExecutor(string id, IServiceUser<PlanExecutor> user)
 	{
 		PlanExecutor executor = null;
 		for (int i = 0; i < this.executingExecutors.Count; ++i)
@@ -213,7 +213,7 @@ public class App : MonoBehaviour
 		}
 	}
 
-	public void CancelRequestForExecutor(string id, IDataUser<PlanExecutor> user)
+	public void CancelRequestForExecutor(string id, IServiceUser<PlanExecutor> user)
 	{
 		for (int i = this.planExecutorUsers.Count-1; i >= 0; --i)
 		{
@@ -328,15 +328,15 @@ public class App : MonoBehaviour
 
 	public void OnDestroy()
 	{
-		dataUserCollections.Clear();
+		userCollections.Clear();
 	}
 
 	public void Initialise()
 	{
 		Debug.Log("Initialise()");
-		this.InitialiseDataUsers(this.saveData);
-		this.InitialiseDataUsers(this.plannerData);
-		this.InitialiseDataUsers(this.nav);
+		this.InitialiseServiceUsers(this.saveData);
+		this.InitialiseServiceUsers(this.plannerData);
+		this.InitialiseServiceUsers(this.nav);
 	}
 
 	void DelayInit()
@@ -356,23 +356,23 @@ public class App : MonoBehaviour
 		this.Initialise();
 	}
 
-	DataUserCollection<DataT> GetDataUserCollection<DataT>()
+	ServiceUserCollection<ServiceT> GetServiceUserCollection<ServiceT>()
 	{
-		DataUserCollection<DataT> collection = null;
+		ServiceUserCollection<ServiceT> collection = null;
 		object value;
-		if (dataUserCollections.TryGetValue(typeof(DataT), out value))
+		if (userCollections.TryGetValue(typeof(ServiceT), out value))
 		{
-			collection = value as DataUserCollection<DataT>;
+			collection = value as ServiceUserCollection<ServiceT>;
 		}
 		return collection;
 	}
 
-	void InitialiseDataUsers<DataT>(DataT data)
+	void InitialiseServiceUsers<ServiceT>(ServiceT data)
 	{
-		var dataUsers = this.GetDataUserCollection<DataT>();
-		if (dataUsers != null)
+		var users = this.GetServiceUserCollection<ServiceT>();
+		if (users != null)
 		{
-			dataUsers.Initialise(data);
+			users.Initialise(data);
 		}
 	}
 
@@ -423,9 +423,9 @@ public class App : MonoBehaviour
 	}
 }
 
-public interface IDataUser<DataT>
+public interface IServiceUser<ServiceT>
 {
-	void Initialise(DataT data);
+	void Initialise(ServiceT data);
 }
 
 }

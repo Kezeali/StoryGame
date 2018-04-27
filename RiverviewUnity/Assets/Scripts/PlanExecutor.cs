@@ -7,7 +7,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class PlanExecutor : MonoBehaviour, IDataUser<SaveData>, IDataUser<Nav>, INavigator
+public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<Nav>, INavigator
 {
 	[SerializeField]
 	public string id;

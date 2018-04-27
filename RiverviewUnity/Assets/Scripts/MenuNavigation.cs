@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 namespace Cloverview
 {
 
-public class MenuNavigation : Clickable, IDataUser<Nav>, INavigator
+public class MenuNavigation : Clickable, IServiceUser<Nav>, INavigator
 {
 	[Header("Menu Navigation")]
 	public bool preload = true;
