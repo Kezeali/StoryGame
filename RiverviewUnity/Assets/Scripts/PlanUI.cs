@@ -168,7 +168,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 	{
 		this.plan.ClearSelections();
 
-		// TODO: get the plan named this.planName from loaded data
+		// TODO(elliot): get the plan named this.planName from loaded data, much like how save data for PlanExecutors is loaded
 		Plan loadedPlan = loadedData.weeklyPlan;
 		loadedData.weeklyPlan = this.plan;
 
@@ -231,7 +231,10 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 				}
 			}
 		}
+	}
 
+	public void CompleteInitialisation()
+	{
 		// Populate the slot UI elements
 		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
 		{
@@ -251,10 +254,9 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 		}
 		if (this.planExecutor != null)
 		{
-			this.planExecutor.Initialise(this.plan, this.planSchema);
+			this.planExecutor.SetPlan(this.plan, this.planSchema);
 		}
 	}
-
 
 	public void Clear()
 	{
@@ -276,6 +278,11 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 			this.selectedSlot.Display(optionUi.planOption, this.defaultFilledSlotPrefab);
 			this.selectedSlot = null;
 			this.planUiAnimator.SetBool("options_open", false);
+
+			if (this.planExecutor != null)
+			{
+				this.planExecutor.OnOptionSelected(optionUi.planOption);
+			}
 		}
 	}
 
@@ -290,6 +297,11 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 		}
 		else
 		{
+			if (this.planExecutor != null)
+			{
+				this.planExecutor.OnOptionDeselected(slot.dataSlot.selectedOption);
+			}
+
 			this.planOptionSelectorUI.DeselectOption(slot.dataSlot.selectedOption);
 			this.selectedSlot.Clear();
 			//this.planOptionSelectorUI.Populate(slot);

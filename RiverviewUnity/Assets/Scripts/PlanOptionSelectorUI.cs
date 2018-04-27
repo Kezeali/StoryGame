@@ -43,6 +43,10 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerData>
 		this.rootLoadout = MakeRootLoadout();
 	}
 
+	public void CompleteInitialisation()
+	{
+	}
+
 	public void Populate(PlanSlotUI slot)
 	{
 		SlotType type = slot.slotType;

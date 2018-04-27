@@ -50,6 +50,10 @@ public class CharacterStatsContainerUI : MonoBehaviour, IServiceUser<SaveData>
 		}
 	}
 
+	public void CompleteInitialisation()
+	{
+	}
+
 	CharacterStatUI GetStatUI(CharacterStatDefinition statDef)
 	{
 		CharacterStatUI result = null;

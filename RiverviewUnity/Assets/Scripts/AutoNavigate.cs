@@ -33,6 +33,10 @@ public class AutoNavigate : MonoBehaviour, IServiceUser<Nav>, INavigator
 		}
 	}
 
+	public void CompleteInitialisation()
+	{
+	}
+
 	public void SetParentScene(string parentScene)
 	{
 		this.parentScene = parentScene;
