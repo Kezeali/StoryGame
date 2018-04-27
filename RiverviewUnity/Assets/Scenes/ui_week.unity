@@ -713,7 +713,7 @@ MonoBehaviour:
   planOptionSelectorUI: {fileID: 1497837959}
   defaultFilledSlotPrefab: {fileID: 114094483307811976, guid: d09756ecb72f93645844e81150c3b5e5,
     type: 2}
-  planExecutor: {fileID: 114723216548656092, guid: b3ac209cf68367f4eae5b5a66cc5d07c,
+  planExecutorPrefab: {fileID: 114723216548656092, guid: b3ac209cf68367f4eae5b5a66cc5d07c,
     type: 2}
   planUiAnimator: {fileID: 343122635}
   planSchema:
@@ -2531,7 +2531,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000055761448, y: 0.00005172819}
+  m_AnchoredPosition: {x: -0.000055761448, y: -0.000009781538}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &902383962
@@ -3664,7 +3664,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2118207278}
   m_HandleRect: {fileID: 2118207277}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
