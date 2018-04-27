@@ -106,8 +106,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			this.executorSaveData = new PlanExecutorSaveData();
 			saveData.planExecutors.Add(this.id, this.executorSaveData);
 		}
-
-		this.ExecuteIfReady();
 	}
 
 	public void Initialise(Nav nav)
@@ -119,14 +117,18 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.activityScenePreloadId = this.nav.GeneratePreloadIdForEnvScenes();
 
 		this.nav.Preload(this.executeMenu, this.parentScene);
+	}
+
+	public void SetPlan(Plan plan, PlanSchema planSchema)
+	{
+		this.plan = plan;
+		this.planSchema = planSchema;
 
 		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
 	}
 
-	public void Initialise(Plan plan, PlanSchema planSchema)
+	public void CompleteInitialisation()
 	{
-		this.plan = plan;
-		this.planSchema = planSchema;
 		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
 	}
 

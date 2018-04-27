@@ -68,6 +68,10 @@ public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 		this.state = TransitionState.Idle;
 	}
 
+	public void CompleteInitialisation()
+	{
+	}
+
 	public void SetGlobalTransitionAnimator(Animator genericTransitionAnimator)
 	{
 		this.genericTransitionAnimator = genericTransitionAnimator;

@@ -41,6 +41,10 @@ public class MenuNavigation : Clickable, IServiceUser<Nav>, INavigator
 		}
 	}
 
+	public void CompleteInitialisation()
+	{
+	}
+
 	public void SetParentScene(string parentScene)
 	{
 		this.parentScene = parentScene;

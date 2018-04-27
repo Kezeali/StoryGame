@@ -25,6 +25,10 @@ public class ExecutingActivitiesPanel : MonoBehaviour, IServiceUser<SaveData>, I
 	public void Initialise(PlanExecutor planExecutor)
 	{
 	}
+
+	public void CompleteInitialisation()
+	{
+	}
 }
 
 }

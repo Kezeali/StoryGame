@@ -41,6 +41,10 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 	{
 	}
 
+	public void CompleteInitialisation()
+	{
+	}
+
 	public void Update()
 	{
 		switch (this.state)

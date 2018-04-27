@@ -86,22 +86,66 @@ public class App : MonoBehaviour
 		}
 	}
 
+	private class ServiceUserCollection
+	{
+		List<IServiceUser> toInitialise = new List<IServiceUser>();
+		List<IServiceUser> initialised = new List<IServiceUser>();
+
+		public void Add(IServiceUser user)
+		{
+			Remove(user);
+			this.toInitialise.Add(user);
+		}
+
+		public void Remove(IServiceUser user)
+		{
+			this.initialised.Remove(user);
+			this.toInitialise.Remove(user);
+		}
+
+		public void CompleteInitialisation()
+		{
+			for (int i = 0; i < this.toInitialise.Count; ++i)
+			{
+			#if UNITY_EDITOR
+				var component = this.toInitialise[i] as MonoBehaviour;
+				if (component != null)
+				{
+					if (!component.isActiveAndEnabled)
+					{
+						continue;
+					}
+				}
+			#endif
+				this.toInitialise[i].CompleteInitialisation();
+			}
+			this.initialised.AddRange(this.toInitialise);
+			this.toInitialise.Clear();
+		}
+	}
+
 	static Dictionary<System.Type, object> userCollections = new Dictionary<System.Type, object>();
+	// Used to call the initialisation complete method
+	static ServiceUserCollection allServiceUsers = new ServiceUserCollection();
 
 	public static void Register<ServiceT>(IServiceUser<ServiceT> user)
 	{
-		ServiceUserCollection<ServiceT> collection = null;
-		object value;
-		if (!userCollections.TryGetValue(typeof(ServiceT), out value))
 		{
-			collection = new ServiceUserCollection<ServiceT>();
-			userCollections.Add(typeof(ServiceT), collection);
+			ServiceUserCollection<ServiceT> collection = null;
+			object value;
+			if (!userCollections.TryGetValue(typeof(ServiceT), out value))
+			{
+				collection = new ServiceUserCollection<ServiceT>();
+				userCollections.Add(typeof(ServiceT), collection);
+			}
+			else
+			{
+				collection = value as ServiceUserCollection<ServiceT>;
+			}
+			collection.Add(user);
 		}
-		else
-		{
-			collection = value as ServiceUserCollection<ServiceT>;
-		}
-		collection.Add(user);
+
+		allServiceUsers.Add(user);
 
 		Debug.LogFormat("Data user added: {0}", user);
 
@@ -122,6 +166,17 @@ public class App : MonoBehaviour
 
 			Debug.LogFormat("Data user removed: {0}", user);
 		}
+	}
+
+	static ServiceUserCollection<ServiceT> GetServiceUserCollection<ServiceT>()
+	{
+		ServiceUserCollection<ServiceT> collection = null;
+		object value;
+		if (userCollections.TryGetValue(typeof(ServiceT), out value))
+		{
+			collection = value as ServiceUserCollection<ServiceT>;
+		}
+		return collection;
 	}
 
 	List<PlanExecutor> executingExecutors = new List<PlanExecutor>();
@@ -337,6 +392,7 @@ public class App : MonoBehaviour
 		this.InitialiseServiceUsers(this.saveData);
 		this.InitialiseServiceUsers(this.plannerData);
 		this.InitialiseServiceUsers(this.nav);
+		this.CompleteInitialisation();
 	}
 
 	void DelayInit()
@@ -356,23 +412,21 @@ public class App : MonoBehaviour
 		this.Initialise();
 	}
 
-	ServiceUserCollection<ServiceT> GetServiceUserCollection<ServiceT>()
-	{
-		ServiceUserCollection<ServiceT> collection = null;
-		object value;
-		if (userCollections.TryGetValue(typeof(ServiceT), out value))
-		{
-			collection = value as ServiceUserCollection<ServiceT>;
-		}
-		return collection;
-	}
-
 	void InitialiseServiceUsers<ServiceT>(ServiceT data)
 	{
-		var users = this.GetServiceUserCollection<ServiceT>();
-		if (users != null)
+		var usersCollection = App.GetServiceUserCollection<ServiceT>();
+		if (usersCollection != null)
 		{
-			users.Initialise(data);
+			usersCollection.Initialise(data);
+		}
+	}
+
+	void CompleteInitialisation()
+	{
+		var usersCollection = App.allServiceUsers;
+		if (usersCollection != null)
+		{
+			usersCollection.CompleteInitialisation();
 		}
 	}
 
@@ -423,9 +477,14 @@ public class App : MonoBehaviour
 	}
 }
 
-public interface IServiceUser<ServiceT>
+public interface IServiceUser<ServiceT> : IServiceUser
 {
 	void Initialise(ServiceT data);
+}
+
+public interface IServiceUser
+{
+	void CompleteInitialisation();
 }
 
 }
