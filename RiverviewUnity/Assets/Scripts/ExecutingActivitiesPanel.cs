@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class ExecutingActivitiesPanel : MonoBehaviour, IDataUser<SaveData>, IDataUser<PlanExecutor>
+public class ExecutingActivitiesPanel : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
 {
 	// TODO(elliot): make a list of executor ids to look for?
 	[SerializeField]

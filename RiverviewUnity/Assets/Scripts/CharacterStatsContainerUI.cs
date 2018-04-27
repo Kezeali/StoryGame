@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
-public class CharacterStatsContainerUI : MonoBehaviour, IDataUser<SaveData>
+public class CharacterStatsContainerUI : MonoBehaviour, IServiceUser<SaveData>
 {
 	[SerializeField]
 	private CharacterStatUI statUiPrefab;

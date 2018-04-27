@@ -263,6 +263,22 @@ public class Nav : MonoBehaviour
 		}
 	}
 
+	public void MakeCurrentMenuTheActiveScene()
+	{
+		if (this.activeMenu != null && this.activeMenu.loadedScene != null)
+		{
+			SceneManager.SetActiveScene(this.activeMenu.loadedScene.scene);
+		}
+	}
+
+	public void MakeCurrentEnvTheActiveScene()
+	{
+		if (this.activeEnvScene != null && this.activeEnvScene.loadedScene != null)
+		{
+			SceneManager.SetActiveScene(this.activeEnvScene.loadedScene.scene);
+		}
+	}
+
 	public void GoTo(MenuData def, string requesterId = null)
 	{
 		var item = new MenuSceneToLoad()

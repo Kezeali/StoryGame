@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
-public class MenuSceneController : MonoBehaviour, IDataUser<SaveData>
+public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 {
 	public Animator transitionAnimator;
 	public string transitionAnimationLayerName = "Transitions";
