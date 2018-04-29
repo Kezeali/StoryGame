@@ -171,7 +171,7 @@ public class Nav : MonoBehaviour
 	#if UNITY_EDITOR
 		if (!this.loadSave)
 		{
-			SetRootObjectsActive(bootScene, true);
+			Nav.SetRootObjectsActive(bootScene, true);
 		}
 	#endif
 	}
@@ -739,7 +739,7 @@ public class Nav : MonoBehaviour
 					}
 					else if (menuToLoad.operation == GoToOp.Close)
 					{
-						
+						Debug.LogError("Not Implemented: GoToOp.Close");
 					}
 				}
 			}
@@ -748,6 +748,20 @@ public class Nav : MonoBehaviour
 		}
 
 		this.processingGoToQueue = false;
+	}
+
+	enum ResolvedVia
+	{
+		RequestedMenu,
+		PopBreadcrumb,
+		PopTopPopup
+	}
+
+	struct ResolvedMenuNavigation
+	{
+		public ResolvedVia type;
+		public MenuData resolvedDef;
+		public VisibleMenu visibleMenu;
 	}
 
 	IEnumerator GoToCoroutine(MenuData def, string requesterId)
@@ -761,45 +775,81 @@ public class Nav : MonoBehaviour
 
 		// TODO(elliot): block input until transition finishes
 
-		VisibleMenu defaultVisibleMenu = null;
-		MenuData resolvedDef = null;
-		if (def.type == MenuType.Back)
+		ResolvedMenuNavigation resolvedNav = default(ResolvedMenuNavigation);
+		switch (def.type)
 		{
-			VisibleMenu newTopPopup = PopTopPopup();
-			if (newTopPopup != null)
+			case MenuType.Back:
 			{
-				defaultVisibleMenu = newTopPopup;
-				resolvedDef = newTopPopup.def;
-			}
-			else
-			{
-				if (this.breadcrumbs.Count > 0)
+				if (this.popupStack.Count > 1)
 				{
-					resolvedDef = this.breadcrumbs.Pop();
+					resolvedNav.type = ResolvedVia.PopTopPopup;
+					resolvedNav.visibleMenu = this.popupStack[this.popupStack.Count-2];
+					resolvedNav.resolvedDef = resolvedNav.visibleMenu.def;
 				}
-			}
-		}
-		else if (def.type == MenuType.ClosePopup)
-		{
-			VisibleMenu newTopPopup = PopTopPopup();
-			if (newTopPopup != null)
+				else
+				{
+					resolvedNav.type = ResolvedVia.PopBreadcrumb;
+					resolvedNav.resolvedDef = this.breadcrumbs.Peek();
+				}
+			} break;
+			case MenuType.ClosePopup:
 			{
-				defaultVisibleMenu = newTopPopup;
-				resolvedDef = newTopPopup.def;
-			}
-		}
-		else
-		{
-			resolvedDef = def;
+				if (this.popupStack.Count > 1)
+				{
+					resolvedNav.type = ResolvedVia.PopTopPopup;
+					resolvedNav.visibleMenu = this.popupStack[this.popupStack.Count-2];
+					resolvedNav.resolvedDef = resolvedNav.visibleMenu.def;
+				}
+			} break;
+			default:
+			{
+				resolvedNav.type = ResolvedVia.RequestedMenu;
+				resolvedNav.resolvedDef = def;
+			} break;
 		}
 
-		if (resolvedDef == null)
+		if (resolvedNav.resolvedDef == null)
 		{
 			yield break;
 		}
 
-		// NOTE(elliot): if a close / back operation was executed above it will have set defaultVisibleMenu to semething other than null. in this case, must be set here before yielding to allow the dependant env scene to be stay activated
-		this.nextActiveMenu = defaultVisibleMenu;
+		// NOTE(elliot): nextActiveMenu can be set early in the case where the navigation resolution above determined that the next menu is one that's already visible. This will prevent some load thrashing.
+		this.nextActiveMenu = resolvedNav.visibleMenu;
+
+		// Remember the previous active menu so any specific transition-in animations can be triggered
+		VisibleMenu previousActiveMenu = this.activeMenu;
+
+		switch (resolvedNav.type)
+		{
+			case ResolvedVia.PopBreadcrumb:
+			{
+				this.breadcrumbs.Pop();
+			} break;
+			case ResolvedVia.PopTopPopup:
+			{
+				// NOTE(elliot): calling this after determining the nextActiveMenu so that any menu-to-menu specific transitions can be triggered
+				this.TransitionOutOfTopPopup(resolvedNav.resolvedDef);
+			} break;
+		}
+
+		MenuData resolvedDef = resolvedNav.resolvedDef;
+		VisibleMenu alreadyVisibleMenu = resolvedNav.visibleMenu;
+
+		// Clear the popups before switching to root menus
+		switch (resolvedDef.type)
+		{
+			case MenuType.Start:
+			case MenuType.Root:
+			{
+				if (this.GetTopPopup() != alreadyVisibleMenu)
+				{
+					// Initiate a transition to the new menu
+					this.TransitionOutOfTopPopup(resolvedDef);
+				}
+				RemoveOtherPopups(resolvedDef);
+				this.breadcrumbs.Clear();
+			} break;
+		}
 
 		// Show the environment scene
 		if (resolvedDef.envScene != null)
@@ -814,20 +864,13 @@ public class Nav : MonoBehaviour
 		// Show the menu scene
 		{
 			// NOTE(elliot): if there isn't already a visible menu provided by a back / close operation above, request the visible menu now, before closing existing menus, to ensure that this new requester is added and any preloaded scene wont be unloaded!
-			VisibleMenu visibleMenu = defaultVisibleMenu ?? this.FindOrMakeVisibleMenu(resolvedDef, requesterId);
+			VisibleMenu visibleMenu = alreadyVisibleMenu ?? this.FindOrMakeVisibleMenu(resolvedDef, requesterId);
 
 			if (visibleMenu != null)
 			{
 				this.nextActiveMenu = visibleMenu;
 
 				PreloadedScene preloadedScene = visibleMenu.loadedScene;
-
-				// Clear the popups before switching to root menus
-				if (resolvedDef.type == MenuType.Start || resolvedDef.type == MenuType.Root)
-				{
-					RemoveOtherPopups(resolvedDef);
-					this.breadcrumbs.Clear();
-				}
 
 				if (preloadedScene.loadOp != null
 					|| (preloadedScene.scene.IsValid() && preloadedScene.scene.isLoaded))
@@ -862,7 +905,7 @@ public class Nav : MonoBehaviour
 						yield break;
 					}
 
-					// NOTE(elliot): intentionally setting nextActiveMenu to null here regardless of wheter the next scene loaded successfully. local var visibleMenu is used to set the current active menu
+					// NOTE(elliot): intentionally setting nextActiveMenu to null here regardless of wheter the next scene loaded successfully (so if it failed, nextActiveMenu is already reset). Local var visibleMenu is used to set the current active menu
 					this.nextActiveMenu = null;
 
 					Scene scene = SceneManager.GetSceneByPath(preloadedScene.scenePath);
@@ -899,7 +942,7 @@ public class Nav : MonoBehaviour
 							}
 						}
 
-						SetRootObjectsActive(scene, true);
+						Nav.SetRootObjectsActive(scene, true);
 
 						// Find controller
 						MenuSceneController controller = null;
@@ -917,7 +960,16 @@ public class Nav : MonoBehaviour
 
 						if (visibleMenu.controller != null)
 						{
-							visibleMenu.controller.TransitionIn(visibleMenu.def);
+							if (visibleMenu.controller.displayedMenu != visibleMenu.def)
+							{
+								MenuData sourceMenu;
+								if (previousActiveMenu != null) {
+										sourceMenu = previousActiveMenu.def;
+								} else {
+									sourceMenu = null;
+								}
+								visibleMenu.controller.TransitionIn(sourceMenu, visibleMenu.def);
+							}
 						}
 					}
 					else
@@ -940,16 +992,16 @@ public class Nav : MonoBehaviour
 
 		if (this.activeMenu == null)
 		{
-			// TODO(elliot): fall back on another menu
-			//Debug.LogWarning("Falling back on default menu.");
+			// TODO(elliot): save (save should use a circular auto-save slots system so if the game state is broken the player can still revert to an earlier save) & exit
+			//Debug.LogError("Failed to load menu. Exiting.");
 		}
 	}
 
-	void TransitionMenuOutWithoutDeactivating(VisibleMenu visibleMenu)
+	void TransitionMenuOutWithoutDeactivating(VisibleMenu visibleMenu, MenuData nextMenu)
 	{
 		if (visibleMenu.controller != null)
 		{
-			visibleMenu.controller.TransitionOut(this.OnTransitionOutFinished, visibleMenu);
+			visibleMenu.controller.TransitionOut(nextMenu, this.OnTransitionOutFinished, visibleMenu);
 		}
 		else
 		{
@@ -965,36 +1017,43 @@ public class Nav : MonoBehaviour
 		}
 	}
 
-	void TransitionMenuOut(VisibleMenu visibleMenu)
+	void TransitionMenuOut(VisibleMenu visibleMenu, MenuData nextMenu)
 	{
 		if (visibleMenu.controller != null)
 		{
-			visibleMenu.controller.TransitionOut(this.DeactivateMenu, visibleMenu);
+			visibleMenu.controller.TransitionOut(nextMenu, this.DeactivatePopup, visibleMenu);
 		}
 		else
 		{
-			this.DeactivateMenu(visibleMenu);
+			this.DeactivatePopup(visibleMenu);
 		}
 	}
 
-	VisibleMenu PopTopPopup()
+	VisibleMenu GetTopPopup()
 	{
-		VisibleMenu newTopPopup = null;
-		
-		// Select prev popup
-		if (this.popupStack.Count > 1)
+		VisibleMenu topPopup;
+		if (this.popupStack.Count > 0)
 		{
-			newTopPopup = this.popupStack[this.popupStack.Count-2];
+			topPopup = this.popupStack[this.popupStack.Count-1];
 		}
+		else
+		{
+			topPopup = null;
+		}
+		return topPopup;
+	}
 
+	VisibleMenu TransitionOutOfTopPopup(MenuData transitioningTo = null)
+	{
+		VisibleMenu menuPopped = null;
 		if (this.popupStack.Count > 0)
 		{
 			int index = this.popupStack.Count-1;
-			VisibleMenu menuPopped = this.popupStack[index];
-			TransitionMenuOut(menuPopped);
+			menuPopped = this.popupStack[index];
+			this.TransitionMenuOut(menuPopped, transitioningTo);
+			this.popupStack.RemoveAt(index);
 		}
-
-		return newTopPopup;
+		return menuPopped;
 	}
 
 	void RemoveOtherPopups(MenuData def)
@@ -1002,9 +1061,14 @@ public class Nav : MonoBehaviour
 		int firstFreeIndex = this.popupStack.ExcludeAll(PopupHasOtherDef, def);
 		for (int i = firstFreeIndex; i < this.popupStack.Count; ++i)
 		{
-			DeactivatePopupAt(i);
+			this.TransitionMenuOut(this.popupStack[i], null);
 		}
 		this.popupStack.RemoveRange(firstFreeIndex, this.popupStack.Count-firstFreeIndex);
+	}
+
+	static bool PopupHasOtherDef(VisibleMenu popup, MenuData def)
+	{
+		return popup.def != def;
 	}
 
 	void DeactivatePopupAt(int index)
@@ -1017,8 +1081,8 @@ public class Nav : MonoBehaviour
 			PreloadedScene preloadedScene = currentPopup.loadedScene;
 			if (preloadedScene != null)
 			{
-				SetRootObjectsActive(preloadedScene.scene, false);
-				OnSceneHidden(preloadedScene);
+				Nav.SetRootObjectsActive(preloadedScene.scene, false);
+				this.OnSceneHidden(preloadedScene);
 			}
 			else
 			{
@@ -1027,12 +1091,7 @@ public class Nav : MonoBehaviour
 		}
 	}
 
-	static bool PopupHasOtherDef(VisibleMenu popup, MenuData def)
-	{
-		return popup.def != def;
-	}
-
-	void DeactivateMenu(VisibleMenu visibleMenu)
+	void DeactivatePopup(VisibleMenu visibleMenu)
 	{
 		Debug.Assert(visibleMenu != null);
 	#if UNITY_EDITOR
@@ -1106,7 +1165,7 @@ public class Nav : MonoBehaviour
 						this.activeEnvScene = visibleEnvScene;
 					}
 
-					SetRootObjectsActive(scene, true);
+					Nav.SetRootObjectsActive(scene, true);
 
 					// Find controller
 					EnvSceneController controller = null;
@@ -1182,7 +1241,7 @@ public class Nav : MonoBehaviour
 			this.activeEnvScene = null;
 		}
 		this.visibleEnvScenes.Remove(visibleEnvScene);
-		SetRootObjectsActive(visibleEnvScene.loadedScene.scene, false);
+		Nav.SetRootObjectsActive(visibleEnvScene.loadedScene.scene, false);
 	}
 
 	VisibleEnvScene FindVisibleEnvScene(SceneData def)
@@ -1324,7 +1383,7 @@ public class Nav : MonoBehaviour
 			if (loadedScene.scene == scene)
 			{
 				this.preloadedScenes.RemoveAt(i);
-				OnSceneHidden(loadedScene);
+				this.OnSceneHidden(loadedScene);
 			}
 		}
 	}
@@ -1404,7 +1463,7 @@ public class Nav : MonoBehaviour
 			{
 				PreloadedScene loadedScene = visibleEnvScene.loadedScene;
 				this.visibleEnvScenes.RemoveAt(i);
-				SetRootObjectsActive(loadedScene.scene, false);
+				Nav.SetRootObjectsActive(loadedScene.scene, false);
 
 				Debug.LogFormat("Hid env scene {0} ({1})", visibleEnvScene.def, loadedScene.scenePath);
 			}

@@ -147,7 +147,7 @@ public class App : MonoBehaviour
 
 		allServiceUsers.Add(user);
 
-		Debug.LogFormat("Data user added: {0}", user);
+		Debug.LogFormat("Service user added: {0}", user);
 
 		if (instance != null)
 		{
@@ -164,8 +164,10 @@ public class App : MonoBehaviour
 			collection = value as ServiceUserCollection<ServiceT>;
 			collection.Remove(user);
 
-			Debug.LogFormat("Data user removed: {0}", user);
+			Debug.LogFormat("Service user removed: {0}", user);
 		}
+
+		allServiceUsers.Remove(user);
 	}
 
 	static ServiceUserCollection<ServiceT> GetServiceUserCollection<ServiceT>()
