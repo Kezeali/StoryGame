@@ -31,6 +31,8 @@ namespace Cloverview
 		public bool allowPreload;
 		public MenuData transitionAs;
 
+		// TODO(elliot): search for transition override options for the to/from scenes in the scenecontroller animators before doing a regular out/in transition
+
 		public void Reset()
 		{
 			this.menuScene = new SceneField() { scenePath = "" };
