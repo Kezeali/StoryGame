@@ -162,7 +162,7 @@ MonoBehaviour:
   m_DefaultBlend:
     m_Style: 0
     m_Time: 1
-  m_CustomBlends: {fileID: 11400000, guid: fc26b20430032ef4daca2ebc6de42c37, type: 2}
+  m_CustomBlends: {fileID: 0}
   m_CameraCutEvent:
     m_PersistentCalls:
       m_Calls: []
