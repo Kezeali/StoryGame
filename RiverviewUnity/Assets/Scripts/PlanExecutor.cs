@@ -80,14 +80,17 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		GameObject[] existingExecutors = GameObject.FindGameObjectsWithTag("PlanExecutor");
 		for (int i = 0; i < existingExecutors.Length; ++i)
 		{
-			PlanExecutor otherExecutor = existingExecutors[i].GetComponent<PlanExecutor>();
-			if (otherExecutor != null)
+			if (existingExecutors[i] != this.gameObject)
 			{
-				this.others.Add(otherExecutor);
-			}
-			else
-			{
-				Debug.LogErrorFormat("Non PlanExecutor taged with PlanExecutor tag: {0}", existingExecutors[i].name);
+				PlanExecutor otherExecutor = existingExecutors[i].GetComponent<PlanExecutor>();
+				if (otherExecutor != null)
+				{
+					this.others.Add(otherExecutor);
+				}
+				else
+				{
+					Debug.LogErrorFormat("Non PlanExecutor taged with PlanExecutor tag: {0}", existingExecutors[i].name);
+				}
 			}
 		}
 	}
@@ -119,16 +122,16 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.nav.Preload(this.executeMenu, this.parentScene);
 	}
 
+	public void CompleteInitialisation()
+	{
+		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
+	}
+
 	public void SetPlan(Plan plan, PlanSchema planSchema)
 	{
 		this.plan = plan;
 		this.planSchema = planSchema;
 
-		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
-	}
-
-	public void CompleteInitialisation()
-	{
 		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
 	}
 
