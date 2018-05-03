@@ -39,6 +39,11 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 		App.Register<SaveData>(this);
 	}
 
+	public void OnDisable()
+	{
+		App.Deregister<SaveData>(this);
+	}
+
 	void DetermineTransitionLayerIndex()
 	{
 		if (this.transitionAnimationLayer == -1 && this.transitionAnimator != null)

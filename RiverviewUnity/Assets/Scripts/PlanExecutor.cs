@@ -62,6 +62,9 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	public void OnDisable()
 	{
+		App.Deregister<SaveData>(this);
+		App.Deregister<Nav>(this);
+
 		this.others.Clear();
 		if (this.nav != null)
 		{
@@ -119,7 +122,10 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 		this.activityScenePreloadId = this.nav.GeneratePreloadIdForEnvScenes();
 
-		this.nav.Preload(this.executeMenu, this.parentScene);
+		if (!string.IsNullOrEmpty(this.parentScene))
+		{
+			this.nav.Preload(this.executeMenu, this.parentScene);
+		}
 	}
 
 	public void CompleteInitialisation()
@@ -365,7 +371,14 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			this.backMenu = this.defaultBackMenu;
 		}
 
-		this.nav.GoTo(this.executeMenu, this.parentScene);
+		if (!string.IsNullOrEmpty(this.parentScene))
+		{
+			this.nav.GoTo(this.executeMenu, this.parentScene);
+		}
+		else
+		{
+			this.nav.GoTo(this.executeMenu);
+		}
 		this.PreloadPlanActivities();
 
 		this.executingSecondsPerUnitTime = secondsPerUnitTime;

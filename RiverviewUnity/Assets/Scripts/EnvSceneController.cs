@@ -58,6 +58,11 @@ public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 		App.Register<SaveData>(this);
 	}
 
+	public void OnDisable()
+	{
+		App.Deregister<SaveData>(this);
+	}
+
 	public void Initialise(SaveData saveData)
 	{
 	}
