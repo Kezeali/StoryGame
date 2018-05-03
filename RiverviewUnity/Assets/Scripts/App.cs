@@ -376,10 +376,28 @@ public class App : MonoBehaviour
 			this.nav.SetEnvCamera(def.type, envCameraCinemachineBrain);
 		}
 
-		this.LoadInternal();
+		this.LoadGlobalProfile();
 
-		// Let nav load immediately
-		this.nav.Initialise(this.saveData);
+		this.LoadUserProfile();
+
+	#if UNITY_EDITOR
+		this.nav.DetermineBootScene();
+		if (!this.nav.loadedInActualBootScene)
+		{
+			// Load a save file so the scene being tested can initialise
+			this.LoadInternal();
+		}
+	#endif
+	}
+
+	void LoadGlobalProfile()
+	{
+		// Load values used at the app level, before even selecting a profile.
+	}
+
+	public void LoadUserProfile()
+	{
+		// Load values needed for the main menu, like control options and volume
 	}
 
 	public void Start()
@@ -479,7 +497,7 @@ public class App : MonoBehaviour
 		this.LoadInternal();
 
 		Debug.Log("Initialising Nav with new save data");
-		this.nav.Initialise(this.saveData);
+		this.nav.Load(this.saveData);
 
 		this.StartCoroutine(this.DelayReInitSaveDataCoroutine());
 	}

@@ -165,6 +165,20 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		return result;
 	}
 
+	string FindOtherExecuting()
+	{
+		string result = "";
+		for (int i = 0; i < this.others.Count; ++i)
+		{
+			if (this.others[i] != null && this.others[i].executing)
+			{
+				result = this.others[i].id;
+				break;
+			}
+		}
+		return result;
+	}
+
 	bool ExecuteIfReady()
 	{
 		if (!this.OthersExecuting() &&
@@ -346,7 +360,8 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			}
 			else
 			{
-				Debug.LogWarningFormat("Tried to execute while another executor ({0}) executing!", "TODO(elliot): get name");
+				string otherExecutorName = this.FindOtherExecuting();
+				Debug.LogWarningFormat("Tried to execute while another executor ({0}) executing!", otherExecutorName);
 			}
 		}
 		else
