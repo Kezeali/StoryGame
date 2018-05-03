@@ -67,10 +67,19 @@ public class App : MonoBehaviour
 
 		public void Initialise(ServiceT data)
 		{
-			for (int i = 0; i < this.toInitialise.Count; ++i)
+			this.toInitialise.RemoveAll(IsNull);
+			this.initialised.RemoveAll(IsNull);
+
+			// Copy everything over to initialised & clear toInitilise before calling anything, as code called from the other types here can add more things to toInitialise which shouldn't be initialised yet
+			int i = this.initialised.Count;
+			this.initialised.AddRange(this.toInitialise);
+			this.toInitialise.Clear();
+
+			for (; i < this.initialised.Count; ++i)
 			{
 			#if UNITY_EDITOR
-				var component = this.toInitialise[i] as MonoBehaviour;
+				// Due to scene post-processing running a little late in the editor (after OnEnabled has been called for objects in the scene), need to check that the to-initialise object is still enabled!
+				var component = this.initialised[i] as MonoBehaviour;
 				if (component != null)
 				{
 					if (!component.isActiveAndEnabled)
@@ -78,11 +87,22 @@ public class App : MonoBehaviour
 						continue;
 					}
 				}
+				Debug.LogFormat("Initialising {0} with {1}", this.initialised[i], data);
 			#endif
-				this.toInitialise[i].Initialise(data);
+				this.initialised[i].Initialise(data);
 			}
-			this.initialised.AddRange(this.toInitialise);
-			this.toInitialise.Clear();
+		}
+
+		static bool IsNull(IServiceUser<ServiceT> v)
+		{
+			return v == null;
+		}
+
+		public void ReInit(ServiceT data)
+		{
+			this.toInitialise.AddRange(this.initialised);
+			this.initialised.Clear();
+			this.Initialise(data);
 		}
 	}
 
@@ -105,10 +125,19 @@ public class App : MonoBehaviour
 
 		public void CompleteInitialisation()
 		{
-			for (int i = 0; i < this.toInitialise.Count; ++i)
+			this.toInitialise.RemoveAll(IsNull);
+			this.initialised.RemoveAll(IsNull);
+
+			// Copy everything over to initialised & clear toInitilise before calling anything, as code called from the other types here can add more things to toInitialise which shouldn't be called yet
+			int i = this.initialised.Count;
+			this.initialised.AddRange(this.toInitialise);
+			this.toInitialise.Clear();
+
+			for (; i < this.initialised.Count; ++i)
 			{
 			#if UNITY_EDITOR
-				var component = this.toInitialise[i] as MonoBehaviour;
+				// Due to scene post-processing running a little late in the editor (after OnEnabled has been called for objects in the scene), need to check that the to-initialise object is still enabled!
+				var component = this.initialised[i] as MonoBehaviour;
 				if (component != null)
 				{
 					if (!component.isActiveAndEnabled)
@@ -117,10 +146,20 @@ public class App : MonoBehaviour
 					}
 				}
 			#endif
-				this.toInitialise[i].CompleteInitialisation();
+				this.initialised[i].CompleteInitialisation();
 			}
-			this.initialised.AddRange(this.toInitialise);
-			this.toInitialise.Clear();
+		}
+
+		static bool IsNull(IServiceUser v)
+		{
+			return v == null;
+		}
+
+		public void ReCompleteInitialisation()
+		{
+			this.toInitialise.AddRange(this.initialised);
+			this.initialised.Clear();
+			this.CompleteInitialisation();
 		}
 	}
 
@@ -322,40 +361,6 @@ public class App : MonoBehaviour
 
 		this.unitySerialisationTypeInspectorConstructor = (inner) => { return new UnitySerialisationTypeInspector(inner); };
 
-		{
-			string data = System.IO.File.ReadAllText("save.txt");
-
-			var deserializer = new DeserializerBuilder()
-				.WithNamingConvention(new CamelCaseNamingConvention())
-				.WithTypeConverter(this.dataItemConverter)
-				.WithTypeInspector(this.unitySerialisationTypeInspectorConstructor)
-				.IgnoreUnmatchedProperties()
-				.Build();
-
-			try
-			{
-				this.saveData = deserializer.Deserialize<SaveData>(data);
-			}
-			catch (System.Exception ex)
-			{
-				Debug.LogException(ex);
-			}
-			if (this.saveData == null)
-			{
-				this.saveData = this.defaultSaveData.saveData;
-			}
-			if (this.saveData.pc == null)
-			{
-				this.saveData.pc = this.defaultSaveData.saveData.pc;
-			}
-			if (this.saveData.leadNpcs == null)
-			{
-				this.saveData.leadNpcs = new List<Character>();
-			}
-			this.saveData.pc.PostLoadCleanup();
-			this.saveData.pc.CalculateStatus();
-		}
-
 		// NOTE(elliot): Cameras are created here!
 		Object.Instantiate(this.menuCameraPrefab, this.transform);
 		Object.Instantiate(this.envTransitionCameraPrefab, this.transform);
@@ -370,6 +375,8 @@ public class App : MonoBehaviour
 
 			this.nav.SetEnvCamera(def.type, envCameraCinemachineBrain);
 		}
+
+		this.LoadInternal();
 
 		// Let nav load immediately
 		this.nav.Initialise(this.saveData);
@@ -390,7 +397,7 @@ public class App : MonoBehaviour
 
 	public void Initialise()
 	{
-		Debug.Log("Initialise()");
+		Debug.Log("Initialise");
 		this.InitialiseServiceUsers(this.saveData);
 		this.InitialiseServiceUsers(this.plannerData);
 		this.InitialiseServiceUsers(this.nav);
@@ -432,6 +439,24 @@ public class App : MonoBehaviour
 		}
 	}
 
+	void ReInitialiseServiceUsers<ServiceT>(ServiceT data)
+	{
+		var usersCollection = App.GetServiceUserCollection<ServiceT>();
+		if (usersCollection != null)
+		{
+			usersCollection.ReInit(data);
+		}
+	}
+
+	void ReCompleteInitialisation()
+	{
+		var usersCollection = App.allServiceUsers;
+		if (usersCollection != null)
+		{
+			usersCollection.ReCompleteInitialisation();
+		}
+	}
+
 	public void OnApplicationFocus(bool focus)
 	{
 		if (!focus)
@@ -443,6 +468,68 @@ public class App : MonoBehaviour
 	public void OnApplicationQuit()
 	{
 		Save();
+	}
+
+	public void Load()
+	{
+		Debug.Log("Loading save game");
+
+		this.StopAllCoroutines();
+		
+		this.LoadInternal();
+
+		Debug.Log("Initialising Nav with new save data");
+		this.nav.Initialise(this.saveData);
+
+		this.StartCoroutine(this.DelayReInitSaveDataCoroutine());
+	}
+
+	IEnumerator DelayReInitSaveDataCoroutine()
+	{
+		Debug.Log("DelayReInitSaveData Started");
+		this.waitingForInit = true;
+		yield return 0;
+		this.waitingForInit = false;
+		Debug.Log("Re-initialising other save-data service users");
+		this.ReInitialiseServiceUsers(this.saveData);
+		this.ReCompleteInitialisation();
+	}
+
+	void LoadInternal()
+	{
+		Debug.Log("LoadInternal");
+
+		string data = System.IO.File.ReadAllText("save.txt");
+
+		var deserializer = new DeserializerBuilder()
+			.WithNamingConvention(new CamelCaseNamingConvention())
+			.WithTypeConverter(this.dataItemConverter)
+			.WithTypeInspector(this.unitySerialisationTypeInspectorConstructor)
+			.IgnoreUnmatchedProperties()
+			.Build();
+
+		try
+		{
+			this.saveData = deserializer.Deserialize<SaveData>(data);
+		}
+		catch (System.Exception ex)
+		{
+			Debug.LogException(ex);
+		}
+		if (this.saveData == null)
+		{
+			this.saveData = this.defaultSaveData.saveData;
+		}
+		if (this.saveData.pc == null)
+		{
+			this.saveData.pc = this.defaultSaveData.saveData.pc;
+		}
+		if (this.saveData.leadNpcs == null)
+		{
+			this.saveData.leadNpcs = new List<Character>();
+		}
+		this.saveData.pc.PostLoadCleanup();
+		this.saveData.pc.CalculateStatus();
 	}
 
 	public void Save()

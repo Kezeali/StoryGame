@@ -1099,7 +1099,10 @@ public class Nav : MonoBehaviour
 		{
 			Debug.LogFormat("Menu deactivated {0}", visibleMenu.def);
 		}
-	#endif
+#endif
+            if (visibleMenu == this.activeMenu) {
+                this.activeMenu = null;
+            }
 		int index = this.popupStack.IndexOf(visibleMenu);
 		DeactivatePopupAt(index);
 	}
