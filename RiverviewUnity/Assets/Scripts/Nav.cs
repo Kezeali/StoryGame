@@ -119,8 +119,9 @@ public class Nav : MonoBehaviour
 	SaveData saveData;
 
 #if UNITY_EDITOR
-	bool loadSave = false;
-	Scene bootScene;
+	[System.NonSerialized]
+	public bool loadedInActualBootScene = false;
+	Scene playInEditorBootScene;
 #endif
 
 	public void Awake()
@@ -135,43 +136,51 @@ public class Nav : MonoBehaviour
 		SceneManager.sceneUnloaded += HandleSceneUnloaded;
 
 	#if UNITY_EDITOR
-		// Intialise the current scene as a menu
+		if (!this.playInEditorBootScene.IsValid())
 		{
-			this.bootScene = SceneManager.GetActiveScene();
-			if (this.bootScene.buildIndex != 0)
-			{
-				var bootLoadedScene = new PreloadedScene()
-				{
-					scenePath = this.bootScene.path,
-					preloadRequesterIds = new List<string>(),
-					scene = this.bootScene
-				};
-				this.preloadedScenes.Add(bootLoadedScene);
-				var bootMenu = new VisibleMenu()
-				{
-					def = this.bootMenuForPlayInEditor,
-					loadedScene = bootLoadedScene
-				};
-				this.nextActiveMenu = null;
-				this.activeMenu = bootMenu;
-				this.popupStack.Add(bootMenu);
-
-				this.loadSave = false;
-			}
-			else
-			{
-				this.loadSave = true;
-			}
+			this.DetermineBootScene();
 		}
 	#endif
 	}
 
+#if UNITY_EDITOR
+	public void DetermineBootScene()
+	{
+		// Intialise the current scene as a menu
+		this.playInEditorBootScene = SceneManager.GetActiveScene();
+		if (this.playInEditorBootScene.buildIndex != 0)
+		{
+			var bootLoadedScene = new PreloadedScene()
+			{
+				scenePath = this.playInEditorBootScene.path,
+				preloadRequesterIds = new List<string>(),
+				scene = this.playInEditorBootScene
+			};
+			this.preloadedScenes.Add(bootLoadedScene);
+			var bootMenu = new VisibleMenu()
+			{
+				def = this.bootMenuForPlayInEditor,
+				loadedScene = bootLoadedScene
+			};
+			this.nextActiveMenu = null;
+			this.activeMenu = bootMenu;
+			this.popupStack.Add(bootMenu);
+
+			this.loadedInActualBootScene = false;
+		}
+		else
+		{
+			this.loadedInActualBootScene = true;
+		}
+	}
+#endif
+
 	public void Start()
 	{
 	#if UNITY_EDITOR
-		if (!this.loadSave)
+		if (!this.loadedInActualBootScene)
 		{
-			Nav.SetRootObjectsActive(bootScene, true);
+			Nav.SetRootObjectsActive(playInEditorBootScene, true);
 		}
 	#endif
 	}
@@ -182,34 +191,21 @@ public class Nav : MonoBehaviour
 		SceneManager.sceneUnloaded -= HandleSceneUnloaded;
 	}
 
-	public void Initialise(SaveData saveData)
+	public void Load(SaveData saveData)
 	{
 		this.saveData = saveData;
 		if (this.saveData.nav == null)
 		{
 			this.saveData.nav = new NavSaveData();
 		}
-	#if UNITY_EDITOR
-		if (this.loadSave)
-	#endif
+
 		{
-			var savedPopupStack = saveData.nav.popupStack;
-			// var savedVisibleEnvScenes = saveData.nav.visibleEnvScenes;
-			saveData.nav.popupStack = this.popupStack;
-			saveData.nav.visibleEnvScenes = this.visibleEnvScenes;
-			for (int savedPopupIndex = 0; savedPopupIndex < savedPopupStack.Count; ++savedPopupIndex)
-			{
-				VisibleMenu savedVisibleMenu = savedPopupStack[savedPopupIndex];
-				PreloadedScene loadedScene = savedVisibleMenu.loadedScene;
-				if (loadedScene != null)
-				{
-					for (int requesterIndex = 0; requesterIndex < loadedScene.preloadRequesterIds.Count; ++requesterIndex)
-					{
-						string requesterId = loadedScene.preloadRequesterIds[savedPopupIndex];
-						GoTo(savedVisibleMenu.def, requesterId);
-					}
-				}
-			}
+			var savedPopupStack = this.saveData.nav.popupStack;
+			var savedVisibleEnvScenes = saveData.nav.visibleEnvScenes;
+			
+			this.saveData.nav.popupStack = this.popupStack;
+			this.saveData.nav.visibleEnvScenes = this.visibleEnvScenes;
+
 			// for (int savedVisibleEnvIndex = 0; savedVisibleEnvIndex < savedVisibleEnvScenes.Count; ++savedVisibleEnvIndex)
 			// {
 			// 	VisibleEnvScene savedVisibleEnv = savedVisibleEnvScenes[savedVisibleEnvIndex];
@@ -219,9 +215,24 @@ public class Nav : MonoBehaviour
 			// 		for (int requesterIndex = 0; requesterIndex < loadedScene.preloadRequesterIds.Count; ++requesterIndex)
 			// 		{
 			// 			string requesterId = loadedScene.preloadRequesterIds[savedPopupIndex];
+			// 			this.GoTo(savedVisibleMenu.def, requesterId);
 			// 		}
 			// 	}
 			// }
+
+			for (int savedPopupIndex = 0; savedPopupIndex < savedPopupStack.Count; ++savedPopupIndex)
+			{
+				VisibleMenu savedVisibleMenu = savedPopupStack[savedPopupIndex];
+				PreloadedScene loadedScene = savedVisibleMenu.loadedScene;
+				if (loadedScene != null)
+				{
+					for (int requesterIndex = 0; requesterIndex < loadedScene.preloadRequesterIds.Count; ++requesterIndex)
+					{
+						string requesterId = loadedScene.preloadRequesterIds[savedPopupIndex];
+						this.GoTo(savedVisibleMenu.def, requesterId);
+					}
+				}
+			}
 		}
 	}
 
