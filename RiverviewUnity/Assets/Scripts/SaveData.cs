@@ -20,8 +20,7 @@ namespace Cloverview
 	[System.Serializable]
 	public class NavSaveData
 	{
-		public List<Nav.VisibleMenu> popupStack;
-		public List<Nav.VisibleEnvScene> visibleEnvScenes;
+		public Nav.VisibleMenu currentRootMenu;
 
 		public int nextPreloadId;
 	}

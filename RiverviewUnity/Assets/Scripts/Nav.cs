@@ -199,12 +199,31 @@ public class Nav : MonoBehaviour
 			this.saveData.nav = new NavSaveData();
 		}
 
+		if (this.saveData.nav.currentRootMenu != null)
 		{
-			var savedPopupStack = this.saveData.nav.popupStack;
-			var savedVisibleEnvScenes = saveData.nav.visibleEnvScenes;
+			if (this.saveData.nav.currentRootMenu.def != null && this.saveData.nav.currentRootMenu.def.type == MenuType.Root)
+			{
+				this.GoTo(this.saveData.nav.currentRootMenu.def, null);
+			}
+
+			// TODO: save breadcrumbs, like this
+			// this.breadcrumbs.Clear();
+			// for (int i = 0; i < this.saveData.breadcrumbs.Count; ++i)
+			// {
+			// 	if (this.saveData.breadcrumbs[i] != null)
+			// 	{
+			// 		this.breadcrumbs.Add(this.saveData.breadcrumbs[i]);
+			// 	}
+			// }
+			// this.saveData.nav.breadcrumbs = this.breadcrumbs;
+		}
+
+		{
+			//var savedPopupStack = this.saveData.nav.popupStack;
+			//var savedVisibleEnvScenes = saveData.nav.visibleEnvScenes;
 			
-			this.saveData.nav.popupStack = this.popupStack;
-			this.saveData.nav.visibleEnvScenes = this.visibleEnvScenes;
+			// this.saveData.nav.popupStack = this.popupStack;
+			// this.saveData.nav.visibleEnvScenes = this.visibleEnvScenes;
 
 			// for (int savedVisibleEnvIndex = 0; savedVisibleEnvIndex < savedVisibleEnvScenes.Count; ++savedVisibleEnvIndex)
 			// {
@@ -220,19 +239,19 @@ public class Nav : MonoBehaviour
 			// 	}
 			// }
 
-			for (int savedPopupIndex = 0; savedPopupIndex < savedPopupStack.Count; ++savedPopupIndex)
-			{
-				VisibleMenu savedVisibleMenu = savedPopupStack[savedPopupIndex];
-				PreloadedScene loadedScene = savedVisibleMenu.loadedScene;
-				if (loadedScene != null)
-				{
-					for (int requesterIndex = 0; requesterIndex < loadedScene.preloadRequesterIds.Count; ++requesterIndex)
-					{
-						string requesterId = loadedScene.preloadRequesterIds[savedPopupIndex];
-						this.GoTo(savedVisibleMenu.def, requesterId);
-					}
-				}
-			}
+			// for (int savedPopupIndex = 0; savedPopupIndex < savedPopupStack.Count; ++savedPopupIndex)
+			// {
+			// 	VisibleMenu savedVisibleMenu = savedPopupStack[savedPopupIndex];
+			// 	PreloadedScene loadedScene = savedVisibleMenu.loadedScene;
+			// 	if (loadedScene != null)
+			// 	{
+			// 		for (int requesterIndex = 0; requesterIndex < loadedScene.preloadRequesterIds.Count; ++requesterIndex)
+			// 		{
+			// 			string requesterId = loadedScene.preloadRequesterIds[savedPopupIndex];
+			// 			this.GoTo(savedVisibleMenu.def, requesterId);
+			// 		}
+			// 	}
+			// }
 		}
 	}
 
@@ -923,6 +942,11 @@ public class Nav : MonoBehaviour
 					if (scene.IsValid() && scene.isLoaded)
 					{
 						this.activeMenu = visibleMenu;
+						// Update navigation save data
+						if (visibleMenu.def.type == MenuType.Root)
+						{
+							this.saveData.nav.currentRootMenu = visibleMenu;
+						}
 
 						Debug.LogFormat("Active menu is now {0}.", this.activeMenu.def);
 
