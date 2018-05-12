@@ -146,31 +146,35 @@ public class Nav : MonoBehaviour
 #if UNITY_EDITOR
 	public void DetermineBootScene()
 	{
-		// Intialise the current scene as a menu
-		this.playInEditorBootScene = SceneManager.GetActiveScene();
-		if (this.playInEditorBootScene.buildIndex != 0)
+		// This wont work if a transtition has already occured
+		if (this.activeMenu == null && this.popupStack.Count == 0)
 		{
-			var bootLoadedScene = new PreloadedScene()
+			// Intialise the current scene as a menu
+			this.playInEditorBootScene = SceneManager.GetActiveScene();
+			if (this.playInEditorBootScene.buildIndex != 0)
 			{
-				scenePath = this.playInEditorBootScene.path,
-				preloadRequesterIds = new List<string>(),
-				scene = this.playInEditorBootScene
-			};
-			this.preloadedScenes.Add(bootLoadedScene);
-			var bootMenu = new VisibleMenu()
-			{
-				def = this.bootMenuForPlayInEditor,
-				loadedScene = bootLoadedScene
-			};
-			this.nextActiveMenu = null;
-			this.activeMenu = bootMenu;
-			this.popupStack.Add(bootMenu);
+				var bootLoadedScene = new PreloadedScene()
+				{
+					scenePath = this.playInEditorBootScene.path,
+					preloadRequesterIds = new List<string>(),
+					scene = this.playInEditorBootScene
+				};
+				this.preloadedScenes.Add(bootLoadedScene);
+				var bootMenu = new VisibleMenu()
+				{
+					def = this.bootMenuForPlayInEditor,
+					loadedScene = bootLoadedScene
+				};
+				this.nextActiveMenu = null;
+				this.activeMenu = bootMenu;
+				this.popupStack.Add(bootMenu);
 
-			this.loadedInActualBootScene = false;
-		}
-		else
-		{
-			this.loadedInActualBootScene = true;
+				this.loadedInActualBootScene = false;
+			}
+			else
+			{
+				this.loadedInActualBootScene = true;
+			}
 		}
 	}
 #endif
@@ -191,13 +195,18 @@ public class Nav : MonoBehaviour
 		SceneManager.sceneUnloaded -= HandleSceneUnloaded;
 	}
 
-	public void Load(SaveData saveData)
+	public void SetSaveData(SaveData saveData)
 	{
 		this.saveData = saveData;
 		if (this.saveData.nav == null)
 		{
 			this.saveData.nav = new NavSaveData();
 		}
+	}
+
+	public void Load(SaveData saveData)
+	{
+		SetSaveData(saveData);
 
 		if (this.saveData.nav.currentRootMenu != null)
 		{
@@ -206,52 +215,16 @@ public class Nav : MonoBehaviour
 				this.GoTo(this.saveData.nav.currentRootMenu.def, null);
 			}
 
-			// TODO: save breadcrumbs, like this
-			// this.breadcrumbs.Clear();
-			// for (int i = 0; i < this.saveData.breadcrumbs.Count; ++i)
-			// {
-			// 	if (this.saveData.breadcrumbs[i] != null)
-			// 	{
-			// 		this.breadcrumbs.Add(this.saveData.breadcrumbs[i]);
-			// 	}
-			// }
-			// this.saveData.nav.breadcrumbs = this.breadcrumbs;
-		}
-
-		{
-			//var savedPopupStack = this.saveData.nav.popupStack;
-			//var savedVisibleEnvScenes = saveData.nav.visibleEnvScenes;
-			
-			// this.saveData.nav.popupStack = this.popupStack;
-			// this.saveData.nav.visibleEnvScenes = this.visibleEnvScenes;
-
-			// for (int savedVisibleEnvIndex = 0; savedVisibleEnvIndex < savedVisibleEnvScenes.Count; ++savedVisibleEnvIndex)
-			// {
-			// 	VisibleEnvScene savedVisibleEnv = savedVisibleEnvScenes[savedVisibleEnvIndex];
-			// 	PreloadedScene loadedScene = savedVisibleEnv.loadedScene;
-			// 	if (loadedScene != null)
-			// 	{
-			// 		for (int requesterIndex = 0; requesterIndex < loadedScene.preloadRequesterIds.Count; ++requesterIndex)
-			// 		{
-			// 			string requesterId = loadedScene.preloadRequesterIds[savedPopupIndex];
-			// 			this.GoTo(savedVisibleMenu.def, requesterId);
-			// 		}
-			// 	}
-			// }
-
-			// for (int savedPopupIndex = 0; savedPopupIndex < savedPopupStack.Count; ++savedPopupIndex)
-			// {
-			// 	VisibleMenu savedVisibleMenu = savedPopupStack[savedPopupIndex];
-			// 	PreloadedScene loadedScene = savedVisibleMenu.loadedScene;
-			// 	if (loadedScene != null)
-			// 	{
-			// 		for (int requesterIndex = 0; requesterIndex < loadedScene.preloadRequesterIds.Count; ++requesterIndex)
-			// 		{
-			// 			string requesterId = loadedScene.preloadRequesterIds[savedPopupIndex];
-			// 			this.GoTo(savedVisibleMenu.def, requesterId);
-			// 		}
-			// 	}
-			// }
+			this.breadcrumbs.Clear();
+			for (int i = 0; i < this.saveData.nav.breadcrumbs.Count; ++i)
+			{
+				MenuData breadcrumb = this.saveData.nav.breadcrumbs.Pop();
+				if (breadcrumb != null)
+				{
+					this.breadcrumbs.Push(breadcrumb);
+				}
+			}
+			this.saveData.nav.breadcrumbs = this.breadcrumbs;
 		}
 	}
 
@@ -549,15 +522,20 @@ public class Nav : MonoBehaviour
 
 	public string GeneratePreloadIdForEnvScenes()
 	{
-		if (this.saveData.nav.nextPreloadId == int.MaxValue)
+		string result = "";
+		if (this.saveData != null)
 		{
-			this.saveData.nav.nextPreloadId = int.MinValue;
+			if (this.saveData.nav.nextPreloadId == int.MaxValue)
+			{
+				this.saveData.nav.nextPreloadId = int.MinValue;
+			}
+			else
+			{
+				++this.saveData.nav.nextPreloadId;
+			}
+			result = this.saveData.nav.nextPreloadId.ToString();
 		}
-		else
-		{
-			++this.saveData.nav.nextPreloadId;
-		}
-		return this.saveData.nav.nextPreloadId.ToString();
+		return result;
 	}
 
 	bool AlreadyLoaded(MenuData def)
@@ -943,7 +921,7 @@ public class Nav : MonoBehaviour
 					{
 						this.activeMenu = visibleMenu;
 						// Update navigation save data
-						if (visibleMenu.def.type == MenuType.Root)
+						if (this.saveData != null && visibleMenu.def.type == MenuType.Root)
 						{
 							this.saveData.nav.currentRootMenu = visibleMenu;
 						}

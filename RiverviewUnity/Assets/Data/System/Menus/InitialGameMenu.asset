@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Name: InitialGameMenu
   m_EditorClassIdentifier: 
   menuScene:
-    scenePath: Assets/Scenes/ui_week.unity
+    scenePath: Assets/Scenes/initial_game_menu.unity
   envScene: {fileID: 11400000, guid: 493a982d533c6af4b94012d684e3c948, type: 2}
   type: 1
   allowPreload: 1
-  transitionAs: {fileID: 11400000, guid: d3a72f4e85283174aab3496559e8a0fb, type: 2}
+  transitionAs: {fileID: 0}
