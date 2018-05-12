@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace Cloverview
 {
     // Button that's meant to work with mouse or touch-based devices.
-    [AddComponentMenu("Cloverview/UI/Button", 30)]
+    [AddComponentMenu("Cloverview/UI/Clickable", 30)]
     public class Clickable : Selectable, IPointerClickHandler, ISubmitHandler
     {
         [Serializable]
@@ -31,10 +31,10 @@ namespace Cloverview
             if (!IsActive() || !IsInteractable())
                 return;
 
-            OnPress();
-
             UISystemProfilerApi.AddMarker("Button.onClick", this);
             m_OnClick.Invoke();
+            
+            OnPress();
         }
 
         protected virtual void OnPress()

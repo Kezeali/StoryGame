@@ -40,6 +40,8 @@ public class App : MonoBehaviour
 	DataItemConverter dataItemConverter;
 	System.Func<ITypeInspector, ITypeInspector> unitySerialisationTypeInspectorConstructor;
 
+	AppSaveData appData;
+	ProfileSaveData profileData;
 	SaveData saveData;
 
 	bool waitingForInit = true;
@@ -376,28 +378,36 @@ public class App : MonoBehaviour
 			this.nav.SetEnvCamera(def.type, envCameraCinemachineBrain);
 		}
 
-		this.LoadGlobalProfile();
+		// NOTE: App Data
+		if (App.SaveExists("global"))
+		{
+			this.LoadAppData();
+		}
+		if (this.appData == null)
+		{
+			this.appData = new AppSaveData();
+			this.appData.selectedProfileName = "Player";
+		}
 
-		this.LoadUserProfile();
+		// NOTE: Load player profile
+		if (App.SaveExists(this.appData.selectedProfileName))
+		{
+			this.LoadUserProfile(this.appData.selectedProfileName);
+		}
+		if (this.profileData == null)
+		{
+			this.profileData = new ProfileSaveData();
+			this.profileData.name = "Player";
+		}
 
 	#if UNITY_EDITOR
 		this.nav.DetermineBootScene();
 		if (!this.nav.loadedInActualBootScene)
 		{
 			// Load a save file so the scene being tested can initialise
-			this.LoadInternal();
+			this.LoadGameInternal();
 		}
 	#endif
-	}
-
-	void LoadGlobalProfile()
-	{
-		// Load values used at the app level, before even selecting a profile.
-	}
-
-	public void LoadUserProfile()
-	{
-		// Load values needed for the main menu, like control options and volume
 	}
 
 	public void Start()
@@ -479,24 +489,50 @@ public class App : MonoBehaviour
 	{
 		if (!focus)
 		{
-			Save();
+			this.Save();
 		}
 	}
 
 	public void OnApplicationQuit()
 	{
-		Save();
+		this.Save();
 	}
 
-	public void Load()
+	void LoadAppData()
 	{
-		Debug.Log("Loading save game");
+		// Load values used at the app level, before even selecting a profile.
+		App.Load("global", out this.appData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+	}
+
+	public void NewUserProfile(string name)
+	{
+		this.appData.selectedProfileName = name;
+		this.Save();
+	}
+
+	public void DeleteUserProfile(string name)
+	{
+		Debug.LogError("Not implemented");
+	}
+
+	public void LoadUserProfile(string name)
+	{
+		// Load values needed for the main menu, like control options and volume
+		if (this.appData != null)
+		{
+			App.Load(this.appData.selectedProfileName, out this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+		}
+	}
+
+	public void LoadGame()
+	{
+		Debug.Log("Loading saved game");
 
 		this.StopAllCoroutines();
 		
-		this.LoadInternal();
+		this.LoadGameInternal();
 
-		Debug.Log("Initialising Nav with new save data");
+		Debug.Log("Loading Nav");
 		this.nav.Load(this.saveData);
 
 		this.StartCoroutine(this.DelayReInitSaveDataCoroutine());
@@ -513,27 +549,52 @@ public class App : MonoBehaviour
 		this.ReCompleteInitialisation();
 	}
 
-	void LoadInternal()
+	void LoadGameInternal()
 	{
-		Debug.Log("LoadInternal");
+		Debug.Log("Load save data");
 
-		string data = System.IO.File.ReadAllText("save.txt");
+		if (this.profileData != null)
+		{
+			string saveFileName = Strf.Format("{0}_{1}", this.profileData.name, this.profileData.selectedSaveName);
+			App.Load(saveFileName, out this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+
+			this.InitSave();
+		}
+		else
+		{
+			Debug.LogError("Can't load game save without profile data!");
+		}
+	}
+
+	public static bool SaveExists(string fileName)
+	{
+		return System.IO.File.Exists(fileName + ".txt");
+	}
+
+	public static void Load<SaveDataT>(string fileName, out SaveDataT saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> extraTypeInspector)
+	{
+		string data = System.IO.File.ReadAllText(fileName + ".txt");
 
 		var deserializer = new DeserializerBuilder()
 			.WithNamingConvention(new CamelCaseNamingConvention())
-			.WithTypeConverter(this.dataItemConverter)
-			.WithTypeInspector(this.unitySerialisationTypeInspectorConstructor)
+			.WithTypeConverter(dataItemConverter)
+			.WithTypeInspector(extraTypeInspector)
 			.IgnoreUnmatchedProperties()
 			.Build();
 
 		try
 		{
-			this.saveData = deserializer.Deserialize<SaveData>(data);
+			saveData = deserializer.Deserialize<SaveDataT>(data);
 		}
 		catch (System.Exception ex)
 		{
 			Debug.LogException(ex);
+			saveData = default(SaveDataT);
 		}
+	}
+
+	void InitSave()
+	{
 		if (this.saveData == null)
 		{
 			this.saveData = this.defaultSaveData.saveData;
@@ -548,14 +609,47 @@ public class App : MonoBehaviour
 		}
 		this.saveData.pc.PostLoadCleanup();
 		this.saveData.pc.CalculateStatus();
+
+		this.nav.SetSaveData(this.saveData);
+	}
+
+	public void NewGame()
+	{
+		Debug.Log("Create new save from default data");
+		if (this.profileData != null)
+		{
+			SaveData newSaveData = this.defaultSaveData.saveData;
+			string saveFileName = Strf.Format("{0}_{1}", this.profileData.name, newSaveData.name);
+
+			this.profileData.selectedSaveName = newSaveData.name;
+
+			App.Save(saveFileName, newSaveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+
+			this.LoadGameInternal();
+		}
 	}
 
 	public void Save()
 	{
-		Save(this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+		if (this.appData != null)
+		{
+			App.Save("global", this.appData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+		}
+		if (this.profileData != null)
+		{
+			if (this.saveData != null)
+			{
+				string saveFileName = Strf.Format("{0}_{1}", this.profileData.name, this.saveData.name);
+				App.Save(saveFileName, this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+
+				this.profileData.selectedSaveName = this.saveData.name;
+			}
+
+			App.Save(this.profileData.name, this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+		}
 	}
 
-	public static void Save(SaveData saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> unitySerialisationTypeInspectorConstructor)
+	public static void Save<SaveDataT>(string fileName, SaveDataT saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> extraTypeInspector)
 	{
 		try
 		{
@@ -565,22 +659,18 @@ public class App : MonoBehaviour
 					.EnsureRoundtrip()
 					.EmitDefaults()
 					.WithTypeConverter(dataItemConverter)
-					.WithTypeInspector(unitySerialisationTypeInspectorConstructor)
+					.WithTypeInspector(extraTypeInspector)
 					.Build();
 				
-				serializer.Serialize(buffer, saveData, typeof(SaveData));
+				serializer.Serialize(buffer, saveData, typeof(SaveDataT));
 
-				System.IO.File.WriteAllText("save.txt", buffer.ToString());
+				System.IO.File.WriteAllText(fileName + ".txt", buffer.ToString());
 			}
 		}
 		catch (System.Exception ex)
 		{
 			Debug.LogException(ex);
 		}
-	}
-
-	public void OpenScene(string sceneName)
-	{
 	}
 }
 

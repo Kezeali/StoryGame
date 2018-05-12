@@ -21,6 +21,7 @@ namespace Cloverview
 	public class NavSaveData
 	{
 		public Nav.VisibleMenu currentRootMenu;
+		public Stack<MenuData> breadcrumbs;
 
 		public int nextPreloadId;
 	}
@@ -31,5 +32,18 @@ namespace Cloverview
 		public int timeUnitsElapsed;
 		public Random.State randomState;
 		public Cast liveCast;
+	}
+
+	[System.Serializable]
+	public class AppSaveData
+	{
+		public string selectedProfileName;
+	}
+
+	[System.Serializable]
+	public class ProfileSaveData
+	{
+		public string name;
+		public string selectedSaveName;
 	}
 }
