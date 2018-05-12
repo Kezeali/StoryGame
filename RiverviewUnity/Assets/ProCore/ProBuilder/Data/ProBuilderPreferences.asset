@@ -29,7 +29,7 @@ MonoBehaviour:
   m_Int_values: 0100000001000000000000000000000000000000
   m_Float_values:
   - 0
-  - 0
+  - 49
   m_String_values:
   - RGBA(0.231, 0.812, 0.233, 1.000)
   m_Color_values: []
