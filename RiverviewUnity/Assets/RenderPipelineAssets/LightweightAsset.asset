@@ -18,7 +18,7 @@ MonoBehaviour:
   m_RequireSoftParticles: 1
   m_SupportsHDR: 1
   m_MSAA: 4
-  m_RenderScale: 2
+  m_RenderScale: 1
   m_ShadowType: 2
   m_ShadowAtlasResolution: 2048
   m_ShadowNearPlaneOffset: 2

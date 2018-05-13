@@ -14,7 +14,7 @@ public class AutoNavigate : MonoBehaviour, IServiceUser<Nav>, INavigator
 
 	Nav nav;
 
-	public void Start()
+	public void OnEnable()
 	{
 		if (Application.isPlaying)
 		{
