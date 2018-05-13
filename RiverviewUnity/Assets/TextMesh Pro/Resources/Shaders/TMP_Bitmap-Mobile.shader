@@ -52,7 +52,6 @@ SubShader {
 		#pragma multi_compile __ UNITY_UI_CLIP_RECT
 		#pragma multi_compile __ UNITY_UI_ALPHACLIP
 
-
 		#include "UnityCG.cginc"
 
 		struct appdata_t {
