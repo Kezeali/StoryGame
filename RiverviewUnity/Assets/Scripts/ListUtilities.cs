@@ -41,4 +41,46 @@ public static class ListUtilities
 		}
 		return freeIndex;
 	}
+
+	public static void Push<T>(this List<T> list, T value)
+	{
+		list.Add(value);
+	}
+
+	public static T Pop<T>(this List<T> list)
+	{
+		T value = default(T);
+		if (list.Count > 0)
+		{
+			value = list[list.Count-1];
+			list.RemoveAt(list.Count-1);
+		}
+		return value;
+	}
+
+	public static T Peek<T>(this List<T> list)
+	{
+		return list[list.Count-1];
+	}
+
+	public static T Peek<T>(this List<T> list, int i)
+	{
+		return list[list.Count-(i+1)];
+	}
+
+	public static void Enqueue< T>(this List<T> list, T value)
+	{
+		list.Add(value);
+	}
+
+	public static T Dequeue<T>(this List<T> list)
+	{
+		T value = default(T);
+		if (list.Count > 0)
+		{
+			value = list[0];
+			list.RemoveAt(0);
+		}
+		return value;
+	}
 }
