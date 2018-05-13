@@ -445,7 +445,7 @@ public class App : MonoBehaviour
 	{
 		Debug.Log("DelayInit Started");
 		this.waitingForInit = true;
-		yield return 0;
+		yield return new WaitForEndOfFrame();
 		this.waitingForInit = false;
 		this.Initialise();
 	}

@@ -7,6 +7,8 @@ namespace Cloverview
 
 public class AutoNavigate : MonoBehaviour, IServiceUser<Nav>, INavigator
 {
+	public bool immediate;
+
 	[Header("Menu Navigation")]
 	public MenuData destination;
 	[ReadOnly]
@@ -19,6 +21,10 @@ public class AutoNavigate : MonoBehaviour, IServiceUser<Nav>, INavigator
 		if (Application.isPlaying)
 		{
 			App.Register(this);
+			if (this.immediate)
+			{
+				App.instance.Initialise();
+			}
 		}
 	}
 
