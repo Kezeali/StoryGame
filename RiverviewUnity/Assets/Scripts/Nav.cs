@@ -108,7 +108,7 @@ public class Nav : MonoBehaviour
 	[System.NonSerialized]
 	public VisibleMenu activeMenu;
 	List<VisibleMenu> popupStack = new List<VisibleMenu>();
-	Stack<MenuData> breadcrumbs = new Stack<MenuData>();
+	List<MenuData> breadcrumbs = new List<MenuData>();
 
 	List<VisibleEnvScene> visibleEnvScenes = new List<VisibleEnvScene>();
 	VisibleEnvScene activeEnvScene;
@@ -218,10 +218,10 @@ public class Nav : MonoBehaviour
 			this.breadcrumbs.Clear();
 			for (int i = 0; i < this.saveData.nav.breadcrumbs.Count; ++i)
 			{
-				MenuData breadcrumb = this.saveData.nav.breadcrumbs.Pop();
+				MenuData breadcrumb = this.saveData.nav.breadcrumbs[i];
 				if (breadcrumb != null)
 				{
-					this.breadcrumbs.Push(breadcrumb);
+					this.breadcrumbs.Add(breadcrumb);
 				}
 			}
 			this.saveData.nav.breadcrumbs = this.breadcrumbs;

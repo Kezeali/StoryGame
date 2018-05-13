@@ -378,27 +378,28 @@ public class App : MonoBehaviour
 			this.nav.SetEnvCamera(def.type, envCameraCinemachineBrain);
 		}
 
-		// NOTE: App Data
-		if (App.SaveExists("global"))
+		// NOTE: Load/create App Data
+		if (SavingStuff.SaveExists("global"))
 		{
 			this.LoadAppData();
 		}
 		if (this.appData == null)
 		{
 			this.appData = new AppSaveData();
-			this.appData.selectedProfileName = "Player";
 		}
+		SavingStuff.SetDefault(ref this.appData.selectedProfileName, "Player");
 
-		// NOTE: Load player profile
-		if (App.SaveExists(this.appData.selectedProfileName))
+		// NOTE: Load/create player profile
+		if (SavingStuff.SaveExists(this.appData.selectedProfileName))
 		{
 			this.LoadUserProfile(this.appData.selectedProfileName);
 		}
 		if (this.profileData == null)
 		{
 			this.profileData = new ProfileSaveData();
-			this.profileData.name = "Player";
 		}
+		SavingStuff.SetDefault(ref this.profileData.name, "Player");
+		SavingStuff.SetDefault(ref this.profileData.selectedSaveName, "1");
 
 	#if UNITY_EDITOR
 		this.nav.DetermineBootScene();
@@ -415,7 +416,7 @@ public class App : MonoBehaviour
 		this.Initialise();
 		this.waitingForInit = false;
 
-		Save();
+		this.Save();
 	}
 
 	public void OnDestroy()
@@ -501,7 +502,7 @@ public class App : MonoBehaviour
 	void LoadAppData()
 	{
 		// Load values used at the app level, before even selecting a profile.
-		App.Load("global", out this.appData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+		SavingStuff.Load("global", out this.appData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 	}
 
 	public void NewUserProfile(string name)
@@ -520,7 +521,7 @@ public class App : MonoBehaviour
 		// Load values needed for the main menu, like control options and volume
 		if (this.appData != null)
 		{
-			App.Load(this.appData.selectedProfileName, out this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+			SavingStuff.Load(this.appData.selectedProfileName, out this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 		}
 	}
 
@@ -555,41 +556,14 @@ public class App : MonoBehaviour
 
 		if (this.profileData != null)
 		{
-			string saveFileName = Strf.Format("{0}_{1}", this.profileData.name, this.profileData.selectedSaveName);
-			App.Load(saveFileName, out this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+			string saveFileName = ProfileSaveData.DetermineSaveFileName(this.profileData.name, this.profileData.selectedSaveName);
+			SavingStuff.Load(saveFileName, out this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 
 			this.InitSave();
 		}
 		else
 		{
 			Debug.LogError("Can't load game save without profile data!");
-		}
-	}
-
-	public static bool SaveExists(string fileName)
-	{
-		return System.IO.File.Exists(fileName + ".txt");
-	}
-
-	public static void Load<SaveDataT>(string fileName, out SaveDataT saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> extraTypeInspector)
-	{
-		string data = System.IO.File.ReadAllText(fileName + ".txt");
-
-		var deserializer = new DeserializerBuilder()
-			.WithNamingConvention(new CamelCaseNamingConvention())
-			.WithTypeConverter(dataItemConverter)
-			.WithTypeInspector(extraTypeInspector)
-			.IgnoreUnmatchedProperties()
-			.Build();
-
-		try
-		{
-			saveData = deserializer.Deserialize<SaveDataT>(data);
-		}
-		catch (System.Exception ex)
-		{
-			Debug.LogException(ex);
-			saveData = default(SaveDataT);
 		}
 	}
 
@@ -619,11 +593,11 @@ public class App : MonoBehaviour
 		if (this.profileData != null)
 		{
 			SaveData newSaveData = this.defaultSaveData.saveData;
-			string saveFileName = Strf.Format("{0}_{1}", this.profileData.name, newSaveData.name);
+			string saveFileName = ProfileSaveData.DetermineSaveFileName(this.profileData.name, newSaveData.name);
 
 			this.profileData.selectedSaveName = newSaveData.name;
 
-			App.Save(saveFileName, newSaveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+			SavingStuff.Save(saveFileName, newSaveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 
 			this.LoadGameInternal();
 		}
@@ -633,43 +607,19 @@ public class App : MonoBehaviour
 	{
 		if (this.appData != null)
 		{
-			App.Save("global", this.appData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+			SavingStuff.Save("global", this.appData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 		}
 		if (this.profileData != null)
 		{
 			if (this.saveData != null)
 			{
-				string saveFileName = Strf.Format("{0}_{1}", this.profileData.name, this.saveData.name);
-				App.Save(saveFileName, this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+				string saveFileName = ProfileSaveData.DetermineSaveFileName(this.profileData.name, this.saveData.name);
+				SavingStuff.Save(saveFileName, this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 
 				this.profileData.selectedSaveName = this.saveData.name;
 			}
 
-			App.Save(this.profileData.name, this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
-		}
-	}
-
-	public static void Save<SaveDataT>(string fileName, SaveDataT saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> extraTypeInspector)
-	{
-		try
-		{
-			using (var buffer = new System.IO.StringWriter())
-			{
-				var serializer = new SerializerBuilder()
-					.EnsureRoundtrip()
-					.EmitDefaults()
-					.WithTypeConverter(dataItemConverter)
-					.WithTypeInspector(extraTypeInspector)
-					.Build();
-				
-				serializer.Serialize(buffer, saveData, typeof(SaveDataT));
-
-				System.IO.File.WriteAllText(fileName + ".txt", buffer.ToString());
-			}
-		}
-		catch (System.Exception ex)
-		{
-			Debug.LogException(ex);
+			SavingStuff.Save(this.profileData.name, this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 		}
 	}
 }
