@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.IO;
 using System.Collections.Generic;
 using YamlDotNet.Serialization;
 
@@ -16,14 +17,49 @@ public static class SavingStuff
 
 	public static bool SaveExists(string fileName)
 	{
-		return System.IO.File.Exists(fileName + ".txt");
+		return File.Exists(SavePath(fileName));
+	}
+
+	public static string DetermineGameFileName(string profileName, string saveName)
+	{
+		return Path.Combine(profileName, saveName);
+	}
+
+	public static string SavePath(string fileName)
+	{
+		string savePath = Path.Combine(Application.persistentDataPath, fileName + ".txt");
+		return savePath;
+	}
+
+	public static string SavePath(string profileName, string fileName)
+	{
+		string savePath = Path.Combine(Application.persistentDataPath, profileName, fileName + ".txt");
+		return savePath;
+	}
+
+	public static void FindSaveGames(List<string> result, string profileFileName)
+	{
+		string savePath = Path.Combine(Application.persistentDataPath, profileFileName);
+
+		if (!Directory.Exists(savePath))
+		{
+			Directory.Create(savePath);
+		}
+
+		string[] files = Directory.GetFiles(savePath);
+		for (int i = 0; i < files.Length; ++i)
+		{
+			if (files[i].EndsWith(".txt")) {
+				result.Add(files[i]);
+			}
+		}
 	}
 
 	public static void Save<SaveDataT>(string fileName, SaveDataT saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> extraTypeInspector)
 	{
 		try
 		{
-			using (var buffer = new System.IO.StringWriter())
+			using (var buffer = new StringWriter())
 			{
 				var serializer = new SerializerBuilder()
 					.EnsureRoundtrip()
@@ -34,7 +70,13 @@ public static class SavingStuff
 				
 				serializer.Serialize(buffer, saveData, typeof(SaveDataT));
 
-				System.IO.File.WriteAllText(fileName + ".txt", buffer.ToString());
+				#error get directory path for SavePath(FileName) and create that
+				if (!Directory.Exists(directoryPath))
+				{
+					Directory.Create(directoryPath);
+				}
+
+				File.WriteAllText(SavePath(fileName), buffer.ToString());
 			}
 		}
 		catch (System.Exception ex)
@@ -45,7 +87,7 @@ public static class SavingStuff
 
 	public static void Load<SaveDataT>(string fileName, out SaveDataT saveData, DataItemConverter dataItemConverter, System.Func<ITypeInspector, ITypeInspector> extraTypeInspector)
 	{
-		string data = System.IO.File.ReadAllText(fileName + ".txt");
+		string data = File.ReadAllText(SavePath(fileName));
 
 		var deserializer = new DeserializerBuilder()
 			.WithNamingConvention(new CamelCaseNamingConvention())

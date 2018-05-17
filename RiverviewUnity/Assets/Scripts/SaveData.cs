@@ -45,10 +45,5 @@ public class ProfileSaveData
 {
 	public string name;
 	public string selectedSaveName;
-
-	public static string DetermineSaveFileName(string profileName, string saveName)
-	{
-		return Strf.Format("{0}.{1}", profileName, saveName);
-	}
 }
 }
