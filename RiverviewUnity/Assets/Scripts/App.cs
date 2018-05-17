@@ -37,6 +37,9 @@ public class App : MonoBehaviour
 	[SerializeField]
 	DefaultSaveData defaultSaveData;
 
+	[System.NonSerialized]
+	public List<string> saveFilesAvailableForCurrentProfile = new List<string>();
+
 	DataItemConverter dataItemConverter;
 	System.Func<ITypeInspector, ITypeInspector> unitySerialisationTypeInspectorConstructor;
 
@@ -522,14 +525,20 @@ public class App : MonoBehaviour
 		if (this.appData != null)
 		{
 			SavingStuff.Load(this.appData.selectedProfileName, out this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
+
+			SavingStuff.FindSaveGames(this.saveFilesAvailableForCurrentProfile, this.appData.selectedProfileName);
 		}
 	}
 
-	public void LoadGame()
+	public void LoadGame(string saveName = null)
 	{
-		Debug.Log("Loading saved game");
+		Debug.LogFormat("Loading saved game '{0}'", saveName ?? this.profileData.selectedSaveName);
 
 		this.StopAllCoroutines();
+
+		if (!string.IsNullOrEmpty(saveName)) {
+			this.profileData.selectedSaveName = saveName;
+		}
 		
 		this.LoadGameInternal();
 
@@ -556,7 +565,7 @@ public class App : MonoBehaviour
 
 		if (this.profileData != null)
 		{
-			string saveFileName = ProfileSaveData.DetermineSaveFileName(this.profileData.name, this.profileData.selectedSaveName);
+			string saveFileName = SavingStuff.DetermineGameFileName(this.profileData.name, this.profileData.selectedSaveName);
 			SavingStuff.Load(saveFileName, out this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 
 			this.InitSave();
@@ -587,13 +596,17 @@ public class App : MonoBehaviour
 		this.nav.SetSaveData(this.saveData);
 	}
 
-	public void NewGame()
+	public void NewGame(string name = null)
 	{
 		Debug.Log("Create new save from default data");
 		if (this.profileData != null)
 		{
+			name = name ?? saveFilesAvailableForCurrentProfile.Count.ToString();
+
 			SaveData newSaveData = this.defaultSaveData.saveData;
-			string saveFileName = ProfileSaveData.DetermineSaveFileName(this.profileData.name, newSaveData.name);
+			newSaveData.name = name;
+
+			string saveFileName = SavingStuff.DetermineGameFileName(this.profileData.name, newSaveData.name);
 
 			this.profileData.selectedSaveName = newSaveData.name;
 
@@ -613,7 +626,7 @@ public class App : MonoBehaviour
 		{
 			if (this.saveData != null)
 			{
-				string saveFileName = ProfileSaveData.DetermineSaveFileName(this.profileData.name, this.saveData.name);
+				string saveFileName = SavingStuff.DetermineGameFileName(this.profileData.name, this.saveData.name);
 				SavingStuff.Save(saveFileName, this.saveData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
 
 				this.profileData.selectedSaveName = this.saveData.name;
