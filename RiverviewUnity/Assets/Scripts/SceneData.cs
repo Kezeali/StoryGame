@@ -20,7 +20,7 @@ namespace Cloverview
 	}
 
 	[CreateAssetMenu(fileName="Scene.asset", menuName="Cloverview/System/Scene Definition")]
-	public class SceneData : ScriptableObject
+	public class SceneData : ScriptableObject, IDataItem
 	{
 		public SceneField scene;
 		public bool allowPreload = true;

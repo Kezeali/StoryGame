@@ -23,7 +23,7 @@ namespace Cloverview
 	}
 
 	[CreateAssetMenu(fileName="Menu.asset", menuName="Cloverview/System/Menu Definition")]
-	public class MenuData : ScriptableObject
+	public class MenuData : ScriptableObject, IDataItem
 	{
 		public SceneField menuScene;
 		public SceneData envScene;

@@ -35,6 +35,9 @@ public class App : MonoBehaviour
 	GameData gameData;
 
 	[SerializeField]
+	SystemData systemData;
+
+	[SerializeField]
 	DefaultSaveData defaultSaveData;
 
 	[System.NonSerialized]
@@ -363,6 +366,9 @@ public class App : MonoBehaviour
 		this.dataItemConverter.AddDataItemRange(this.plannerData.subjects);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.planActivities);
 		this.dataItemConverter.AddDataItemRange(this.gameData.roles);
+		this.dataItemConverter.AddDataItemRange(this.systemData.menus);
+		this.dataItemConverter.AddDataItemRange(this.systemData.envScenes);
+		this.dataItemConverter.AddDataItemRange(this.systemData.commutes);
 
 		this.unitySerialisationTypeInspectorConstructor = (inner) => { return new UnitySerialisationTypeInspector(inner); };
 
@@ -395,14 +401,14 @@ public class App : MonoBehaviour
 		// NOTE: Load/create player profile
 		if (SavingStuff.SaveExists(this.appData.selectedProfileName))
 		{
-			this.LoadUserProfile(this.appData.selectedProfileName);
+			this.LoadUserProfileInternal(this.appData.selectedProfileName);
 		}
 		if (this.profileData == null)
 		{
 			this.profileData = new ProfileSaveData();
 		}
 		SavingStuff.SetDefault(ref this.profileData.name, "Player");
-		SavingStuff.SetDefault(ref this.profileData.selectedSaveName, "1");
+		SavingStuff.SetDefault(ref this.profileData.selectedSaveName, "0");
 
 	#if UNITY_EDITOR
 		this.nav.DetermineBootScene();
@@ -430,9 +436,16 @@ public class App : MonoBehaviour
 	public void Initialise()
 	{
 		Debug.Log("Initialise");
-		this.InitialiseServiceUsers(this.saveData);
 		this.InitialiseServiceUsers(this.plannerData);
 		this.InitialiseServiceUsers(this.nav);
+		if (this.profileData != null)
+		{
+			this.InitialiseServiceUsers(this.profileData);
+		}
+		if (this.saveData != null)
+		{
+			this.InitialiseServiceUsers(this.saveData);
+		}
 		this.CompleteInitialisation();
 	}
 
@@ -521,7 +534,15 @@ public class App : MonoBehaviour
 
 	public void LoadUserProfile(string name)
 	{
-		// Load values needed for the main menu, like control options and volume
+		this.LoadUserProfileInternal(name);
+		if (this.profileData != null)
+		{
+			this.ReInitService(this.profileData);
+		}
+	}
+
+	void LoadUserProfileInternal(string name)
+	{
 		if (this.appData != null)
 		{
 			SavingStuff.Load(this.appData.selectedProfileName, out this.profileData, this.dataItemConverter, this.unitySerialisationTypeInspectorConstructor);
@@ -545,7 +566,7 @@ public class App : MonoBehaviour
 		Debug.Log("Loading Nav");
 		this.nav.Load(this.saveData);
 
-		this.StartCoroutine(this.DelayReInitSaveDataCoroutine());
+		this.ReInitService(this.saveData);
 	}
 
 	IEnumerator DelayReInitSaveDataCoroutine()
@@ -554,8 +575,13 @@ public class App : MonoBehaviour
 		this.waitingForInit = true;
 		yield return 0;
 		this.waitingForInit = false;
-		Debug.Log("Re-initialising other save-data service users");
-		this.ReInitialiseServiceUsers(this.saveData);
+		this.ReInitService(this.saveData);
+	}
+
+	void ReInitService<ServiceT>(ServiceT service)
+	{
+		Debug.LogFormat("Re-initialising {0} service users", service);
+		this.ReInitialiseServiceUsers(service);
 		this.ReCompleteInitialisation();
 	}
 

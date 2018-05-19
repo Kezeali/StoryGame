@@ -173,6 +173,7 @@ MonoBehaviour:
   nav: {fileID: 114650394401774564}
   plannerData: {fileID: 11400000, guid: 2eea9fa73fb9b4c4f9e277940ca300d7, type: 2}
   gameData: {fileID: 11400000, guid: da2642e653cc19c448e2b207d88d799a, type: 2}
+  systemData: {fileID: 11400000, guid: ab04a83765a082a4fac67c8476dc5d8a, type: 2}
   defaultSaveData: {fileID: 11400000, guid: 38951aae88785cf4e864ff802aeb357b, type: 2}
 --- !u!114 &114650394401774564
 MonoBehaviour:
