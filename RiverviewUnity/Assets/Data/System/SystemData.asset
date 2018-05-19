@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f40833064716a644b8db90a7f7d4a80b, type: 3}
+  m_Name: SystemData
+  m_EditorClassIdentifier: 
+  menus:
+  - {fileID: 11400000, guid: 3db9e5f8f95f1a84d85ab003971a97c5, type: 2}
+  - {fileID: 11400000, guid: f1d8c551a3c69df4b8bc44d9c82d92e6, type: 2}
+  - {fileID: 11400000, guid: 068204dc8d1c3c446b33aee621e037c9, type: 2}
+  - {fileID: 11400000, guid: 0895c0c3ec5a86c4eb445934cec4a43f, type: 2}
+  - {fileID: 11400000, guid: c4f7f7688b050c14485bbef3c139970c, type: 2}
+  - {fileID: 11400000, guid: d5d2ad5ca9e9640449b64ffeeb80f4ab, type: 2}
+  - {fileID: 11400000, guid: 3a182ad9387bd7e4bb7e1a67ea017de3, type: 2}
+  - {fileID: 11400000, guid: d3a72f4e85283174aab3496559e8a0fb, type: 2}
+  envScenes:
+  - {fileID: 11400000, guid: 9e8d67d87b3276e4baf8c8749c74a25a, type: 2}
+  - {fileID: 11400000, guid: edbac21b1d70dcd46b8f1f3aa55b21c1, type: 2}
+  - {fileID: 11400000, guid: 735231d4e6b8d0a42824bc192c051d24, type: 2}
+  - {fileID: 11400000, guid: 493a982d533c6af4b94012d684e3c948, type: 2}
+  - {fileID: 11400000, guid: ade65cbdfc75aca40adcd72e75ba6943, type: 2}
+  commutes:
+  - {fileID: 11400000, guid: eaa4d9d27d5cb494ea0721bc9434e576, type: 2}
+  - {fileID: 11400000, guid: 44214e8a753f0e24482fd9bf872622f6, type: 2}
+  defaultSaves:
+  - {fileID: 11400000, guid: 38951aae88785cf4e864ff802aeb357b, type: 2}

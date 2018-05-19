@@ -43,15 +43,23 @@ public static class SavingStuff
 
 		if (!Directory.Exists(savePath))
 		{
-			Directory.Create(savePath);
+			Directory.CreateDirectory(savePath);
 		}
 
-		string[] files = Directory.GetFiles(savePath);
-		for (int i = 0; i < files.Length; ++i)
+		if (result != null)
 		{
-			if (files[i].EndsWith(".txt")) {
-				result.Add(files[i]);
+			result.Clear();
+			string[] files = Directory.GetFiles(savePath);
+			for (int i = 0; i < files.Length; ++i)
+			{
+				if (files[i].EndsWith(".txt")) {
+					result.Add(files[i]);
+				}
 			}
+		}
+		else
+		{
+			Debug.LogError("Argument must not be null: result");
 		}
 	}
 
@@ -70,13 +78,14 @@ public static class SavingStuff
 				
 				serializer.Serialize(buffer, saveData, typeof(SaveDataT));
 
-				#error get directory path for SavePath(FileName) and create that
+				string filePath = SavePath(fileName);
+				string directoryPath = Path.GetDirectoryName(filePath);
 				if (!Directory.Exists(directoryPath))
 				{
-					Directory.Create(directoryPath);
+					Directory.CreateDirectory(directoryPath);
 				}
 
-				File.WriteAllText(SavePath(fileName), buffer.ToString());
+				File.WriteAllText(filePath, buffer.ToString());
 			}
 		}
 		catch (System.Exception ex)

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+[ExecutionOrder(10)]
 public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 {
 	public Animator sceneAnimator;
@@ -56,6 +57,8 @@ public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 	{
 		this.state = TransitionState.Uninitialised;
 		App.Register<SaveData>(this);
+
+		App.instance.Initialise();
 	}
 
 	public void OnDisable()
@@ -67,14 +70,14 @@ public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 	{
 	}
 
+	public void CompleteInitialisation()
+	{
+	}
+
 	public void SetCamera(CinemachineBrain cinemachineBrain)
 	{
 		this.cinemachineBrain = cinemachineBrain;
 		this.state = TransitionState.Idle;
-	}
-
-	public void CompleteInitialisation()
-	{
 	}
 
 	public void SetGlobalTransitionAnimator(Animator genericTransitionAnimator)

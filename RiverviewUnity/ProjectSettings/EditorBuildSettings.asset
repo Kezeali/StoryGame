@@ -9,24 +9,27 @@ EditorBuildSettings:
     path: Assets/Scenes/boot.unity
     guid: 335326f0e4afa414a8d96474ce0f645b
   - enabled: 1
-    path: Assets/Scenes/start.unity
-    guid: 293881876591e74498d9a2a39b65aa40
-  - enabled: 1
-    path: Assets/Scenes/initial_game_menu.unity
-    guid: a869fb1e77f948242a3a5c161951c509
-  - enabled: 1
-    path: Assets/Scenes/ui_week.unity
-    guid: 2e4c35d3c3a5c13498ab12121c1eba99
-  - enabled: 1
-    path: Assets/Scenes/ui_character_status.unity
-    guid: e26cce5fd84dfc644b4902a6a3228688
+    path: Assets/Scenes/bedroom.unity
+    guid: 36a598f95515d3b46baec471c43c752b
   - enabled: 1
     path: Assets/Scenes/blank_stage.unity
     guid: f9327038c7bac0c44a4b954c29d35598
   - enabled: 1
-    path: Assets/Scenes/bedroom.unity
-    guid: 36a598f95515d3b46baec471c43c752b
-  - enabled: 1
     path: Assets/Scenes/field.unity
     guid: ff1ec5cf1ec70aa4ab721324590451fe
+  - enabled: 1
+    path: Assets/Scenes/initial_game_menu.unity
+    guid: a869fb1e77f948242a3a5c161951c509
+  - enabled: 1
+    path: Assets/Scenes/school_class.unity
+    guid: 98df704c0ab0e124aa9fdc44d8792d70
+  - enabled: 1
+    path: Assets/Scenes/start.unity
+    guid: 293881876591e74498d9a2a39b65aa40
+  - enabled: 1
+    path: Assets/Scenes/ui_character_status.unity
+    guid: e26cce5fd84dfc644b4902a6a3228688
+  - enabled: 1
+    path: Assets/Scenes/ui_week.unity
+    guid: 2e4c35d3c3a5c13498ab12121c1eba99
   m_configObjects: {}

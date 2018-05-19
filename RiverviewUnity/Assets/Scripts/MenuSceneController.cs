@@ -6,6 +6,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+[ExecutionOrder(10)]
 public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 {
 	public Animator transitionAnimator;
@@ -37,6 +38,8 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 		// TODO: only do this if the animator is ready
 		this.DetermineTransitionLayerIndex();
 		App.Register<SaveData>(this);
+
+		App.instance.Initialise();
 	}
 
 	public void OnDisable()
