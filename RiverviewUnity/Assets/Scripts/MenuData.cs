@@ -8,17 +8,17 @@ namespace Cloverview
 	{
 		Start,
 		Root,
-		Overlay,
-		OpaqueOverlay,
+		Sub,
+		OpaqueSub,
 		Back,
-		ClosePopup
+		CloseSub
 	}
 
 	public static class MenuTypeUtils
 	{
 		public static bool IsPreloadable(this MenuType type)
 		{
-			return type == MenuType.Root || type == MenuType.Overlay || type == MenuType.OpaqueOverlay;
+			return type == MenuType.Root || type == MenuType.Sub || type == MenuType.OpaqueSub;
 		}
 	}
 
@@ -37,7 +37,7 @@ namespace Cloverview
 		{
 			this.menuScene = new SceneField() { scenePath = "" };
 
-			this.type = MenuType.Overlay;
+			this.type = MenuType.Sub;
 			this.allowPreload = true;
 		}
 	}

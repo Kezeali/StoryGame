@@ -78,10 +78,13 @@ public class Nav : MonoBehaviour
 		}
 	}
 
+	[System.Serializable]
 	public class VisibleMenu
 	{
 		public MenuData def;
+		[System.NonSerialized]
 		public MenuSceneController controller;
+		[System.NonSerialized]
 		public PreloadedScene loadedScene;
 	}
 
@@ -89,9 +92,11 @@ public class Nav : MonoBehaviour
 	public class VisibleEnvScene
 	{
 		public SceneData def;
+		[System.NonSerialized]
 		public EnvSceneController controller;
 		public ActiveActivity activeActivity;
 		public ActiveEvent activeEvent;
+		[System.NonSerialized]
 		public PreloadedScene loadedScene;
 	}
 
@@ -453,7 +458,7 @@ public class Nav : MonoBehaviour
 	public void Preload(MenuData def, string requesterId)
 	{
 		if (def.allowPreload
-			&& def.type != MenuType.Back && def.type != MenuType.ClosePopup)
+			&& def.type != MenuType.Back && def.type != MenuType.CloseSub)
 		{
 			// Validate the requester id: must be a visible scene
 			PreloadedScene loadedScene = this.FindLoadedScene(requesterId);
@@ -800,7 +805,7 @@ public class Nav : MonoBehaviour
 					resolvedNav.resolvedDef = this.breadcrumbs.Peek();
 				}
 			} break;
-			case MenuType.ClosePopup:
+			case MenuType.CloseSub:
 			{
 				if (this.popupStack.Count > 1)
 				{
@@ -855,6 +860,12 @@ public class Nav : MonoBehaviour
 					this.TransitionOutOfTopPopup(resolvedDef);
 				}
 				RemoveOtherPopups(resolvedDef);
+			} break;
+		}
+		switch (resolvedDef.type)
+		{
+			case MenuType.Start:
+			{
 				this.breadcrumbs.Clear();
 			} break;
 		}
@@ -1113,9 +1124,9 @@ public class Nav : MonoBehaviour
 			Debug.LogFormat("Menu deactivated {0}", visibleMenu.def);
 		}
 #endif
-            if (visibleMenu == this.activeMenu) {
-                this.activeMenu = null;
-            }
+		if (visibleMenu == this.activeMenu) {
+			this.activeMenu = null;
+		}
 		int index = this.popupStack.IndexOf(visibleMenu);
 		DeactivatePopupAt(index);
 	}
