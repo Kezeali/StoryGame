@@ -235,11 +235,23 @@ public class App : MonoBehaviour
 		public IServiceUser<PlanExecutor> user;
 	}
 	List<PlanExecutorUser> planExecutorUsers = new List<PlanExecutorUser>();
-	public void AddExecutor(PlanExecutor executor)
+
+	public static bool ExecutorBeginning(PlanExecutor executor)
+	{
+		return App.instance.AddExecutorInternal(executor);
+	}
+
+	public static void ExecutorEnding(PlanExecutor executor)
+	{
+		App.instance.RemoveExecutorInternal(executor);
+	}
+
+	// Returns true if the executor was added
+	bool AddExecutorInternal(PlanExecutor executor)
 	{
 		if (executor == null)
 		{
-			return;
+			return false;
 		}
 		bool foundExisting = false;
 		for (int i = 0; i < this.executingExecutors.Count; ++i)
@@ -272,18 +284,16 @@ public class App : MonoBehaviour
 		{
 			Debug.LogErrorFormat("Tried to add plan executor with duplicate ID {0}", executor.id);
 		}
+		return !foundExisting;
 	}
 
-	public void RemoveExecutor(PlanExecutor executor)
+	void RemoveExecutorInternal(PlanExecutor executor)
 	{
 		for (int i = this.executingExecutors.Count-1; i >= 0 ; --i)
 		{
-			if (this.executingExecutors[i] != null)
+			if (this.executingExecutors[i] == null || this.executingExecutors[i] == executor)
 			{
-				if (this.executingExecutors[i] == executor)
-				{
-					this.executingExecutors.RemoveAt(i);
-				}
+				this.executingExecutors.RemoveAt(i);
 			}
 		}
 	}
@@ -308,6 +318,9 @@ public class App : MonoBehaviour
 		}
 		else
 		{
+			this.nav.MakeCurrentMenuTheActiveScene();
+			//this.planExecutor = Object.Instantiate(this.planExecutorPrefab);
+
 			PlanExecutorUser entry = new PlanExecutorUser()
 			{
 				executorId = id,

@@ -28,6 +28,11 @@ public class AutoNavigate : MonoBehaviour, IServiceUser<Nav>, INavigator
 		}
 	}
 
+	public void OnDisable()
+	{
+		App.Deregister(this);
+	}
+
 	public void Initialise(Nav nav)
 	{
 		Debug.Assert(nav);

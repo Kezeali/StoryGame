@@ -22,6 +22,11 @@ public class CharacterStatsContainerUI : MonoBehaviour, IServiceUser<SaveData>
 		App.Register(this);
 	}
 
+	public void OnDisable()
+	{
+		App.Deregister(this);
+	}
+
 	public void Initialise(SaveData loadedData)
 	{
 		this.character = loadedData.pc;

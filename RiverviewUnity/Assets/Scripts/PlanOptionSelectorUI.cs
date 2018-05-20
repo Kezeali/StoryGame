@@ -29,6 +29,11 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerData>
 		App.Register(this);
 	}
 
+	public void OnDisabled()
+	{
+		App.Deregister(this);
+	}
+
 	public void Initialise(PlannerData plannerData)
 	{
 		Debug.Assert(this.planUI != null);

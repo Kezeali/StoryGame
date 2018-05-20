@@ -25,6 +25,16 @@ public class MenuNavigation : Clickable, IServiceUser<Nav>, INavigator
 		}
 	}
 
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+
+		if (Application.isPlaying)
+		{
+			App.Deregister(this);
+		}
+	}
+
 	protected override void OnPress()
 	{
 		this.Go();

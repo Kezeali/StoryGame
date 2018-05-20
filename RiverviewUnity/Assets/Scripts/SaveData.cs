@@ -9,7 +9,7 @@ public class SaveData
 	public string name;
 
 	public int time;
-	public Plan weeklyPlan;
+	public List<Plan> plans;
 	public Character pc;
 	public List<Character> leadNpcs;
 	public NavSaveData nav;
@@ -31,6 +31,8 @@ public class PlanExecutorSaveData
 {
 	public int timeUnitsElapsed;
 	public Random.State randomState;
+	public string planName;
+	public PlanSchema liveSchema;
 	public Cast liveCast;
 }
 

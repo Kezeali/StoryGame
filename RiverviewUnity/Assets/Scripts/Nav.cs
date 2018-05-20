@@ -109,7 +109,8 @@ public class Nav : MonoBehaviour
 
 	List<PreloadedScene> preloadedScenes = new List<PreloadedScene>();
 
-	VisibleMenu nextActiveMenu;
+	[System.NonSerialized]
+	public VisibleMenu nextActiveMenu;
 	[System.NonSerialized]
 	public VisibleMenu activeMenu;
 	List<VisibleMenu> popupStack = new List<VisibleMenu>();
@@ -217,7 +218,12 @@ public class Nav : MonoBehaviour
 		{
 			if (this.saveData.nav.currentRootMenu.def != null && this.saveData.nav.currentRootMenu.def.type == MenuType.Root)
 			{
-				this.GoTo(this.saveData.nav.currentRootMenu.def, null);
+				string requesterId = null;
+				if (this.activeMenu != null && this.activeMenu.loadedScene != null)
+				{
+					requesterId = this.activeMenu.loadedScene.scenePath;
+				}
+				this.GoTo(this.saveData.nav.currentRootMenu.def, requesterId);
 			}
 
 			this.breadcrumbs.Clear();
@@ -821,7 +827,11 @@ public class Nav : MonoBehaviour
 			} break;
 		}
 
-		if (resolvedNav.resolvedDef == null)
+		ResolvedVia resolvedNavType = resolvedNav.type;
+		MenuData resolvedDef = resolvedNav.resolvedDef;
+		VisibleMenu alreadyVisibleMenu = resolvedNav.visibleMenu;
+
+		if (resolvedDef == null)
 		{
 			yield break;
 		}
@@ -831,44 +841,6 @@ public class Nav : MonoBehaviour
 
 		// Remember the previous active menu so any specific transition-in animations can be triggered
 		VisibleMenu previousActiveMenu = this.activeMenu;
-
-		switch (resolvedNav.type)
-		{
-			case ResolvedVia.PopBreadcrumb:
-			{
-				this.breadcrumbs.Pop();
-			} break;
-			case ResolvedVia.PopTopPopup:
-			{
-				// NOTE(elliot): calling this after determining the nextActiveMenu so that any menu-to-menu specific transitions can be triggered
-				this.TransitionOutOfTopPopup(resolvedNav.resolvedDef);
-			} break;
-		}
-
-		MenuData resolvedDef = resolvedNav.resolvedDef;
-		VisibleMenu alreadyVisibleMenu = resolvedNav.visibleMenu;
-
-		// Clear the popups before switching to root menus
-		switch (resolvedDef.type)
-		{
-			case MenuType.Start:
-			case MenuType.Root:
-			{
-				if (this.GetTopPopup() != alreadyVisibleMenu)
-				{
-					// Initiate a transition to the new menu
-					this.TransitionOutOfTopPopup(resolvedDef);
-				}
-				RemoveOtherPopups(resolvedDef);
-			} break;
-		}
-		switch (resolvedDef.type)
-		{
-			case MenuType.Start:
-			{
-				this.breadcrumbs.Clear();
-			} break;
-		}
 
 		// Show the environment scene
 		if (resolvedDef.envScene != null)
@@ -885,10 +857,46 @@ public class Nav : MonoBehaviour
 			// NOTE(elliot): if there isn't already a visible menu provided by a back / close operation above, request the visible menu now, before closing existing menus, to ensure that this new requester is added and any preloaded scene wont be unloaded!
 			VisibleMenu visibleMenu = alreadyVisibleMenu ?? this.FindOrMakeVisibleMenu(resolvedDef, requesterId);
 
+			this.nextActiveMenu = visibleMenu;
+
+			// NOTE(elliot): now that the nextActiveMenu has definately been set, previous menus can be unloaded safely without erroniously unloading the next menu in that case that a previous menu was the only thing referencing it
+			switch (resolvedNavType)
+			{
+				case ResolvedVia.PopBreadcrumb:
+				{
+					this.breadcrumbs.Pop();
+				} break;
+				case ResolvedVia.PopTopPopup:
+				{
+					// NOTE(elliot): calling this after determining the nextActiveMenu so that any menu-to-menu specific transitions can be triggered
+					this.TransitionOutOfTopPopup(resolvedDef);
+				} break;
+			}
+
+			// Clear the popups before switching to root menus
+			switch (resolvedDef.type)
+			{
+				case MenuType.Start:
+				case MenuType.Root:
+				{
+					if (this.GetTopPopup() != alreadyVisibleMenu)
+					{
+						// Initiate a transition to the new menu
+						this.TransitionOutOfTopPopup(resolvedDef);
+					}
+					RemoveOtherPopups(resolvedDef);
+				} break;
+			}
+			switch (resolvedDef.type)
+			{
+				case MenuType.Start:
+				{
+					this.breadcrumbs.Clear();
+				} break;
+			}
+
 			if (visibleMenu != null)
 			{
-				this.nextActiveMenu = visibleMenu;
-
 				PreloadedScene preloadedScene = visibleMenu.loadedScene;
 
 				if (preloadedScene.loadOp != null
@@ -1016,7 +1024,7 @@ public class Nav : MonoBehaviour
 
 		if (this.activeMenu == null)
 		{
-			// TODO(elliot): save (save should use a circular auto-save slots system so if the game state is broken the player can still revert to an earlier save) & exit
+			// TODO(elliot): save & exit (save should use a circular auto-save slots system so if the game state is broken the player can still revert to an earlier save)
 			//Debug.LogError("Failed to load menu. Exiting.");
 		}
 	}
