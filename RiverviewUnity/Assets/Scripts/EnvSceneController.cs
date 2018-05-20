@@ -58,6 +58,7 @@ public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 		this.state = TransitionState.Uninitialised;
 		App.Register<SaveData>(this);
 
+		// NOTE(elliot): the scenecontroller script is set to execute late (see the ExecutionOrder attribute above) so all other service users in the scene should be registered by now
 		App.instance.Initialise();
 	}
 
@@ -87,7 +88,7 @@ public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 
 	public void SetEvent(ActiveEvent @event)
 	{
-		// TODO(elliot): pass all scene Marks to the event (to the playable director?)
+		// TODO(elliot): pass all scene Marks to the event (which will have the Playable Director?)
 
 		// TODO(elliot): set time of day?
 	}

@@ -31,6 +31,9 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	[System.NonSerialized]
 	public float executingSecondsPerUnitTime;
 
+	[System.NonSerialized]
+	public string currentActivityName;
+
 	MenuData backMenu;
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
@@ -111,6 +114,28 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		{
 			this.executorSaveData = new PlanExecutorSaveData();
 			saveData.planExecutors.Add(this.id, this.executorSaveData);
+		}
+
+		if (this.executorSaveData != null)
+		{
+			if (this.planSchema == null)
+			{
+				this.planSchema = this.executorSaveData.liveSchema;
+			}
+			if (this.planSchema != null && this.plan == null && this.executorSaveData.planName != null)
+			{
+				for (int i = 0; i < this.saveData.plans.Count; ++i)
+				{
+					if (this.saveData.plans[i].name == this.executorSaveData.planName)
+					{
+						this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.executorSaveData.planName);
+						SchemaStuff.UpgradePlan(this.planSchema, this.plan, this.saveData.plans[i]);
+						break;
+					}
+				}
+			}
+			this.executorSaveData.planName = null;
+			this.executorSaveData.liveSchema = null;
 		}
 	}
 
@@ -354,6 +379,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	{
 		if (!this.executing)
 		{
+			this.gameObject.SetActive(true);
 			if (!this.OthersExecuting())
 			{
 				this.StartCoroutine(this.ExecuteCoroutine(this.defaultSecondsPerUnitTime, skipTimeUnits, 0));
@@ -374,10 +400,22 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	{
 		this.executing = true;
 
+		bool success = App.ExecutorBeginning(this);
+		if (!success)
+		{
+			this.executing = false;
+			yield break;
+		}
+
 		Object.DontDestroyOnLoad(this.gameObject);
+
+		// Save the plan name and schema in use
+		this.executorSaveData.planName = this.plan.name;
+		this.executorSaveData.liveSchema = this.planSchema;
 		
 		// Save the menu to return to
-		if (this.nav.activeMenu != null && this.nav.activeMenu.def != null)
+		Nav.VisibleMenu sourceMenu = this.nav.nextActiveMenu ?? this.nav.activeMenu;
+		if (sourceMenu != null && sourceMenu.def != null)
 		{
 			this.backMenu = this.nav.activeMenu.def;
 		}
@@ -565,12 +603,15 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 		this.saveData.time += this.executorSaveData.timeUnitsElapsed;
 
+		this.executorSaveData.planName = null;
+		this.executorSaveData.liveSchema = null;
 		this.executorSaveData.liveCast = null;
 		this.executorSaveData.timeUnitsElapsed = 0;
 
 		Debug.Log("Plan done.");
-		
+
 		this.executing = false;
+		App.ExecutorEnding(this);
 
 		this.UnloadAllPreloadedActivities();
 
@@ -625,6 +666,8 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 				};
 
 				Debug.LogFormat("Executing plannerItem: {0}", option.plannerItem);
+
+				this.currentActivityName = option.plannerItem.name;
 
 				if (!instant)
 				{

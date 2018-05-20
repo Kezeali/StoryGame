@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
+public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
 {
 	[SerializeField]
 	private string planName;
@@ -57,14 +57,21 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 		}
 
 		this.GenerateSchema();
-		this.CreateBlankPlan();
+		this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.planName);
+		this.MapUI();
 
 		App.Register<Nav>(this);
 		App.Register<SaveData>(this);
+
+		App.instance.GetExecutor(this.planExecutorPrefab.id, this);
 	}
 
 	public void OnDisable()
 	{
+		App.Deregister<Nav>(this);
+		App.Deregister<SaveData>(this);
+		App.instance.CancelRequestForExecutor(this.planExecutorPrefab.id, this);
+
 		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
 		{
 			PlanSectionUI uiSection = this.uiSections[sectionIndex];
@@ -102,6 +109,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 				PlanSlotUI nextSlotUI = uiSection.slots[slotIndex+1];
 
 				var schemaSlot = new PlanSchemaSlot();
+				schemaSlot.slotType = slotUI.slotType;
 				schemaSlot.unitIndex = slotUI.SlotUnitIndex();
 				schemaSlot.unitLength = nextSlotUI.SlotUnitIndex() - schemaSlot.unitIndex;
 				schemaSection.slots[slotIndex] = schemaSlot;
@@ -111,6 +119,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 				PlanSlotUI slotUI = uiSection.slots[slotsCount-1];
 
 				var schemaSlot = new PlanSchemaSlot();
+				schemaSlot.slotType = slotUI.slotType;
 				schemaSlot.unitIndex = slotUI.SlotUnitIndex();
 				schemaSlot.unitLength = schemaSection.totalTimeUnits - schemaSlot.unitIndex;
 				schemaSection.slots[slotsCount-1] = schemaSlot;
@@ -118,40 +127,19 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 		}
 	}
 
-	void CreateBlankPlan()
+	void MapUI()
 	{
 		int sectionsCount = this.uiSections.Length;
-
-		this.plan = new Plan();
-		this.plan.name = planName;
-
-		this.plan.sections = new PlanSection[sectionsCount];
-		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
+		for (int sectionIndex = 0; sectionIndex < sectionsCount; ++sectionIndex)
 		{
-			PlanSchemaSection schemaSection = this.planSchema.sections[newSectionIndex];
-			PlanSectionUI uiSection = uiSections[newSectionIndex];
-
-			var planSection = new PlanSection();
-			this.plan.sections[newSectionIndex] = planSection;
-
-			schemaSection.section = planSection;
+			PlanSectionUI uiSection = this.uiSections[sectionIndex];
+			PlanSection planSection = this.plan.sections[sectionIndex];
 
 			int slotsCount = uiSection.slots.Length;
-
-			planSection.slots = new PlanSlot[slotsCount];
 			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
 			{
-				PlanSchemaSlot schemaSlot = schemaSection.slots[slotIndex];
-
 				PlanSlotUI slotUI = uiSection.slots[slotIndex];
-
-				var planSlot = new PlanSlot();
-				planSlot.unitIndex = slotUI.SlotUnitIndex();
-				planSlot.slotType = slotUI.slotType;
-				planSection.slots[slotIndex] = planSlot;
-
-				schemaSlot.slot = planSlot;
-
+				PlanSlot planSlot = planSection.slots[slotIndex];
 				slotUI.Initialise(planSlot);
 			}
 		}
@@ -166,71 +154,25 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 
 	public void Initialise(SaveData loadedData)
 	{
-		this.plan.ClearSelections();
-
-		// TODO(elliot): get the plan named this.planName from loaded data, much like how save data for PlanExecutors is loaded
-		Plan loadedPlan = loadedData.weeklyPlan;
-		loadedData.weeklyPlan = this.plan;
-
 		this.selectedSlot = null;
 
-		// Upgrade the data
-		int sectionsCount = this.planSchema.sections.Length;
-		for (int sectionIndex = 0; sectionIndex < sectionsCount; ++sectionIndex)
+		Plan loadedPlan = null;
+		for (int i = 0; i <	loadedData.plans.Count; ++i)
 		{
-			PlanSchemaSection schemaSection = this.planSchema.sections[sectionIndex];
-			PlanSection planSection = this.plan.sections[sectionIndex];
-
-			if (loadedPlan != null && loadedPlan.sections.Length > sectionIndex)
+			if (loadedData.plans[i].name == this.planName)
 			{
-				PlanSection loadedSection = loadedPlan.sections[sectionIndex];
-
-				// Try to transfer the content of each slot
-				for (int loadedSlotIndex = 0; loadedSlotIndex < loadedSection.slots.Length; ++loadedSlotIndex)
-				{
-					PlanSlot loadedSlot = loadedSection.slots[loadedSlotIndex];
-
-					if (loadedSlot.selectedOption == null)
-					{
-						continue;
-					}
-
-					int loadedSlotUnitBegin = loadedSlot.unitIndex;
-					int selectedOptionLength = 0;
-					if (loadedSlot.selectedOption != null && loadedSlot.selectedOption.plannerItem != null)
-					{
-						selectedOptionLength = loadedSlot.selectedOption.plannerItem.timeUnits;
-					}
-					// this is just a guess, but that's fine
-					// TODO(elliot): consider saving the schema for each plan so this doesn't have to be guessed?
-					int loadedSlotUnitEnd = loadedSlotUnitBegin + selectedOptionLength;
-
-					SlotType requiredType = loadedSlot.slotType;
-
-					// Look for the first empty & valid slot that overlaps the given entry
-					for (int actualSlotIndex = 0; actualSlotIndex < planSection.slots.Length; ++ actualSlotIndex)
-					{
-						PlanSchemaSlot schemaSlot = schemaSection.slots[actualSlotIndex];
-						PlanSlot actualSlot = planSection.slots[actualSlotIndex];
-
-						if (actualSlot.slotType == requiredType && actualSlot.selectedOption == null)
-						{
-							int actualUnitLength = schemaSlot.unitLength;
-							int actualBegin = schemaSlot.unitIndex;
-							int actualEnd = actualBegin + actualUnitLength;
-
-							// NOTE(elliot): this should check whether both, 1) the loaded slot overlaps the slot currently being checked (called "actualSlot", as it is a slot that is actually in the current schema), and 2) the selected option in the loaded slot will fit in the actual slot
-							if (((loadedSlotUnitBegin > actualBegin && loadedSlotUnitBegin <= actualEnd) || (loadedSlotUnitEnd > actualBegin && loadedSlotUnitEnd <= actualEnd))
-								&& selectedOptionLength <= actualUnitLength)
-							{
-								actualSlot.selectedOption = loadedSlot.selectedOption;
-								break;
-							}
-						}
-					}
-				}
+				loadedPlan = loadedData.plans[i];
+				loadedData.plans[i] = this.plan;
+				break;
 			}
 		}
+
+		SchemaStuff.UpgradePlan(this.planSchema, this.plan, loadedPlan);
+	}
+
+	public void Initialise(PlanExecutor executor)
+	{
+		this.planExecutor = executor;
 	}
 
 	public void CompleteInitialisation()
@@ -247,11 +189,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>
 			}
 		}
 
-		if (this.planExecutor == null)
-		{
-			this.nav.MakeCurrentMenuTheActiveScene();
-			this.planExecutor = Object.Instantiate(this.planExecutorPrefab);
-		}
 		if (this.planExecutor != null)
 		{
 			this.planExecutor.SetPlan(this.plan, this.planSchema);

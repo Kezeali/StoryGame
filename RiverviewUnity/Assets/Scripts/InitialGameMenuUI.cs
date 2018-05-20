@@ -12,6 +12,11 @@ public class InitialGameMenuUI : MonoBehaviour, IServiceUser<ProfileSaveData>
 		App.Register<ProfileSaveData>(this);
 	}
 
+	public void OnDisable()
+	{
+		App.Deregister<ProfileSaveData>(this);
+	}
+
 	public void Initialise(ProfileSaveData profileData)
 	{
 		int savesToLoad = App.instance.saveFilesAvailableForCurrentProfile.Count;

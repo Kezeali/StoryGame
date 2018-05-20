@@ -37,8 +37,10 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 		this.state = TransitionState.Uninitialised;
 		// TODO: only do this if the animator is ready
 		this.DetermineTransitionLayerIndex();
+
 		App.Register<SaveData>(this);
 
+		// NOTE(elliot): the scenecontroller script is set to execute late (see the ExecutionOrder attribute above) so all other service users in the scene should be registered by now
 		App.instance.Initialise();
 	}
 
