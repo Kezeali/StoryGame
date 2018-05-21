@@ -40,6 +40,9 @@ public class App : MonoBehaviour
 	[SerializeField]
 	DefaultSaveData defaultSaveData;
 
+	[SerializeField]
+	PlanExecutor[] planExecutorPrefabs;
+
 	[System.NonSerialized]
 	public List<string> saveFilesAvailableForCurrentProfile = new List<string>();
 
@@ -231,7 +234,7 @@ public class App : MonoBehaviour
 	List<PlanExecutor> executingExecutors = new List<PlanExecutor>();
 	struct PlanExecutorUser
 	{
-		public string executorId;
+		public string desiredType;
 		public IServiceUser<PlanExecutor> user;
 	}
 	List<PlanExecutorUser> planExecutorUsers = new List<PlanExecutorUser>();
@@ -258,7 +261,7 @@ public class App : MonoBehaviour
 		{
 			if (this.executingExecutors[i] != null)
 			{
-				if (this.executingExecutors[i].id == executor.id)
+				if (this.executingExecutors[i].key == executor.key)
 				{
 					foundExisting = true;
 					break;
@@ -272,7 +275,7 @@ public class App : MonoBehaviour
 			{
 				if (this.planExecutorUsers[i].user != null)
 				{
-					if (this.planExecutorUsers[i].executorId == executor.id)
+					if (this.planExecutorUsers[i].desiredType == executor.instantiatedFrom)
 					{
 						this.planExecutorUsers[i].user.Initialise(executor);
 						this.planExecutorUsers.RemoveAt(i);
@@ -282,7 +285,7 @@ public class App : MonoBehaviour
 		}
 		else
 		{
-			Debug.LogErrorFormat("Tried to add plan executor with duplicate ID {0}", executor.id);
+			Debug.LogErrorFormat("Tried to add plan executor with duplicate ID {0}", executor.key);
 		}
 		return !foundExisting;
 	}
@@ -298,14 +301,14 @@ public class App : MonoBehaviour
 		}
 	}
 
-	public void GetExecutor(string id, IServiceUser<PlanExecutor> user)
+	public void GetExecutor(string type, IServiceUser<PlanExecutor> user)
 	{
 		PlanExecutor executor = null;
 		for (int i = 0; i < this.executingExecutors.Count; ++i)
 		{
 			if (this.executingExecutors[i] != null)
 			{
-				if (this.executingExecutors[i].id == id)
+				if (this.executingExecutors[i].instantiatedFrom == type)
 				{
 					executor = this.executingExecutors[i];
 					break;
@@ -318,12 +321,9 @@ public class App : MonoBehaviour
 		}
 		else
 		{
-			this.nav.MakeCurrentMenuTheActiveScene();
-			//this.planExecutor = Object.Instantiate(this.planExecutorPrefab);
-
 			PlanExecutorUser entry = new PlanExecutorUser()
 			{
-				executorId = id,
+				desiredType = type,
 				user = user
 			};
 			this.planExecutorUsers.Add(entry);
@@ -334,7 +334,7 @@ public class App : MonoBehaviour
 	{
 		for (int i = this.planExecutorUsers.Count-1; i >= 0; --i)
 		{
-			if (this.planExecutorUsers[i].executorId == id && this.planExecutorUsers[i].user == user)
+			if (this.planExecutorUsers[i].desiredType == id && this.planExecutorUsers[i].user == user)
 			{
 					this.planExecutorUsers.RemoveAt(i);
 			}
@@ -350,6 +350,45 @@ public class App : MonoBehaviour
 				this.executingExecutors.RemoveAt(i);
 			}
 		}
+	}
+
+	// TODO: IPlanExecutorController instead
+	public static void RegisterPlan(IServiceUser<PlanExecutor> planner, string planName, string executorTypeName)
+	{
+		PlanExecutor planExecutor = null;
+		for (int i = 0; i < instance.executingExecutors.Count; ++i)
+		{
+			PlanExecutor executor = instance.executingExecutors[i];
+			if (executor.instantiatedFrom == executorTypeName && executor.GetExpectedPlanName() == planName)
+			{
+				planExecutor = executor;
+				break;
+			}
+		}
+		if (planExecutor == null)
+		{
+			PlanExecutor prefab = null;
+			for (int i = 0; i < instance.planExecutorPrefabs.Length; ++i)
+			{
+				if (instance.planExecutorPrefabs[i].name == executorTypeName)
+				{
+					prefab = instance.planExecutorPrefabs[i];
+					break;
+				}
+			}
+			if (prefab != null)
+			{
+				instance.nav.MakeCurrentMenuTheActiveScene();
+				planExecutor = Object.Instantiate(prefab, instance.transform);
+				planExecutor.instantiatedFrom = executorTypeName;
+			}
+			planner.Initialise(planExecutor);
+		}
+	}
+
+	public static void DeregisterPlan(IServiceUser<PlanExecutor> planner, string planName, string executorTypeName)
+	{
+		// TODO: remove the planner as a user of the given executor. if there's no users left, expire the executor
 	}
 
 	public void Awake()

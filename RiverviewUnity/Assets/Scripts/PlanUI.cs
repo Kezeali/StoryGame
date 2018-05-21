@@ -38,6 +38,21 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, 
 	PlanExecutor planExecutor;
 	Nav nav;
 
+	public void OnValidate()
+	{
+	#if UNITY_EDITOR
+		Object[] others = Object.FindObjectsOfType(typeof(PlanUI));
+		for (int i = 0; i < others.Length; ++i)
+		{
+			PlanUI other = others[i] as PlanUI;
+			if (other != null && other != this && other.planName == this.planName)
+			{
+				Debug.LogErrorFormat("PlanUIs with duplicate planName values: {0}, {1}", this, others[i]);
+			}
+		}
+	#endif
+	}
+
 	public void OnEnable()
 	{
 		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>(true);
@@ -62,15 +77,14 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, 
 
 		App.Register<Nav>(this);
 		App.Register<SaveData>(this);
-
-		App.instance.GetExecutor(this.planExecutorPrefab.id, this);
+		App.RegisterPlan(this, this.planName, this.planExecutorPrefab.name);
 	}
 
 	public void OnDisable()
 	{
+		App.DeregisterPlan(this, this.planName, this.planExecutorPrefab.name);
 		App.Deregister<Nav>(this);
 		App.Deregister<SaveData>(this);
-		App.instance.CancelRequestForExecutor(this.planExecutorPrefab.id, this);
 
 		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
 		{
@@ -173,6 +187,8 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, 
 	public void Initialise(PlanExecutor executor)
 	{
 		this.planExecutor = executor;
+
+		this.planExecutor.SetPlan(this.plan, this.planSchema);
 	}
 
 	public void CompleteInitialisation()
