@@ -10,9 +10,6 @@ namespace Cloverview
 public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<Nav>, INavigator
 {
 	[SerializeField]
-	public string id;
-
-	[SerializeField]
 	float defaultSecondsPerUnitTime;
 
 	[SerializeField]
@@ -29,15 +26,22 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	public string parentScene;
 
 	[System.NonSerialized]
+	public string instantiatedFrom;
+
+	[System.NonSerialized]
 	public float executingSecondsPerUnitTime;
 
 	[System.NonSerialized]
 	public string currentActivityName;
 
+	[System.NonSerialized]
+	public string key;
+
 	MenuData backMenu;
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
 	Nav nav;
+	string expectedPlanName;
 	Plan plan;
 	PlanSchema planSchema;
 	string activityScenePreloadId;
@@ -110,10 +114,11 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		{
 			this.saveData.planExecutors = new Dictionary<string, PlanExecutorSaveData>();
 		}
-		if (!saveData.planExecutors.TryGetValue(this.id, out this.executorSaveData))
+		this.key = Strf.Format("{0}{1}", this.instantiatedFrom, this.expectedPlanName);
+		if (!saveData.planExecutors.TryGetValue(this.key, out this.executorSaveData))
 		{
 			this.executorSaveData = new PlanExecutorSaveData();
-			saveData.planExecutors.Add(this.id, this.executorSaveData);
+			saveData.planExecutors.Add(this.key, this.executorSaveData);
 		}
 
 		if (this.executorSaveData != null)
@@ -166,6 +171,16 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
 	}
 
+	public void SetExpectedPlanName(string name)
+	{
+		this.expectedPlanName = name;
+	}
+
+	public string GetExpectedPlanName()
+	{
+		return this.expectedPlanName;
+	}
+
 	bool PreloadIfReady()
 	{
 		if (this.DataReady())
@@ -197,7 +212,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		{
 			if (this.others[i] != null && this.others[i].executing)
 			{
-				result = this.others[i].id;
+				result = this.others[i].instantiatedFrom;
 				break;
 			}
 		}
@@ -392,7 +407,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 		else
 		{
-			Debug.LogWarningFormat("Tried to execute again while {0} already executing!", this.id);
+			Debug.LogWarningFormat("Tried to execute again while {0} already executing!", this.instantiatedFrom);
 		}
 	}
 
