@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
+public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
 {
 	[SerializeField]
 	private string planName;
@@ -36,7 +36,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, 
 
 	PlanSlotUI selectedSlot;
 	PlanExecutor planExecutor;
-	Nav nav;
 
 	public void OnValidate()
 	{
@@ -75,7 +74,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, 
 		this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.planName);
 		this.MapUI();
 
-		App.Register<Nav>(this);
 		App.Register<SaveData>(this);
 		App.RegisterPlan(this, this.planName, this.planExecutorPrefab.name);
 	}
@@ -83,7 +81,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, 
 	public void OnDisable()
 	{
 		App.DeregisterPlan(this, this.planName, this.planExecutorPrefab.name);
-		App.Deregister<Nav>(this);
 		App.Deregister<SaveData>(this);
 
 		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
@@ -157,13 +154,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<Nav>, IServiceUser<SaveData>, 
 				slotUI.Initialise(planSlot);
 			}
 		}
-	}
-
-	public void Initialise(Nav nav)
-	{
-		Debug.Assert(nav != null);
-
-		this.nav = nav;
 	}
 
 	public void Initialise(SaveData loadedData)

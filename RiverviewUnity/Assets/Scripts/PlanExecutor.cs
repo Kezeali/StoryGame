@@ -114,45 +114,15 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	{
 		this.instantiatedFrom = instantiatedFrom;
 		this.expectedPlanName = expectedPlanName;
-		this.key = Strf.Format("{0}{1}", this.instantiatedFrom, this.expectedPlanName);
+		this.key = Strf.Format("{0}:{1}", this.instantiatedFrom, this.expectedPlanName);
+		Debug.LogFormat("Set executor key '{0}'", this.key);
+		this.LoadSave();
 	}
 
 	public void Initialise(SaveData saveData)
 	{
 		Debug.Assert(saveData != null);
-
 		this.saveData = saveData;
-		if (this.saveData.planExecutors == null)
-		{
-			this.saveData.planExecutors = new Dictionary<string, PlanExecutorSaveData>();
-		}
-		if (!saveData.planExecutors.TryGetValue(this.key, out this.executorSaveData))
-		{
-			this.executorSaveData = new PlanExecutorSaveData();
-			saveData.planExecutors.Add(this.key, this.executorSaveData);
-		}
-
-		if (this.executorSaveData != null)
-		{
-			if (this.planSchema == null)
-			{
-				this.planSchema = this.executorSaveData.liveSchema;
-			}
-			if (this.planSchema != null && this.plan == null && this.executorSaveData.planName != null)
-			{
-				for (int i = 0; i < this.saveData.plans.Count; ++i)
-				{
-					if (this.saveData.plans[i].name == this.executorSaveData.planName)
-					{
-						this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.executorSaveData.planName);
-						SchemaStuff.UpgradePlan(this.planSchema, this.plan, this.saveData.plans[i]);
-						break;
-					}
-				}
-			}
-			this.executorSaveData.planName = null;
-			this.executorSaveData.liveSchema = null;
-		}
 	}
 
 	public void Initialise(Nav nav)
@@ -171,7 +141,47 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	public void CompleteInitialisation()
 	{
+		this.LoadSave();
 		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
+	}
+
+	void LoadSave()
+	{
+		if (this.saveData != null && !string.IsNullOrEmpty(this.key))
+		{
+			Debug.LogFormat("Loading save data for executor key '{0}'", this.key);
+			if (this.saveData.planExecutors == null)
+			{
+				this.saveData.planExecutors = new Dictionary<string, PlanExecutorSaveData>();
+			}
+			if (!saveData.planExecutors.TryGetValue(this.key, out this.executorSaveData))
+			{
+				this.executorSaveData = new PlanExecutorSaveData();
+				saveData.planExecutors.Add(this.key, this.executorSaveData);
+			}
+
+			if (this.executorSaveData != null)
+			{
+				if (this.planSchema == null)
+				{
+					this.planSchema = this.executorSaveData.liveSchema;
+				}
+				if (this.planSchema != null && this.plan == null && this.executorSaveData.planName != null)
+				{
+					for (int i = 0; i < this.saveData.plans.Count; ++i)
+					{
+						if (this.saveData.plans[i].name == this.executorSaveData.planName)
+						{
+							this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.executorSaveData.planName);
+							SchemaStuff.UpgradePlan(this.planSchema, this.plan, this.saveData.plans[i]);
+							break;
+						}
+					}
+				}
+				this.executorSaveData.planName = null;
+				this.executorSaveData.liveSchema = null;
+			}
+		}
 	}
 
 	public void SetPlan(Plan plan, PlanSchema planSchema)
@@ -240,7 +250,12 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	bool DataReady()
 	{
-		return this.plan != null && this.planSchema != null && this.nav != null && this.saveData != null;
+		return
+			this.plan != null && 
+			this.planSchema != null && 
+			this.nav != null && 
+			this.saveData != null && 
+			this.executorSaveData != null;
 	}
 
 	public void SetParentScene(string parentScene)

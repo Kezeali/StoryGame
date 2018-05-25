@@ -378,9 +378,9 @@ public class App : MonoBehaviour
 			}
 			if (prefab != null)
 			{
+				Debug.LogFormat("Instantiating '{0}' executor for plan '{1}'", executorTypeName, planName);
 				instance.nav.MakeCurrentMenuTheActiveScene();
 				planExecutor = Object.Instantiate(prefab, instance.transform);
-				Object.DontDestroyOnLoad(planExecutor.gameObject);
 				planExecutor.SetKey(executorTypeName, planName);
 				planExecutor.controller = controller;
 
@@ -394,6 +394,7 @@ public class App : MonoBehaviour
 		}
 		if (planExecutor != null)
 		{
+			// TODO: call IPlanExecutorController.ReceiveExecutor() here
 			controller.Initialise(planExecutor);
 		}
 		else
@@ -416,7 +417,8 @@ public class App : MonoBehaviour
 		}
 		if (planExecutor != null)
 		{
-			instance.RemoveExecutorInternal(planExecutor);
+			// instance.RemoveExecutorInternal(planExecutor);
+			// Object.Destroy(planExecutor);
 		}
 	}
 
