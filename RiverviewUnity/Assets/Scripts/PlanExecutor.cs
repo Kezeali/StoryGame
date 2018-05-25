@@ -29,6 +29,9 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	public string instantiatedFrom;
 
 	[System.NonSerialized]
+	public string expectedPlanName;
+
+	[System.NonSerialized]
 	public float executingSecondsPerUnitTime;
 
 	[System.NonSerialized]
@@ -37,11 +40,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	[System.NonSerialized]
 	public string key;
 
+	[System.NonSerialized]
+	public IServiceUser<PlanExecutor> controller;
+
 	MenuData backMenu;
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
 	Nav nav;
-	string expectedPlanName;
 	Plan plan;
 	PlanSchema planSchema;
 	string activityScenePreloadId;
@@ -105,6 +110,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 	}
 
+	public void SetKey(string instantiatedFrom, string expectedPlanName)
+	{
+		this.instantiatedFrom = instantiatedFrom;
+		this.expectedPlanName = expectedPlanName;
+		this.key = Strf.Format("{0}{1}", this.instantiatedFrom, this.expectedPlanName);
+	}
+
 	public void Initialise(SaveData saveData)
 	{
 		Debug.Assert(saveData != null);
@@ -114,7 +126,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		{
 			this.saveData.planExecutors = new Dictionary<string, PlanExecutorSaveData>();
 		}
-		this.key = Strf.Format("{0}{1}", this.instantiatedFrom, this.expectedPlanName);
 		if (!saveData.planExecutors.TryGetValue(this.key, out this.executorSaveData))
 		{
 			this.executorSaveData = new PlanExecutorSaveData();
@@ -169,11 +180,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.planSchema = planSchema;
 
 		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
-	}
-
-	public void SetExpectedPlanName(string name)
-	{
-		this.expectedPlanName = name;
 	}
 
 	public string GetExpectedPlanName()
@@ -422,8 +428,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			yield break;
 		}
 
-		Object.DontDestroyOnLoad(this.gameObject);
-
 		// Save the plan name and schema in use
 		this.executorSaveData.planName = this.plan.name;
 		this.executorSaveData.liveSchema = this.planSchema;
@@ -631,8 +635,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.UnloadAllPreloadedActivities();
 
 		this.nav.GoTo(this.backMenu, this.parentScene);
-
-		Object.Destroy(this.gameObject);
 	}
 
 	static PlanActivityData GetActivity(PlanSlot slot)

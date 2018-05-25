@@ -8,9 +8,9 @@ namespace Cloverview
 
 public class ExecutingActivitiesPanel : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
 {
-	// TODO(elliot): make this a list of executor ids to look for?
+	// NOTE(elliot): if you want a single widget be able to display more than one type of executor, simply add multiple ExecutingActivitiesPanel components to it
 	[SerializeField]
-	string executorId;
+	PlanExecutor executorToDisplay;
 
 	[SerializeField]
 	Text activityNameText;
@@ -20,13 +20,14 @@ public class ExecutingActivitiesPanel : MonoBehaviour, IServiceUser<SaveData>, I
 	public void OnEnable()
 	{
 		App.Register<SaveData>(this);
-		App.instance.GetExecutor(executorId, this);
+
+		App.instance.GetExecutor(this.executorToDisplay.name, this);
 	}
 
 	public void OnDisable()
 	{
-		App.Register<SaveData>(this);
-		App.instance.CancelRequestForExecutor(executorId, this);
+		App.Deregister<SaveData>(this);
+		App.instance.CancelRequestForExecutor(this.executorToDisplay.name, this);
 	}
 
 	public void Initialise(SaveData saveData)
@@ -44,8 +45,11 @@ public class ExecutingActivitiesPanel : MonoBehaviour, IServiceUser<SaveData>, I
 
 	public void Update()
 	{
-		string currentActivityName = executor.currentActivityName;
-		this.activityNameText.text = currentActivityName;
+		if (this.executor != null)
+		{
+			string currentActivityName = this.executor.currentActivityName;
+			this.activityNameText.text = currentActivityName;
+		}
 	}
 }
 
