@@ -175,6 +175,8 @@ MonoBehaviour:
   gameData: {fileID: 11400000, guid: da2642e653cc19c448e2b207d88d799a, type: 2}
   systemData: {fileID: 11400000, guid: ab04a83765a082a4fac67c8476dc5d8a, type: 2}
   defaultSaveData: {fileID: 11400000, guid: 38951aae88785cf4e864ff802aeb357b, type: 2}
+  planExecutorPrefabs:
+  - {fileID: 114723216548656092, guid: b3ac209cf68367f4eae5b5a66cc5d07c, type: 2}
 --- !u!114 &114650394401774564
 MonoBehaviour:
   m_ObjectHideFlags: 1

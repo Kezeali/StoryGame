@@ -241,12 +241,12 @@ public class App : MonoBehaviour
 
 	public static bool ExecutorBeginning(PlanExecutor executor)
 	{
-		return App.instance.AddExecutorInternal(executor);
+		// NOTE(elliot): this was used for verifying that the given executor is the only active instance, but that's not needed anymore
+		return true;
 	}
 
 	public static void ExecutorEnding(PlanExecutor executor)
 	{
-		App.instance.RemoveExecutorInternal(executor);
 	}
 
 	// Returns true if the executor was added
@@ -353,13 +353,13 @@ public class App : MonoBehaviour
 	}
 
 	// TODO: IPlanExecutorController instead
-	public static void RegisterPlan(IServiceUser<PlanExecutor> planner, string planName, string executorTypeName)
+	public static void RegisterPlan(IServiceUser<PlanExecutor> controller, string planName, string executorTypeName)
 	{
 		PlanExecutor planExecutor = null;
 		for (int i = 0; i < instance.executingExecutors.Count; ++i)
 		{
 			PlanExecutor executor = instance.executingExecutors[i];
-			if (executor.instantiatedFrom == executorTypeName && executor.GetExpectedPlanName() == planName)
+			if (executor.instantiatedFrom == executorTypeName && executor.expectedPlanName == planName)
 			{
 				planExecutor = executor;
 				break;
@@ -380,15 +380,44 @@ public class App : MonoBehaviour
 			{
 				instance.nav.MakeCurrentMenuTheActiveScene();
 				planExecutor = Object.Instantiate(prefab, instance.transform);
-				planExecutor.instantiatedFrom = executorTypeName;
+				Object.DontDestroyOnLoad(planExecutor.gameObject);
+				planExecutor.SetKey(executorTypeName, planName);
+				planExecutor.controller = controller;
+
+				bool added = instance.AddExecutorInternal(planExecutor);
+				if (!added)
+				{
+					Object.Destroy(planExecutor);
+					planExecutor = null;
+				}
 			}
-			planner.Initialise(planExecutor);
+		}
+		if (planExecutor != null)
+		{
+			controller.Initialise(planExecutor);
+		}
+		else
+		{
+			Debug.LogErrorFormat("Failed to create executor for {0}", controller);
 		}
 	}
 
-	public static void DeregisterPlan(IServiceUser<PlanExecutor> planner, string planName, string executorTypeName)
+	public static void DeregisterPlan(IServiceUser<PlanExecutor> controller, string planName, string executorTypeName)
 	{
-		// TODO: remove the planner as a user of the given executor. if there's no users left, expire the executor
+		PlanExecutor planExecutor = null;
+		for (int i = 0; i < instance.executingExecutors.Count; ++i)
+		{
+			PlanExecutor executor = instance.executingExecutors[i];
+			if (executor.instantiatedFrom == executorTypeName && executor.expectedPlanName == planName && executor.controller == controller)
+			{
+				planExecutor = executor;
+				break;
+			}
+		}
+		if (planExecutor != null)
+		{
+			instance.RemoveExecutorInternal(planExecutor);
+		}
 	}
 
 	public void Awake()
