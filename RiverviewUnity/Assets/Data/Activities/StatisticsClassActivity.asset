@@ -9,13 +9,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5a86956968eb814aa95c07b766db260, type: 3}
-  m_Name: SchoolClassroomActivity
+  m_Name: StatisticsClassActivity
   m_EditorClassIdentifier: 
   scene: {fileID: 11400000, guid: ade65cbdfc75aca40adcd72e75ba6943, type: 2}
   statBonuses:
-  - name: Studious Atmosphere
-    stat: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
-    flatBonus: 0.5
-    bonusPerTimeUnit: -0.05
-    activePeriodTimeUnits: 1
+  - name: Statistics Focus
+    stat: {fileID: 11400000, guid: 4310afa92d8ec6c448570142f178bc63, type: 2}
+    flatBonus: 0
+    bonusPerTimeUnit: 1
+    activePeriodTimeUnits: -1
     activePeriodExtensionPerTimeUnit: 0

@@ -13,14 +13,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   saveData:
     name: New
-    weeklyPlan:
-      name: 
-      sections: []
+    time: 0
+    plans: []
     pc:
       name: You
+      role: {fileID: 11400000, guid: 5fb069ba7dfe3dd43820aad5b37ac85f, type: 2}
       activeBonuses: []
+      permanentBonuses: []
       baseStats:
       - definition: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
         value: 10
-      - definition: {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
-        value: 0
+    leadNpcs: []
+    nav:
+      currentRootMenu:
+        def: {fileID: 0}
+      breadcrumbs: []
+      nextPreloadId: 0
+    randomState:
+      s0: 0
+      s1: 0
+      s2: 0
+      s3: 0

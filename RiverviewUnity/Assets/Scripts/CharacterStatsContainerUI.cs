@@ -51,6 +51,10 @@ public class CharacterStatsContainerUI : MonoBehaviour, IServiceUser<SaveData>
 					statUi = Object.Instantiate(this.statUiPrefab, this.additionalStatsContainer);
 					statUi.Initialise(this.character, stat.definition);
 				}
+				else
+				{
+					statUi.Refresh();
+				}
 			}
 		}
 	}
