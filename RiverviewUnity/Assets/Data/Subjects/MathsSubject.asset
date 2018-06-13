@@ -15,5 +15,7 @@ MonoBehaviour:
   statBonuses:
   - name: Maths Aptitude
     stat: {fileID: 11400000, guid: e4829ff83c089194d96c87c5c61510e1, type: 2}
+    flatBonus: 0
     bonusPerTimeUnit: 1
-    activePeriodTimeUnits: 0
+    activePeriodTimeUnits: -1
+    activePeriodExtensionPerTimeUnit: 0

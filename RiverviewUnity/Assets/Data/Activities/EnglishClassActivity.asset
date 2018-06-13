@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5a86956968eb814aa95c07b766db260, type: 3}
+  m_Name: EnglishClassActivity
+  m_EditorClassIdentifier: 
+  scene: {fileID: 11400000, guid: ade65cbdfc75aca40adcd72e75ba6943, type: 2}
+  statBonuses:
+  - name: English Focus
+    stat: {fileID: 11400000, guid: b099af9d1ffbb7c4899e5b742ef65240, type: 2}
+    flatBonus: 1
+    bonusPerTimeUnit: 1
+    activePeriodTimeUnits: -1
+    activePeriodExtensionPerTimeUnit: 0
+  - name: Language Learning
+    stat: {fileID: 11400000, guid: b6fdd4749b23b8c499bae2e886672f8a, type: 2}
+    flatBonus: 0
+    bonusPerTimeUnit: 0.5
+    activePeriodTimeUnits: -1
+    activePeriodExtensionPerTimeUnit: 0
+  - name: Language Mindset
+    stat: {fileID: 11400000, guid: b6fdd4749b23b8c499bae2e886672f8a, type: 2}
+    flatBonus: 0
+    bonusPerTimeUnit: 1
+    activePeriodTimeUnits: 0
+    activePeriodExtensionPerTimeUnit: 0.5

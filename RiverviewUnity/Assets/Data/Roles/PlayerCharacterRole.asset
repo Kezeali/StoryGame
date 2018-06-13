@@ -17,7 +17,5 @@ MonoBehaviour:
     activeBonuses: []
     permanentBonuses: []
     baseStats:
-    - definition: {fileID: 0}
-      value: 0
-    - definition: {fileID: 0}
-      value: 0
+    - definition: {fileID: 11400000, guid: 388139ea48748f84898b267c785c47c5, type: 2}
+      value: 10

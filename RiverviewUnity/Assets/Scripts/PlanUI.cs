@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
+public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IPlanExecutorController
 {
 	[SerializeField]
 	private string planName;
@@ -174,11 +174,15 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 		SchemaStuff.UpgradePlan(this.planSchema, this.plan, loadedPlan);
 	}
 
-	public void Initialise(PlanExecutor executor)
+	public void ReceiveExecutor(PlanExecutor executor)
 	{
+		Debug.Assert(executor != null);
 		this.planExecutor = executor;
 
-		this.planExecutor.SetPlan(this.plan, this.planSchema);
+		if (this.planExecutor != null)
+		{
+			this.planExecutor.SetPlan(this.plan, this.planSchema);
+		}
 	}
 
 	public void CompleteInitialisation()

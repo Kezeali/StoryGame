@@ -41,7 +41,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	public string key;
 
 	[System.NonSerialized]
-	public IServiceUser<PlanExecutor> controller;
+	public IPlanExecutorController controller;
 
 	MenuData backMenu;
 	SaveData saveData;

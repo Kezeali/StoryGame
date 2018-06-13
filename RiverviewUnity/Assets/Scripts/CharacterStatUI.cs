@@ -26,7 +26,8 @@ public class CharacterStatUI : MonoBehaviour
 		{
 			this.statType = statType;
 		}
-		Refresh();
+		this.Refresh();
+		this.InvokeRepeating("Refresh", 1, 0.5f);
 	}
 
 	public void Refresh()

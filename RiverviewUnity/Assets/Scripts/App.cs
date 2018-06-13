@@ -352,8 +352,7 @@ public class App : MonoBehaviour
 		}
 	}
 
-	// TODO: IPlanExecutorController instead
-	public static void RegisterPlan(IServiceUser<PlanExecutor> controller, string planName, string executorTypeName)
+	public static void RegisterPlan(IPlanExecutorController controller, string planName, string executorTypeName)
 	{
 		PlanExecutor planExecutor = null;
 		for (int i = 0; i < instance.executingExecutors.Count; ++i)
@@ -394,8 +393,7 @@ public class App : MonoBehaviour
 		}
 		if (planExecutor != null)
 		{
-			// TODO: call IPlanExecutorController.ReceiveExecutor() here
-			controller.Initialise(planExecutor);
+			controller.ReceiveExecutor(planExecutor);
 		}
 		else
 		{
@@ -403,7 +401,7 @@ public class App : MonoBehaviour
 		}
 	}
 
-	public static void DeregisterPlan(IServiceUser<PlanExecutor> controller, string planName, string executorTypeName)
+	public static void DeregisterPlan(IPlanExecutorController controller, string planName, string executorTypeName)
 	{
 		PlanExecutor planExecutor = null;
 		for (int i = 0; i < instance.executingExecutors.Count; ++i)
@@ -754,6 +752,11 @@ public interface IServiceUser<ServiceT> : IServiceUser
 public interface IServiceUser
 {
 	void CompleteInitialisation();
+}
+
+public interface IPlanExecutorController
+{
+	void ReceiveExecutor(PlanExecutor executor);
 }
 
 }

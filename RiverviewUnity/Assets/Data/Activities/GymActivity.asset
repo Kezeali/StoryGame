@@ -12,4 +12,22 @@ MonoBehaviour:
   m_Name: GymActivity
   m_EditorClassIdentifier: 
   scene: {fileID: 11400000, guid: 735231d4e6b8d0a42824bc192c051d24, type: 2}
-  statBonuses: []
+  statBonuses:
+  - name: Flexed
+    stat: {fileID: 11400000, guid: 30ad4e9c4f632d84593150c9dfecf553, type: 2}
+    flatBonus: 0
+    bonusPerTimeUnit: 0.5
+    activePeriodTimeUnits: 10
+    activePeriodExtensionPerTimeUnit: 10
+  - name: Cardio Boost
+    stat: {fileID: 11400000, guid: 7c215557142f06e4db117483f8cd2676, type: 2}
+    flatBonus: 0
+    bonusPerTimeUnit: 1
+    activePeriodTimeUnits: 5
+    activePeriodExtensionPerTimeUnit: 2
+  - name: Feelin Tough
+    stat: {fileID: 11400000, guid: b0b9113b73b15fd4bae2645fb68abf13, type: 2}
+    flatBonus: 0
+    bonusPerTimeUnit: 1
+    activePeriodTimeUnits: 4
+    activePeriodExtensionPerTimeUnit: 2
