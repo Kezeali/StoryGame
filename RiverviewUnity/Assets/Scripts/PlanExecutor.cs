@@ -142,7 +142,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	public void CompleteInitialisation()
 	{
 		this.LoadSave();
-		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
+		if (!this.ResumeExecutionIfReady()) { this.PreloadIfReady(); }
 	}
 
 	void LoadSave()
@@ -189,7 +189,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.plan = plan;
 		this.planSchema = planSchema;
 
-		if (!this.ExecuteIfReady()) { this.PreloadIfReady(); }
+		if (!this.ResumeExecutionIfReady()) { this.PreloadIfReady(); }
 	}
 
 	public string GetExpectedPlanName()
@@ -234,8 +234,8 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 		return result;
 	}
-
-	bool ExecuteIfReady()
+ 
+	bool ResumeExecutionIfReady()
 	{
 		if (!this.OthersExecuting() &&
 			this.DataReady() &&
@@ -409,6 +409,11 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 				}
 			}
 		}
+	}
+
+	public bool IsReadyForPlayerToExecute()
+	{
+		return !this.OthersExecuting() && this.DataReady();
 	}
 
 	public void Execute(int skipTimeUnits = 0)

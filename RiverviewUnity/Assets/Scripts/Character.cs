@@ -131,24 +131,98 @@ namespace Cloverview
 			}
 		}
 
+		[System.Serializable]
+		public struct Favourite
+		{
+			public QualityData quality;
+			public float affinity;
+		}
+
+		[System.Serializable]
+		public struct Tag
+		{
+			public QualityData quality;
+			public int amount;
+		}
+
 		public string name;
 		public RoleData role;
-		public List<ActiveBonus> activeBonuses;
-		public List<ActiveBonus> permanentBonuses;
-		public BaseStat[] baseStats;
+		public List<ActiveBonus> activeBonuses = new List<ActiveBonus>();
+		public List<ActiveBonus> permanentBonuses = new List<ActiveBonus>();
+		public List<Favourite> favourites = new List<Favourite>();
+		public List<Tag> tags = new List<Tag>();
+		public BaseStat[] baseStats = new BaseStat[0];
 		[System.NonSerialized]
 		public Status status;
+
+		public static Character Generate(RoleData role)
+		{
+			Character character = new Character();
+			character.role = role;
+			if (character.role != null)
+			{
+				BaseStatsGenerator[] generators = role.statGenerators;
+				List<BaseStat> generatedStats = new List<BaseStat>(generators.Length);
+				for (int i = 0; i < generators.Length; ++i)
+				{
+					Character.BaseStat baseStat = generators[i].Generate();
+					if (baseStat.definition != null)
+					{
+						generatedStats.Add(baseStat);
+					}
+				}
+				character.baseStats = generatedStats.ToArray();
+			}
+			return character;
+		}
+
+		static List<T> CloneList<T>(List<T> source)
+		{
+			if (source != null) {
+				return new List<T>(source);
+			} else {
+				return new List<T>();
+			}
+		}
+
+		static T[] CloneArray<T>(T[] source)
+		{
+			if (source != null) {
+				T[] clone = new T[source.Length];
+				System.Array.Copy(source, 0, clone, 0, source.Length);
+				return clone;
+			} else {
+				return new T[0];
+			}
+		}
 
 		public Character CreateSimulationClone()
 		{
 			Character clone = new Character();
 			clone.name = this.name;
-			clone.activeBonuses = new List<ActiveBonus>(this.activeBonuses);
-			clone.permanentBonuses = new List<ActiveBonus>(this.permanentBonuses);
-			clone.baseStats = new BaseStat[this.baseStats.Length];
-			System.Array.Copy(this.baseStats, 0, clone.baseStats, 0, this.baseStats.Length);
+			clone.activeBonuses = CloneList(this.activeBonuses);
+			clone.permanentBonuses = CloneList(this.permanentBonuses);
+			clone.favourites = CloneList(this.favourites);
+			clone.tags = CloneList(this.tags);
+			clone.baseStats = CloneArray(this.baseStats);
 			clone.status = this.status.CreateClone();
 			return clone;
+		}
+
+		public void ApplyStatus(Character simCharacter)
+		{
+			this.permanentBonuses.Clear();
+			this.activeBonuses.Clear();
+			this.permanentBonuses.AddRange(simCharacter.permanentBonuses);
+			this.activeBonuses.AddRange(simCharacter.activeBonuses);
+
+			this.favourites.Clear();
+			this.favourites.AddRange(simCharacter.favourites);
+
+			this.tags.Clear();
+			this.tags.AddRange(simCharacter.tags);
+
+			this.CalculateStatus();
 		}
 
 		public void Recycle()
@@ -205,15 +279,6 @@ namespace Cloverview
 
 				this.CalculateStatus();
 			}
-		}
-
-		public void ApplyStatus(Character simCharacter)
-		{
-			this.permanentBonuses.Clear();
-			this.activeBonuses.Clear();
-			this.permanentBonuses.AddRange(simCharacter.permanentBonuses);
-			this.activeBonuses.AddRange(simCharacter.activeBonuses);
-			this.CalculateStatus();
 		}
 
 		public void ClearTemporaryStatBonuses()
