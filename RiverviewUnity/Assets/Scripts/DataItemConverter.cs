@@ -73,6 +73,9 @@ namespace Cloverview
 
 		public object ReadYaml(IParser parser, System.Type type)
 		{
+			if (parser.Current == null) {
+				return null;
+			}
 			var name = ((Scalar)parser.Current).Value;
 			parser.MoveNext();
 
