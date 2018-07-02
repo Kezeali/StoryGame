@@ -8,6 +8,11 @@ public class SaveData
 {
 	public string name;
 
+	public string displayName;
+
+	// This field is set when the player makes a new named save during a game, and allows a tree-view to be generated for save games showing their heratage
+	public string parentSaveName;
+
 	public int time;
 	public List<Plan> plans;
 	public Character pc;
@@ -46,6 +51,7 @@ public class AppSaveData
 public class ProfileSaveData
 {
 	public string name;
+	public string displayName;
 	public string selectedSaveName;
 }
 }

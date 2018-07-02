@@ -483,8 +483,8 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 							this.nav.FinishCommute(this.activityScenePreloadId);
 
-							// The event has completed, save progress
-							PlanExecutor.ApplySimulation(this.saveData, liveCast);
+							// The event has completed, push status back to the primary save data
+							PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
 						}
 					}
 
@@ -495,8 +495,8 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 						}
 					}
 
-					// The activity has completed, save progress
-					PlanExecutor.ApplySimulation(this.saveData, liveCast);
+					// The activty has completed, push status back to the primary save data
+					PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
 				}
 
 				localTimeUnitsElapsed += schemaSlot.unitLength;
@@ -543,14 +543,14 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 						this.nav.FinishCommute(this.activityScenePreloadId);
 
-						// The event has completed, save progress
-						PlanExecutor.ApplySimulation(this.saveData, liveCast);
+						// The event has completed, push status back to the primary save data
+						PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
 					}
 				}
 			}
 		}
 
-		PlanExecutor.ApplySimulation(this.saveData, liveCast);
+		PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
 
 		this.saveData.time += this.executorSaveData.timeUnitsElapsed;
 
@@ -569,15 +569,15 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.nav.GoTo(this.backMenu, this.parentScene);
 	}
 
-	static ApplySimulation(SaveData saveData, Cast liveCast)
+	static void ApplyNewStatuses(SaveData saveData, Cast liveCast)
 	{
 		saveData.pc.ApplyStatus(liveCast.pc);
 		for (int simNpcIndex = 0; simNpcIndex < liveCast.leadNpcs.Count; ++simNpcIndex) {
 			Character simNpc = liveCast.leadNpcs[simNpcIndex];
 			Character actualNpc = null;
 			for (int npcIndex = 0; npcIndex < saveData.leadNpcs.Count; ++npcIndex) {
-				if (this.saveData.leadNpcs[npcIndex].name == simNpc.name) {
-					actualNpc = this.saveData.leadNpcs[npcIndex];
+				if (saveData.leadNpcs[npcIndex].name == simNpc.name) {
+					actualNpc = saveData.leadNpcs[npcIndex];
 				}
 			}
 			if (actualNpc != null) {
