@@ -4,6 +4,16 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+public interface IGenerator<GeneratedT>
+{
+	GeneratedT Generate();
+}
+
+public interface ICheckValid
+{
+	bool IsValid();
+}
+
 [CreateAssetMenu(fileName="Role.asset", menuName="Cloverview/Role Definition")]
 public class RoleData : ScriptableObject, IDataItem
 {
@@ -25,7 +35,7 @@ public class NameGenerator
 }
 
 [System.Serializable]
-public class BaseStatsGenerator
+public class BaseStatsGenerator : IGenerator<Character.BaseStat>
 {
 	public CharacterStatDefinition definition;
 	public float minValue;
@@ -65,7 +75,7 @@ public class BaseStatsGenerator
 }
 
 [System.Serializable]
-public class FavouriteQualitiesGenerator
+public class FavouriteQualitiesGenerator : IGenerator<Character.Favourite>
 {
 	public struct Option
 	{
@@ -112,7 +122,7 @@ public class FavouriteQualitiesGenerator
 }
 
 [System.Serializable]
-public class TagQualitiesGenerator
+public class TagQualitiesGenerator : IGenerator<Character.Tag>
 {
 	public struct Option
 	{

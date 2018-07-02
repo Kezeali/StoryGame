@@ -99,14 +99,15 @@ namespace Cloverview
 		}
 
 		[System.Serializable]
-		public struct BaseStat
+		public struct BaseStat : ICheckValid
 		{
 			public CharacterStatDefinition definition;
 			public float value;
+			public bool IsValid() { return definition != null; }
 		}
 
 		[System.Serializable]
-		public struct ActiveBonus
+		public struct ActiveBonus : ICheckValid
 		{
 			public StatBonusData definition;
 			public float value;
@@ -129,20 +130,24 @@ namespace Cloverview
 			{
 				return this.activePeriodTimeUnits < 0;
 			}
+
+			public bool IsValid() { return definition != null; }
 		}
 
 		[System.Serializable]
-		public struct Favourite
+		public struct Favourite : ICheckValid
 		{
 			public QualityData quality;
 			public float affinity;
+			public bool IsValid() { return quality != null; }
 		}
 
 		[System.Serializable]
-		public struct Tag
+		public struct Tag : ICheckValid
 		{
 			public QualityData quality;
 			public int amount;
+			public bool IsValid() { return quality != null; }
 		}
 
 		public string name;
@@ -161,19 +166,45 @@ namespace Cloverview
 			character.role = role;
 			if (character.role != null)
 			{
-				BaseStatsGenerator[] generators = role.statGenerators;
-				List<BaseStat> generatedStats = new List<BaseStat>(generators.Length);
-				for (int i = 0; i < generators.Length; ++i)
+				if (role.nameGenerator != null)
 				{
-					Character.BaseStat baseStat = generators[i].Generate();
-					if (baseStat.definition != null)
-					{
-						generatedStats.Add(baseStat);
-					}
+					character.name = role.nameGenerator.Generate();
 				}
-				character.baseStats = generatedStats.ToArray();
+				BaseStatsGenerator[] statGenerators = role.statGenerators;
+				if (statGenerators != null)
+				{
+					List<BaseStat> generatedStats = new List<BaseStat>(statGenerators.Length);
+					for (int i = 0; i < statGenerators.Length; ++i)
+					{
+						Character.BaseStat baseStat = statGenerators[i].Generate();
+						if (baseStat.definition != null)
+						{
+							generatedStats.Add(baseStat);
+						}
+					}
+					character.baseStats = generatedStats.ToArray();
+				}
+				GenerateItems(character.favourites, role.favouritesGenerators);
+				GenerateItems(character.tags, role.tagsGenerators);
 			}
 			return character;
+		}
+
+		static void GenerateItems<T>(List<T> destinationList, IGenerator<T>[] generators)
+			where T : ICheckValid
+		{
+			if (generators != null)
+			{
+				destinationList.Clear();
+				for (int i = 0; i < generators.Length; ++i)
+				{
+					T item = generators[i].Generate();
+					if (item.IsValid())
+					{
+						destinationList.Add(item);
+					}
+				}
+			}
 		}
 
 		static List<T> CloneList<T>(List<T> source)
@@ -236,8 +267,22 @@ namespace Cloverview
 
 		public void PostLoadCleanup()
 		{
+			EnsureNotNull(ref this.activeBonuses);
+			EnsureNotNull(ref this.permanentBonuses);
+			EnsureNotNull(ref this.favourites);
+			EnsureNotNull(ref this.tags);
+
 			this.activeBonuses.RemoveAll(InvalidBonus);
 			this.permanentBonuses.RemoveAll(InvalidBonus);
+		}
+
+		void EnsureNotNull<T>(ref T field)
+			where T : new()
+		{
+			if (field == null)
+			{
+				field = new T();
+			}
 		}
 
 		public void CalculateStatus()
