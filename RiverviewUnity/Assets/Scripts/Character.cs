@@ -16,12 +16,9 @@ namespace Cloverview
 			public static Status New()
 			{
 				var newStatus = new Status();
-				if (statListPool.Count > 0)
-				{
+				if (statListPool.Count > 0) {
 					newStatus.stats = statListPool.Pop();
-				}
-				else
-				{
+				} else {
 					newStatus.stats = new List<Stat>();
 				}
 				return newStatus;
@@ -30,8 +27,7 @@ namespace Cloverview
 			public void Recycle()
 			{
 				Debug.Assert(this.stats != null);
-				if (this.stats != null)
-				{
+				if (this.stats != null) {
 					this.stats.Clear();
 					statListPool.Push(this.stats);
 					this.stats = null;
@@ -56,11 +52,9 @@ namespace Cloverview
 				Stat result = default(Stat);
 				result.value = statDef.baseValue;
 								
-				for (int i = 0; i < this.stats.Count; ++i)
-				{
+				for (int i = 0; i < this.stats.Count; ++i) {
 					Stat stat = this.stats[i];
-					if (stat.definition == statDef)
-					{
+					if (stat.definition == statDef) {
 						result = stat;
 						break;
 					}
@@ -76,11 +70,9 @@ namespace Cloverview
 				result.definition = statDef;
 				result.value = statDef.baseValue;
 								
-				for (int i = 0; i < this.stats.Count; ++i)
-				{
+				for (int i = 0; i < this.stats.Count; ++i) {
 					Stat stat = this.stats[i];
-					if (stat.definition == statDef)
-					{
+					if (stat.definition == statDef) {
 						result = stat;
 						this.stats.RemoveAt(i);
 						break;
@@ -113,6 +105,7 @@ namespace Cloverview
 			public float value;
 			public int beginTimeUnit;
 			public int activePeriodTimeUnits;
+			public List<StatBonusSource> sources;
 
 			public int TimeElapsed(int currentTimeUnit)
 			{
@@ -126,7 +119,7 @@ namespace Cloverview
 				return result;
 			}
 
-			public bool IsInfinite()
+			public bool IsPermanent()
 			{
 				return this.activePeriodTimeUnits < 0;
 			}
@@ -164,21 +157,16 @@ namespace Cloverview
 		{
 			Character character = new Character();
 			character.role = role;
-			if (character.role != null)
-			{
-				if (role.nameGenerator != null)
-				{
+			if (character.role != null) {
+				if (role.nameGenerator != null) {
 					character.name = role.nameGenerator.Generate();
 				}
 				BaseStatsGenerator[] statGenerators = role.statGenerators;
-				if (statGenerators != null)
-				{
+				if (statGenerators != null) {
 					List<BaseStat> generatedStats = new List<BaseStat>(statGenerators.Length);
-					for (int i = 0; i < statGenerators.Length; ++i)
-					{
+					for (int i = 0; i < statGenerators.Length; ++i) {
 						Character.BaseStat baseStat = statGenerators[i].Generate();
-						if (baseStat.definition != null)
-						{
+						if (baseStat.definition != null) {
 							generatedStats.Add(baseStat);
 						}
 					}
@@ -193,14 +181,11 @@ namespace Cloverview
 		static void GenerateItems<T>(List<T> destinationList, IGenerator<T>[] generators)
 			where T : ICheckValid
 		{
-			if (generators != null)
-			{
+			if (generators != null) {
 				destinationList.Clear();
-				for (int i = 0; i < generators.Length; ++i)
-				{
+				for (int i = 0; i < generators.Length; ++i) {
 					T item = generators[i].Generate();
-					if (item.IsValid())
-					{
+					if (item.IsValid()) {
 						destinationList.Add(item);
 					}
 				}
@@ -258,8 +243,7 @@ namespace Cloverview
 
 		public void Recycle()
 		{
-			if (Status.IsUsable(this.status))
-			{
+			if (Status.IsUsable(this.status)) {
 				this.status.Recycle();
 			}
 			this.status = null;
@@ -279,8 +263,7 @@ namespace Cloverview
 		void EnsureNotNull<T>(ref T field)
 			where T : new()
 		{
-			if (field == null)
-			{
+			if (field == null) {
 				field = new T();
 			}
 		}
@@ -288,41 +271,85 @@ namespace Cloverview
 		public void CalculateStatus()
 		{
 			Status newStatus = CalculateStatus(this);
-			if (Status.IsUsable(this.status))
-			{
+			if (Status.IsUsable(this.status)) {
 				this.status.Recycle();
 			}
 			this.status = newStatus;
 		}
 
-		public void AddStatBonuses(StatBonusData[] bonuses, int beginTimeUnit, int timeSpent)
+		public void AddStatBonuses(StatBonusData[] bonuses, StatBonusSource source, int beginTimeUnit, int timeSpent)
 		{
 			Debug.Assert(bonuses != null);
-			if (bonuses != null && bonuses.Length > 0)
-			{
-				for (int i = 0; i < bonuses.Length; ++i)
-				{
+			if (bonuses != null && bonuses.Length > 0) {
+				for (int i = 0; i < bonuses.Length; ++i) {
 					Debug.Assert(bonuses[i].stat != null);
-					if (bonuses[i].stat != null)
-					{
-						var activeBonus = new ActiveBonus()
-						{
+					if (bonuses[i].stat != null) {
+						var activeBonus = new ActiveBonus() {
 							definition = bonuses[i],
 							beginTimeUnit = beginTimeUnit
 						};
 						CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
-						if (activeBonus.IsInfinite())
-						{
-							this.permanentBonuses.Add(activeBonus);
-						}
-						else
-						{
+						if (activeBonus.IsPermanent()) {
+							Character.AddOrMergeActiveBonus(this.permanentBonuses, activeBonus);
+						} else {
+							// NOTE(elliot): don't merge temporary bonuses as they'll time out anyway and it's nice to see all the items separately
+							// TODO(elliot): handle this list getting too big
 							this.activeBonuses.Add(activeBonus);
 						}
 					}
 				}
-
 				this.CalculateStatus();
+			}
+		}
+
+		static void AddOrMergeActiveBonus(List<ActiveBonus> currentList, ActiveBonus newBonus)
+		{
+			bool merged = false;
+			for (int i = 0; i < currentList.Count; ++i) {
+				ActiveBonus existingBonus = currentList[i];
+				if (Character.ShouldMerge(existingBonus, newBonus)) {
+					currentList[i] = Character.Merge(existingBonus, newBonus);
+					merged = true;
+					break;
+				}
+			}
+			if (!merged) {
+				currentList.Add(newBonus);
+			}
+		}
+
+		static bool ShouldMerge(ActiveBonus a, ActiveBonus b)
+		{
+			bool result =
+				StatBonusData.AreEqual(a.definition, b.definition) && (
+				(a.IsPermanent() && b.IsPermanent()) ||
+				(a.beginTimeUnit == b.beginTimeUnit && a.activePeriodTimeUnits == b.activePeriodTimeUnits)
+				);
+			return result;
+		}
+
+		static ActiveBonus Merge(ActiveBonus existingBonus, ActiveBonus addition)
+		{
+			Debug.Assert(StatBonusData.AreEqual(existingBonus.definition, addition.definition));
+			ActiveBonus result = existingBonus;
+			result.value += addition.value;
+			Merge(result.sources, addition.sources);
+			return result;
+		}
+
+		static void Merge(List<StatBonusSource> existingSources, List<StatBonusSource> additions)
+		{
+			for (int additionIndex = 0; additionIndex < additions.Count; ++additionIndex)
+			{
+				bool alreadyInList = false;
+				for (int existingSourceIndex = 0; existingSourceIndex < existingSources.Count; ++existingSourceIndex)
+				{
+					alreadyInList |= additions[additionIndex].Equals(existingSources[existingSourceIndex]);
+				}
+				if (!alreadyInList)
+				{
+					existingSources.Add(additions[additionIndex]);
+				}
 			}
 		}
 
@@ -338,7 +365,7 @@ namespace Cloverview
 			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex)
 			{
 				ActiveBonus bonus = this.activeBonuses[activeBonusIndex];
-				Debug.Assert(!bonus.IsInfinite());
+				Debug.Assert(!bonus.IsPermanent());
 				if (bonus.RemainingTime(currentTimeUnit) <= 0)
 				{
 					this.activeBonuses.RemoveAt(activeBonusIndex);

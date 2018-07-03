@@ -18,8 +18,13 @@ namespace Cloverview
 
 		public void Finish()
 		{
-			this.cast.pc.AddStatBonuses(this.def.statBonuses, this.beginTimeUnit, this.timeUnitsSpent);
-			this.cast.pc.AddStatBonuses(this.subjectDef.statBonuses, this.beginTimeUnit, this.timeUnitsSpent);
+			StatBonusSource source = new StatBonusSource()
+			{
+				name = def.name,
+				type = StatBonusSource.SourceType.Activity
+			};
+			this.cast.pc.AddStatBonuses(this.def.statBonuses, source, this.beginTimeUnit, this.timeUnitsSpent);
+			this.cast.pc.AddStatBonuses(this.subjectDef.statBonuses, source, this.beginTimeUnit, this.timeUnitsSpent);
 		}
 	}
 
