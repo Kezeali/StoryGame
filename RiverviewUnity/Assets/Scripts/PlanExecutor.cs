@@ -98,7 +98,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 				if (otherExecutor != null) {
 					this.others.Add(otherExecutor);
 				} else {
-					Debug.LogErrorFormat("Non PlanExecutor taged with PlanExecutor tag: {0}", existingExecutors[i].name);
+					Debug.LogErrorFormat("Non PlanExecutor tagged with PlanExecutor tag: {0}", existingExecutors[i].name);
 				}
 			}
 		}
