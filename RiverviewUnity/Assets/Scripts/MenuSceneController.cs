@@ -31,6 +31,8 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 	Nav.VisibleMenu transitioningOutNavScene;
 	int transitionAnimationLayer = -1;
 	int transitionAnimationNameHash = 0;
+	bool completedAttemptToPlay;
+	MenuData previousMenu;
 
 	public void OnEnable()
 	{
@@ -90,6 +92,9 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 				bool stillGoing = false;
 				if (this.transitionAnimator != null)
 				{
+					if (!this.completedAttemptToPlay) {
+						this.AttemptToPlayTransitionIn(this.previousMenu, this.displayedMenu);
+					}
 					AnimatorStateInfo stateInfo = this.transitionAnimator.GetCurrentAnimatorStateInfo(this.transitionAnimationLayer);
 					if (stateInfo.shortNameHash == this.transitionAnimationNameHash && stateInfo.normalizedTime < 1.0f)
 					{
@@ -98,6 +103,7 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 				}
 				if (!stillGoing)
 				{
+					this.previousMenu = null;
 					this.state = TransitionState.Idle;
 				}
 			} break;
@@ -115,9 +121,10 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 		this.state = TransitionState.Idle;
 	}
 
-	public void TransitionIn(MenuData sourceMenu, MenuData def)
+	public void TransitionIn(MenuData sourceMenu, MenuData destMenu)
 	{
-		this.displayedMenu = def;
+		this.previousMenu = sourceMenu;
+		this.displayedMenu = destMenu;
 
 		this.DetermineTransitionLayerIndex();
 
@@ -127,63 +134,81 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 		this.state = TransitionState.In;
 		this.transitionAnimationNameHash = 0;
 
-		if (this.transitionAnimator != null)
+		this.AttemptToPlayTransitionIn(sourceMenu, destMenu);
+	}
+
+	void AttemptToPlayTransitionIn(MenuData sourceMenu, MenuData destMenu)
+	{
+		bool ready = true;
+		if (this.transitionAnimator != null && this.transitionAnimator.runtimeAnimatorController != null)
 		{
-			MenuData transitionMenuDef = def.transitionAs != null ? def.transitionAs : def;
-
-			// All menus should have a ResetTransition animation to tidy things up
-			this.transitionAnimator.Play("ResetTransition", this.transitionAnimationLayer);
-			this.transitionAnimator.Update(0f);
-
-			if (sourceMenu != null)
+			if (this.transitionAnimator.isInitialized)
 			{
-				// Target menu provided: look for a specific menu-to-menu (across) type transition
-				// Animation state name format: In[SourceMenuName]-[DestMenuName]
-				MenuData sourceMenuTransitionMenuDef = sourceMenu.transitionAs ?? sourceMenu;
-				string transitionAnimationName = Strf.Format("In{0}-{1}", transitionMenuDef.name, sourceMenuTransitionMenuDef.name);
+				MenuData transitionMenuDef = destMenu.transitionAs ?? destMenu;
 
-				int hash = Animator.StringToHash(transitionAnimationName);
-				if (this.transitionAnimator.HasState(this.transitionAnimationLayer, hash))
+				Debug.LogFormat("MenuSceneController: Playing ResetTransition on {0}, entering {1} from {2}", this.transitionAnimator.runtimeAnimatorController.name, destMenu.name, sourceMenu != null ? sourceMenu.name : "null");
+				// All menus should have a ResetTransition animation to tidy things up
+				this.transitionAnimator.Play("ResetTransition", this.transitionAnimationLayer);
+				this.transitionAnimator.Update(0f);
+
+				if (sourceMenu != null)
 				{
-					this.transitionAnimationNameHash = hash;
+					// Target menu provided: look for a specific menu-to-menu (across) type transition
+					// Animation state name format: In[SourceMenuName]-[DestMenuName]
+					MenuData sourceMenuTransitionMenuDef = sourceMenu.transitionAs ?? sourceMenu;
+					string transitionAnimationName = Strf.Format("In{0}-{1}", transitionMenuDef.name, sourceMenuTransitionMenuDef.name);
+
+					int hash = Animator.StringToHash(transitionAnimationName);
+					if (this.transitionAnimator.HasState(this.transitionAnimationLayer, hash))
+					{
+						this.transitionAnimationNameHash = hash;
+					}
+
+					if (this.transitionAnimationNameHash != 0)
+					{
+						this.state = TransitionState.Across;
+					}
+				}
+
+				if (this.transitionAnimationNameHash == 0)
+				{
+					// There was no menu-to-menu transition found, so look for an in-transition for the new menu
+					string transitionAnimationName = transitionMenuDef.name + "In";
+
+					int hash = Animator.StringToHash(transitionAnimationName);
+					if (this.transitionAnimator.HasState(this.transitionAnimationLayer, hash))
+					{
+						this.transitionAnimationNameHash = hash;
+					}
 				}
 
 				if (this.transitionAnimationNameHash != 0)
 				{
-					this.state = TransitionState.Across;
+					Debug.Log("MenuSceneController: Playing menu-in transition");
+					this.transitionAnimator.Play(this.transitionAnimationNameHash, this.transitionAnimationLayer);
 				}
 			}
-
-			if (this.transitionAnimationNameHash == 0)
+			else
 			{
-				// There was no menu-to-menu transition found, so look for an in-transition for the new menu
-				string transitionAnimationName = transitionMenuDef.name + "In";
-
-				int hash = Animator.StringToHash(transitionAnimationName);
-				if (this.transitionAnimator.HasState(this.transitionAnimationLayer, hash))
-				{
-					this.transitionAnimationNameHash = hash;
-				}
-			}
-
-			if (this.transitionAnimationNameHash != 0)
-			{
-				this.transitionAnimator.Play(this.transitionAnimationNameHash, this.transitionAnimationLayer);
+				// Animator is not initlialized yet
+				ready = false;
 			}
 		}
 
-		if (this.transitionAnimationNameHash == 0)
+		if (ready && this.transitionAnimationNameHash == 0)
 		{
 			this.state = TransitionState.Idle;
 		}
+
+		this.completedAttemptToPlay = ready;
 	}
 
-	public void TransitionOut(MenuData destMenu, System.Action<Nav.VisibleMenu> completionCallback = null, Nav.VisibleMenu leavingMenu = null)
+	public void TransitionOut(MenuData destMenu, System.Action<Nav.VisibleMenu> completionCallback = null, Nav.VisibleMenu sourceNavScene = null)
 	{
 		this.DetermineTransitionLayerIndex();
 
 		this.transitioningOutCallback = completionCallback;
-		this.transitioningOutNavScene = leavingMenu;
+		this.transitioningOutNavScene = sourceNavScene;
 
 		this.displayedMenu = null;
 
@@ -191,14 +216,16 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 		this.state = TransitionState.Out;
 		this.transitionAnimationNameHash = 0;
 
-		if (leavingMenu != null)
+		if (sourceNavScene != null)
 		{
-			MenuData def = leavingMenu.def;
+			MenuData sourceMenu = sourceNavScene.def;
 
-			if (this.transitionAnimator != null)
+			// NOTE(elliot): the isInitialized check here means that if this animator isn't initialized yet the transition-out animation will not play: this is desired behaviour, as it means the scene is being left immediately after loading, so it's fine to just go straight to the next scene.
+			if (this.transitionAnimator != null && this.transitionAnimator.runtimeAnimatorController != null && this.transitionAnimator.isInitialized)
 			{
-				MenuData transitionMenuDef = def.transitionAs ?? def;
+				MenuData transitionMenuDef = sourceMenu.transitionAs ?? sourceMenu;
 
+				Debug.LogFormat("MenuSceneController: Playing ResetTransition on {0}, leaving {1} to enter {2}", this.transitionAnimator.runtimeAnimatorController.name, sourceMenu.name, destMenu != null ? destMenu.name : "null");
 				// All menus should have a ResetTransition animation to tidy things up
 				this.transitionAnimator.Play("ResetTransition", this.transitionAnimationLayer);
 				this.transitionAnimator.Update(0f);
