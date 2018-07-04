@@ -43,7 +43,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	[System.NonSerialized]
 	public IPlanExecutorController controller;
 
-	MenuData backMenu;
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
 	Nav nav;
@@ -393,15 +392,20 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 
 		// Save the plan name and schema in use
+		/////////////////////////////////////////
+		/////////// LOOKS LIKE THIS IS BROKEN -- Reloading a plan in progress breaks -- i think it's because some code assumes it has to be launched by the PlanUI, and other code assumes that the executorSaveData is enough to go on
+		// TODO(elliot): actually use this data? is it used?
 		this.executorSaveData.planName = this.plan.name;
 		this.executorSaveData.liveSchema = this.planSchema;
-		
-		// Save the menu to return to
-		Nav.VisibleMenu sourceMenu = this.nav.nextActiveMenu ?? this.nav.activeMenu;
-		if (sourceMenu != null && sourceMenu.def != null) {
-			this.backMenu = this.nav.activeMenu.def;
-		} else {
-			this.backMenu = this.defaultBackMenu;
+
+		if (this.executorSaveData.backMenu == null) {
+			// Save the menu to return to
+			Nav.VisibleMenu sourceMenu = this.nav.nextActiveMenu ?? this.nav.activeMenu;
+			if (sourceMenu != null && sourceMenu.def != null) {
+				this.executorSaveData.backMenu = this.nav.activeMenu.def;
+			} else {
+				this.executorSaveData.backMenu = this.defaultBackMenu;
+			}
 		}
 
 		if (!string.IsNullOrEmpty(this.parentScene)) {
@@ -410,6 +414,10 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			this.nav.GoTo(this.executeMenu);
 		}
 		this.PreloadPlanActivities();
+
+		while (this.nav.IsProcessingGoToMenuQueue()) {
+			yield return 0;
+		}
 
 		this.executingSecondsPerUnitTime = secondsPerUnitTime;
 
@@ -558,6 +566,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.executorSaveData.liveSchema = null;
 		this.executorSaveData.liveCast = null;
 		this.executorSaveData.timeUnitsElapsed = 0;
+		this.executorSaveData.backMenu = null;
 
 		Debug.Log("Plan done.");
 
@@ -566,7 +575,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 		this.UnloadAllPreloadedActivities();
 
-		this.nav.GoTo(this.backMenu, this.parentScene);
+		this.nav.GoTo(this.executorSaveData.backMenu, this.parentScene);
 	}
 
 	static void ApplyNewStatuses(SaveData saveData, Cast liveCast)

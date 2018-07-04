@@ -103,7 +103,7 @@ public class Nav : MonoBehaviour
 	Queue<MenuSceneToLoad> menuToLoadQueue = new Queue<MenuSceneToLoad>();
 	Queue<EnvSceneToLoad> envSceneToLoadQueue = new Queue<EnvSceneToLoad>();
 	bool processingQueue = false;
-	Queue<MenuSceneToLoad> menuToGoToQueue = new Queue<MenuSceneToLoad>();
+	List<MenuSceneToLoad> menuToGoToQueue = new List<MenuSceneToLoad>();
 	Queue<EnvSceneToLoad> envSceneToGoToQueue = new Queue<EnvSceneToLoad>();
 	bool processingGoToQueue = false;
 
@@ -293,6 +293,21 @@ public class Nav : MonoBehaviour
 		}
 	}
 
+	public bool IsProcessingGoToQueues()
+	{
+		return this.processingGoToQueue;
+	}
+
+	public bool IsProcessingGoToMenuQueue()
+	{
+		return this.processingGoToQueue && this.menuToGoToQueue.Count > 0;
+	}
+
+	public int GoToMenuQueueLength()
+	{
+		return this.menuToGoToQueue.Count;
+	}
+
 	public void GoTo(MenuData def, string requesterId = null)
 	{
 		var item = new MenuSceneToLoad()
@@ -470,7 +485,7 @@ public class Nav : MonoBehaviour
 			PreloadedScene loadedScene = this.FindLoadedScene(requesterId);
 			if (loadedScene == null || !this.IsVisible(loadedScene))
 			{
-				Debug.LogWarningFormat("Invalid requester {0} tried to preload menu {1}. Preload requesters for menus must be loaded menus themselves.", requesterId, def.name);
+				Debug.LogWarningFormat("Invalid requester '{0}' tried to preload menu {1}. Preload requesters for menus must be loaded menus themselves.", requesterId, def.name);
 				requesterId = null;
 			}
 
@@ -744,7 +759,7 @@ public class Nav : MonoBehaviour
 			}
 			else if (this.menuToGoToQueue.Count > 0)
 			{
-				MenuSceneToLoad menuToLoad = this.menuToGoToQueue.Dequeue();
+				MenuSceneToLoad menuToLoad = this.menuToGoToQueue.Peek();
 
 				if (menuToLoad.def != null)
 				{
@@ -761,6 +776,8 @@ public class Nav : MonoBehaviour
 						Debug.LogError("Not Implemented: GoToOp.Close");
 					}
 				}
+
+				this.menuToGoToQueue.Dequeue();
 			}
 
 			yield return 0;
@@ -842,14 +859,11 @@ public class Nav : MonoBehaviour
 		// Remember the previous active menu so any specific transition-in animations can be triggered
 		VisibleMenu previousActiveMenu = this.activeMenu;
 
-		// Show the environment scene
+		// Start loading the environment scene
+		IEnumerator goToEnvSceneOp = null;
 		if (resolvedDef.envScene != null)
 		{
-			IEnumerator op = this.GoToEnvSceneCoroutine(resolvedDef.envScene, resolvedDef.menuScene);
-			while (op.MoveNext())
-			{
-				yield return 0;
-			}
+			goToEnvSceneOp = this.GoToEnvSceneCoroutine(resolvedDef.envScene, resolvedDef.menuScene);
 		}
 
 		// Show the menu scene
@@ -857,6 +871,7 @@ public class Nav : MonoBehaviour
 			// NOTE(elliot): if there isn't already a visible menu provided by a back / close operation above, request the visible menu now, before closing existing menus, to ensure that this new requester is added and any preloaded scene wont be unloaded!
 			VisibleMenu visibleMenu = alreadyVisibleMenu ?? this.FindOrMakeVisibleMenu(resolvedDef, requesterId);
 
+			// NOTE(elliot): IMPORTANT!! nextActiveMenu is set to a value here, before any yields
 			this.nextActiveMenu = visibleMenu;
 
 			// NOTE(elliot): now that the nextActiveMenu has definately been set, previous menus can be unloaded safely without erroniously unloading the next menu in that case that a previous menu was the only thing referencing it
@@ -1021,6 +1036,12 @@ public class Nav : MonoBehaviour
 		}
 		// Normally cleared immediately after load succeeded: clearing here in case load failed
 		this.nextActiveMenu = null;
+
+		// Wait for the env scene to finish loading
+		while (goToEnvSceneOp != null && goToEnvSceneOp.MoveNext())
+		{
+			yield return 0;
+		}
 
 		if (this.activeMenu == null)
 		{
