@@ -39,6 +39,7 @@ public class PlanExecutorSaveData
 	public string planName;
 	public PlanSchema liveSchema;
 	public Cast liveCast;
+	public MenuData backMenu;
 }
 
 [System.Serializable]
