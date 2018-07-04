@@ -153,6 +153,10 @@ namespace Cloverview
 		[System.NonSerialized]
 		public Status status;
 
+		const int MAX_TEMPORARY_BONUSES = 100000;
+		// Try to reduce temporary bonuses to this amount if it exceeded the maximum:
+		const int SAFE_TEMPORARY_BONUSES = MAX_TEMPORARY_BONUSES - (MAX_TEMPORARY_BONUSES / 100);
+
 		public static Character Generate(RoleData role)
 		{
 			Character character = new Character();
@@ -277,6 +281,26 @@ namespace Cloverview
 			this.status = newStatus;
 		}
 
+		static Stack<List<StatBonusSource>> availableStatBonusSourceLists = new Stack<List<StatBonusSource>>();
+
+		static List<StatBonusSource> MakeSourcesList(StatBonusSource source)
+		{
+			List<StatBonusSource> list;
+			if (availableStatBonusSourceLists.Count == 0) {
+				list = new List<StatBonusSource>(1);
+			} else {
+				list = availableStatBonusSourceLists.Pop();
+				list.Clear();
+			}
+			list.Add(source);
+			return list;
+		}
+
+		static void ReturnSourcesList(List<StatBonusSource> list)
+		{
+			availableStatBonusSourceLists.Push(list);
+		}
+
 		public void AddStatBonuses(StatBonusData[] bonuses, StatBonusSource source, int beginTimeUnit, int timeSpent)
 		{
 			Debug.Assert(bonuses != null);
@@ -290,11 +314,13 @@ namespace Cloverview
 						};
 						CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
 						if (activeBonus.IsPermanent()) {
-							Character.AddOrMergeActiveBonus(this.permanentBonuses, activeBonus);
+							Character.AddOrMergeActiveBonus(this.permanentBonuses, activeBonus, source);
 						} else {
-							// NOTE(elliot): don't merge temporary bonuses as they'll time out anyway and it's nice to see all the items separately
-							// TODO(elliot): handle this list getting too big
-							this.activeBonuses.Add(activeBonus);
+							// TODO(elliot): handle this list getting too big. do a pass over the list with an increasing margin-of-error to try and merge more similar (but not strictly equal) bonuses. widen the margin up to some maximum allowable amount. if the list still isn't shrunk enough at that point it's time to start spitting out errors.
+							if (this.activeBonuses.Count > MAX_TEMPORARY_BONUSES) {
+							} else {
+								Character.AddOrMergeActiveBonus(this.activeBonuses, activeBonus, source);
+							}
 						}
 					}
 				}
@@ -302,19 +328,44 @@ namespace Cloverview
 			}
 		}
 
-		static void AddOrMergeActiveBonus(List<ActiveBonus> currentList, ActiveBonus newBonus)
+		static void AddOrMergeActiveBonus(List<ActiveBonus> currentList, ActiveBonus newBonus, StatBonusSource source)
 		{
 			bool merged = false;
 			for (int i = 0; i < currentList.Count; ++i) {
 				ActiveBonus existingBonus = currentList[i];
 				if (Character.ShouldMerge(existingBonus, newBonus)) {
-					currentList[i] = Character.Merge(existingBonus, newBonus);
+					existingBonus = Character.Merge(existingBonus, newBonus);
+					AddSource(ref existingBonus.sources, source);
+					currentList[i] = existingBonus;
 					merged = true;
 					break;
 				}
 			}
 			if (!merged) {
+				newBonus.sources = Character.MakeSourcesList(source);
 				currentList.Add(newBonus);
+			}
+		}
+
+		static void AddSource(ref List<StatBonusSource> existingSources, StatBonusSource newSource)
+		{
+			if (existingSources == null)
+			{
+				existingSources = Character.MakeSourcesList(newSource);
+				return;
+			}
+			bool alreadyInList = false;
+			for (int existingSourceIndex = 0; existingSourceIndex < existingSources.Count; ++existingSourceIndex)
+			{
+				bool equal = newSource.Equals(existingSources[existingSourceIndex]);
+				if (equal) {
+					alreadyInList = true;
+					break;
+				}
+			}
+			if (!alreadyInList)
+			{
+				existingSources.Add(newSource);
 			}
 		}
 
@@ -333,18 +384,29 @@ namespace Cloverview
 			Debug.Assert(StatBonusData.AreEqual(existingBonus.definition, addition.definition));
 			ActiveBonus result = existingBonus;
 			result.value += addition.value;
-			Merge(result.sources, addition.sources);
+			Merge(ref result.sources, addition.sources);
 			return result;
 		}
 
-		static void Merge(List<StatBonusSource> existingSources, List<StatBonusSource> additions)
+		static void Merge(ref List<StatBonusSource> existingSources, List<StatBonusSource> additions)
 		{
+			if (additions == null) {
+				return;
+			}
+			if (existingSources == null) {
+				existingSources = additions;
+				return;
+			}
 			for (int additionIndex = 0; additionIndex < additions.Count; ++additionIndex)
 			{
 				bool alreadyInList = false;
 				for (int existingSourceIndex = 0; existingSourceIndex < existingSources.Count; ++existingSourceIndex)
 				{
-					alreadyInList |= additions[additionIndex].Equals(existingSources[existingSourceIndex]);
+					bool equal = additions[additionIndex].Equals(existingSources[existingSourceIndex]);
+					if (equal) {
+						alreadyInList = true;
+						break;
+					}
 				}
 				if (!alreadyInList)
 				{
