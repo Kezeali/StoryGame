@@ -107,8 +107,8 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	{
 		this.instantiatedFrom = instantiatedFrom;
 		this.expectedPlanName = expectedPlanName;
-		this.key = Strf.Format("{0}:{1}", this.instantiatedFrom, this.expectedPlanName);
-		Debug.LogFormat("Set executor key '{0}'", this.key);
+		this.key = Strf.Format("{0}({1})", this.instantiatedFrom, this.expectedPlanName);
+		Debug.LogFormat("Assigned executor key '{0}'", this.key);
 		this.LoadSave();
 	}
 
@@ -123,22 +123,25 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		Debug.Assert(nav);
 
 		this.nav = nav;
+	}
 
+	public void CompleteInitialisation()
+	{
 		this.activityScenePreloadId = this.nav.GeneratePreloadIdForEnvScenes();
 
 		if (!string.IsNullOrEmpty(this.parentScene)) {
 			this.nav.Preload(this.executeMenu, this.parentScene);
 		}
-	}
-
-	public void CompleteInitialisation()
-	{
+		
 		this.LoadSave();
 		if (!this.ResumeExecutionIfReady()) { this.PreloadIfReady(); }
 	}
 
 	void LoadSave()
 	{
+		// TODO: abort execution whenever service initialisation happens
+		Debug.Assert(!this.executing);
+
 		if (this.saveData != null && !string.IsNullOrEmpty(this.key)) {
 			Debug.LogFormat("Loading save data for executor key '{0}'", this.key);
 			if (this.saveData.planExecutors == null) {
@@ -150,30 +153,35 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			}
 
 			if (this.executorSaveData != null) {
-				if (this.planSchema == null) {
+				// Resuming: try to load the plan in the state execution was saved in
+				if (this.executorSaveData.timeUnitsElapsed > 0 && this.executorSaveData.livePlan != null && this.executorSaveData.liveSchema != null) {
 					this.planSchema = this.executorSaveData.liveSchema;
+					this.plan = this.executorSaveData.livePlan;
+					// TODO(elliot): Make sure the loaded plan actually matches the loaded schema
+					// NOTE(elliot): don't have to worry about PlanUI upgrading the loaded plan to a new, conflicting schema, even if livePlan points to the same object as the PlanUI plan in the saveData, as PlanUI creates a new plan and upgrades the data from loaded object into that
+				} else {
+					// If any of the values required to resume were missing, reset them all
+					this.executorSaveData.livePlan = null;
+					this.executorSaveData.liveSchema = null;
+					this.executorSaveData.timeUnitsElapsed = 0;
 				}
-				if (this.planSchema != null && this.plan == null && this.executorSaveData.planName != null) {
-					for (int i = 0; i < this.saveData.plans.Count; ++i) {
-						if (this.saveData.plans[i].name == this.executorSaveData.planName) {
-							this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.executorSaveData.planName);
-							SchemaStuff.UpgradePlan(this.planSchema, this.plan, this.saveData.plans[i]);
-							break;
-						}
-					}
-				}
-				this.executorSaveData.planName = null;
-				this.executorSaveData.liveSchema = null;
 			}
 		}
 	}
 
 	public void SetPlan(Plan plan, PlanSchema planSchema)
 	{
-		this.plan = plan;
-		this.planSchema = planSchema;
+		if (!this.executing && !this.IsReadyToResume()) {
+			this.plan = plan;
+			this.planSchema = planSchema;
 
-		if (!this.ResumeExecutionIfReady()) { this.PreloadIfReady(); }
+			this.PreloadIfReady();
+		}
+	}
+
+	bool IsReadyToResume()
+	{
+		return this.executorSaveData != null && this.executorSaveData.timeUnitsElapsed > 0 && this.executorSaveData.livePlan != null && this.executorSaveData.liveSchema != null;
 	}
 
 	public string GetExpectedPlanName()
@@ -183,7 +191,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	bool PreloadIfReady()
 	{
-		if (this.DataReady()) {
+		if (this.DataReadyToBeginExecution()) {
 			this.PreloadPlanActivities();
 			return true;
 		}
@@ -216,10 +224,10 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
  
 	bool ResumeExecutionIfReady()
 	{
-		if (!this.OthersExecuting() &&
-			this.DataReady() &&
+		if (this.RequiredServicesAreInitialised() &&
+			this.executorSaveData.timeUnitsElapsed > 0 &&
 			this.isActiveAndEnabled &&
-			this.executorSaveData.timeUnitsElapsed > 0)
+			!this.OthersExecuting())
 		{
 			this.Execute(this.executorSaveData.timeUnitsElapsed);
 			return true;
@@ -227,14 +235,18 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		return false;
 	}
 
-	bool DataReady()
+	bool RequiredServicesAreInitialised()
+	{
+		return this.nav != null && 
+			this.saveData != null && 
+			this.executorSaveData != null;
+	}
+
+	bool DataReadyToBeginExecution()
 	{
 		return
 			this.plan != null && 
-			this.planSchema != null && 
-			this.nav != null && 
-			this.saveData != null && 
-			this.executorSaveData != null;
+			this.planSchema != null;
 	}
 
 	public void SetParentScene(string parentScene)
@@ -244,12 +256,16 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	public void OnOptionSelected(PlanOption selectedOption)
 	{
-		this.PreloadPlanActivities();
+		if (this.DataReadyToBeginExecution()) {
+			this.PreloadPlanActivities();
+		}
 	}
 
 	public void OnOptionDeselected(PlanOption selectedOption)
 	{
-		this.PreloadPlanActivities();
+		if (this.DataReadyToBeginExecution()) {
+			this.PreloadPlanActivities();
+		}
 	}
 
 	void PreloadPlanActivities()
@@ -312,6 +328,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 	}
 
+	EventDataSorter sorter = new EventDataSorter();
 	void FilterAvailableEvents()
 	{
 		if (this.saveData != null) {
@@ -327,8 +344,9 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 					this.nextFilteredEvents.Add(eventDef);
 				}
 			}
-			// TODO(elliot): cache the sorter to avoid extra garbage creation
-			this.nextFilteredEvents.Sort(new EventDataSorter() { pc = pc });
+
+			sorter.pc = pc;
+			this.nextFilteredEvents.Sort(sorter);
 
 			var temp = this.filteredEvents;
 			this.filteredEvents = this.nextFilteredEvents;
@@ -363,7 +381,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	public bool IsReadyForPlayerToExecute()
 	{
-		return !this.OthersExecuting() && this.DataReady();
+		return !this.OthersExecuting() && this.DataReadyToBeginExecution();
 	}
 
 	public void Execute(int skipTimeUnits = 0)
@@ -392,10 +410,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 
 		// Save the plan name and schema in use
-		/////////////////////////////////////////
-		/////////// LOOKS LIKE THIS IS BROKEN -- Reloading a plan in progress breaks -- i think it's because some code assumes it has to be launched by the PlanUI, and other code assumes that the executorSaveData is enough to go on
-		// TODO(elliot): actually use this data? is it used?
-		this.executorSaveData.planName = this.plan.name;
+		this.executorSaveData.livePlan = this.plan;
 		this.executorSaveData.liveSchema = this.planSchema;
 
 		if (this.executorSaveData.backMenu == null) {
@@ -562,10 +577,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 		this.saveData.time += this.executorSaveData.timeUnitsElapsed;
 
-		this.executorSaveData.planName = null;
+
+		this.executorSaveData.livePlan = null;
 		this.executorSaveData.liveSchema = null;
 		this.executorSaveData.liveCast = null;
 		this.executorSaveData.timeUnitsElapsed = 0;
+		// Copy the value before resetting it so it can be used to actually go back!
+		MenuData nextMenu = this.executorSaveData.backMenu;
 		this.executorSaveData.backMenu = null;
 
 		Debug.Log("Plan done.");
@@ -574,8 +592,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		App.ExecutorEnding(this);
 
 		this.UnloadAllPreloadedActivities();
+                 
+		// Allow the controller to pass in a new plan in case it has changed from the live-plan that just finished executing
+		if (this.controller != null) {
+			this.controller.ReceiveExecutor(this);
+		}
 
-		this.nav.GoTo(this.executorSaveData.backMenu, this.parentScene);
+		this.nav.GoTo(nextMenu, this.parentScene);
 	}
 
 	static void ApplyNewStatuses(SaveData saveData, Cast liveCast)

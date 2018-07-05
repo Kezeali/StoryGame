@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 	[System.Serializable]
-	public class Plan
+	public sealed class Plan
 	{
 		public string name;
 
@@ -12,13 +12,13 @@ namespace Cloverview
 
 	// A section of the plan such as a day or week
 	[System.Serializable]
-	public class PlanSection
+	public sealed class PlanSection
 	{
 		public PlanSlot[] slots = new PlanSlot[0];
 	}
 
 	[System.Serializable]
-	public class PlanSlot
+	public sealed class PlanSlot
 	{
 		public int unitIndex;
 		public SlotType slotType;

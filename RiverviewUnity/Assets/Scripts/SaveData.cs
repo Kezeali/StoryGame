@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 [System.Serializable]
-public class SaveData
+public sealed class SaveData
 {
 	public string name;
 
@@ -23,7 +23,7 @@ public class SaveData
 }
 
 [System.Serializable]
-public class NavSaveData
+public sealed class NavSaveData
 {
 	public Nav.VisibleMenu currentRootMenu;
 	public List<MenuData> breadcrumbs;
@@ -32,24 +32,24 @@ public class NavSaveData
 }
 
 [System.Serializable]
-public class PlanExecutorSaveData
+public sealed class PlanExecutorSaveData
 {
 	public int timeUnitsElapsed;
 	public Random.State randomState;
-	public string planName;
+	public Plan livePlan;
 	public PlanSchema liveSchema;
 	public Cast liveCast;
 	public MenuData backMenu;
 }
 
 [System.Serializable]
-public class AppSaveData
+public sealed class AppSaveData
 {
 	public string selectedProfileName;
 }
 
 [System.Serializable]
-public class ProfileSaveData
+public sealed class ProfileSaveData
 {
 	public string name;
 	public string displayName;

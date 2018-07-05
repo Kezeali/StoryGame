@@ -34,6 +34,11 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 	bool completedAttemptToPlay;
 	MenuData previousMenu;
 
+#if UNITY_EDITOR
+	// As of 2018.1.4 scene processors run too late when playing in editor so OnEnabled gets called before ProcessSceneToAllowPreload runs on newly loaded scenes
+	bool hasBeenDisabled;
+#endif
+
 	public void OnEnable()
 	{
 		this.state = TransitionState.Uninitialised;
@@ -42,13 +47,23 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 
 		App.Register<SaveData>(this);
 
+	#if UNITY_EDITOR
+		if (this.hasBeenDisabled) {
+	#endif
 		// NOTE(elliot): the scenecontroller script is set to execute late (see the ExecutionOrder attribute above) so all other service users in the scene should be registered by now
 		App.instance.Initialise();
+	#if UNITY_EDITOR
+		}
+	#endif
 	}
 
 	public void OnDisable()
 	{
 		App.Deregister<SaveData>(this);
+
+	#if UNITY_EDITOR
+		this.hasBeenDisabled = true;
+	#endif
 	}
 
 	void DetermineTransitionLayerIndex()
@@ -146,7 +161,8 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 			{
 				MenuData transitionMenuDef = destMenu.transitionAs ?? destMenu;
 
-				Debug.LogFormat("MenuSceneController: Playing ResetTransition on {0}, entering {1} from {2}", this.transitionAnimator.runtimeAnimatorController.name, destMenu.name, sourceMenu != null ? sourceMenu.name : "null");
+				Debug.LogFormat("MenuSceneController: Playing transition animation on {0}, entering {1} from {2}", this.transitionAnimator.runtimeAnimatorController.name, destMenu.name, sourceMenu != null ? sourceMenu.name : "null");
+
 				// All menus should have a ResetTransition animation to tidy things up
 				this.transitionAnimator.Play("ResetTransition", this.transitionAnimationLayer);
 				this.transitionAnimator.Update(0f);
@@ -220,12 +236,15 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 		{
 			MenuData sourceMenu = sourceNavScene.def;
 
+			Debug.Log("MenuSceneController: Transitioning out of " + sourceMenu.name);
+
 			// NOTE(elliot): the isInitialized check here means that if this animator isn't initialized yet the transition-out animation will not play: this is desired behaviour, as it means the scene is being left immediately after loading, so it's fine to just go straight to the next scene.
 			if (this.transitionAnimator != null && this.transitionAnimator.runtimeAnimatorController != null && this.transitionAnimator.isInitialized)
 			{
 				MenuData transitionMenuDef = sourceMenu.transitionAs ?? sourceMenu;
 
-				Debug.LogFormat("MenuSceneController: Playing ResetTransition on {0}, leaving {1} to enter {2}", this.transitionAnimator.runtimeAnimatorController.name, sourceMenu.name, destMenu != null ? destMenu.name : "null");
+				Debug.LogFormat("MenuSceneController: Playing transition animation on {0}, leaving {1} to enter {2}", this.transitionAnimator.runtimeAnimatorController.name, sourceMenu.name, destMenu != null ? destMenu.name : "null");
+
 				// All menus should have a ResetTransition animation to tidy things up
 				this.transitionAnimator.Play("ResetTransition", this.transitionAnimationLayer);
 				this.transitionAnimator.Update(0f);

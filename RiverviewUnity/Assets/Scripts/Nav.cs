@@ -39,14 +39,19 @@ public class Nav : MonoBehaviour
 		Close
 	}
 
-	private class MenuSceneToLoad
+	// TODO(elliot): pool these request objects
+	private sealed class MenuSceneToLoad
 	{
 		public MenuData def;
 		public string preloadRequesterId;
 		public GoToOp operation;
+		public override string ToString()
+		{
+			return Strf.Format("{2} {0}, requested by '{1}'", def, preloadRequesterId, operation);
+		}
 	}
 
-	private class EnvSceneToLoad
+	private sealed class EnvSceneToLoad
 	{
 		public SceneData def;
 		public string preloadRequesterId;
@@ -55,9 +60,13 @@ public class Nav : MonoBehaviour
 		public ActiveEvent activeEvent;
 		public CommuteSceneData commuteDef;
 		public CommuteDirection commuteDirection;
+		public override string ToString()
+		{
+			return Strf.Format("{2} {0}, requested by '{1}'", def, preloadRequesterId, operation);
+		}
 	}
 
-	public class PreloadedScene
+	public sealed class PreloadedScene
 	{
 		public string scenePath;
 		public List<string> preloadRequesterIds;
@@ -593,6 +602,7 @@ public class Nav : MonoBehaviour
 			if (this.envSceneToLoadQueue.Count > 0)
 			{
 				EnvSceneToLoad envSceneRequest = this.envSceneToLoadQueue.Dequeue();
+				Debug.LogFormat("Nav.ProcessQueueCoroutine: Executing {0}.", envSceneRequest);
 
 				if (envSceneRequest.def != null)
 				{
@@ -624,23 +634,25 @@ public class Nav : MonoBehaviour
 			}
 			else if (this.menuToLoadQueue.Count > 0)
 			{
-				MenuSceneToLoad menuToLoad = this.menuToLoadQueue.Dequeue();
-				if (menuToLoad.def != null)
+				MenuSceneToLoad menuRequest = this.menuToLoadQueue.Dequeue();
+				Debug.LogFormat("Nav.ProcessQueueCoroutine: Executing {0}.", menuRequest);
+
+				if (menuRequest.def != null)
 				{
-					if (menuToLoad.def.type.IsPreloadable())
+					if (menuRequest.def.type.IsPreloadable())
 					{
 						if (this.preloadedScenes.Count <= maxLoadedScenes)
 						{
 							PreloadedScene preloadedScene =
 
-							this.FindOrLoadMenuScene(menuToLoad.def, menuToLoad.preloadRequesterId);
+							this.FindOrLoadMenuScene(menuRequest.def, menuRequest.preloadRequesterId);
 
 							Debug.LogFormat("Preload requested for {0}. Current load progress: {1}", preloadedScene.scenePath, preloadedScene.loadOp.progress);
 						}
 					}
 					else
 					{
-						Debug.LogErrorFormat("Tried to pre-load an menu type that can't be pre-loaded: {0}", menuToLoad.def);
+						Debug.LogErrorFormat("Tried to pre-load an menu type that can't be pre-loaded: {0}", menuRequest.def);
 					}
 				}
 			}
@@ -662,6 +674,7 @@ public class Nav : MonoBehaviour
 			if (this.envSceneToGoToQueue.Count > 0)
 			{
 				EnvSceneToLoad envSceneRequest = this.envSceneToGoToQueue.Dequeue();
+				Debug.LogFormat("Nav.ProcessGoToQueueCoroutine: Executing {0}.", envSceneRequest);
 
 				if (envSceneRequest.def != null)
 				{
@@ -759,19 +772,20 @@ public class Nav : MonoBehaviour
 			}
 			else if (this.menuToGoToQueue.Count > 0)
 			{
-				MenuSceneToLoad menuToLoad = this.menuToGoToQueue.Peek();
+				MenuSceneToLoad menuRequest = this.menuToGoToQueue[0];
+				Debug.LogFormat("Nav.ProcessGoToQueueCoroutine: Executing {0}.", menuRequest);
 
-				if (menuToLoad.def != null)
+				if (menuRequest.def != null)
 				{
-					if (menuToLoad.operation == GoToOp.Open)
+					if (menuRequest.operation == GoToOp.Open)
 					{
-						IEnumerator op = this.GoToCoroutine(menuToLoad.def, menuToLoad.preloadRequesterId);
+						IEnumerator op = this.GoToCoroutine(menuRequest.def, menuRequest.preloadRequesterId);
 						while (op.MoveNext())
 						{
 							yield return op.Current;
 						}
 					}
-					else if (menuToLoad.operation == GoToOp.Close)
+					else if (menuRequest.operation == GoToOp.Close)
 					{
 						Debug.LogError("Not Implemented: GoToOp.Close");
 					}
@@ -780,7 +794,7 @@ public class Nav : MonoBehaviour
 				this.menuToGoToQueue.Dequeue();
 			}
 
-			yield return 0;
+			// yield return 0;
 		}
 
 		this.processingGoToQueue = false;
@@ -899,7 +913,7 @@ public class Nav : MonoBehaviour
 						// Initiate a transition to the new menu
 						this.TransitionOutOfTopPopup(resolvedDef);
 					}
-					RemoveOtherPopups(resolvedDef);
+					this.RemoveOtherPopups(resolvedDef);
 				} break;
 			}
 			switch (resolvedDef.type)
@@ -1052,6 +1066,7 @@ public class Nav : MonoBehaviour
 
 	void TransitionMenuOutWithoutDeactivating(VisibleMenu visibleMenu, MenuData nextMenu)
 	{
+		Debug.Log("Nav.TransitionMenuOutWithoutDeactivating: " + visibleMenu.def.name);
 		if (visibleMenu.controller != null)
 		{
 			visibleMenu.controller.TransitionOut(nextMenu, this.OnTransitionOutFinished, visibleMenu);
@@ -1064,6 +1079,11 @@ public class Nav : MonoBehaviour
 
 	void OnTransitionOutFinished(VisibleMenu visibleMenu)
 	{
+	#if UNITY_EDITOR
+		if (visibleMenu != null) {
+			Debug.Log("Nav.OnTransitionOutFinished: " + visibleMenu.def.name);
+		}
+	#endif
 		if (visibleMenu == this.activeMenu)
 		{
 			this.activeMenu = null;
@@ -1072,6 +1092,7 @@ public class Nav : MonoBehaviour
 
 	void TransitionMenuOut(VisibleMenu visibleMenu, MenuData nextMenu)
 	{
+		Debug.Log("Nav.TransitionMenuOut: " + visibleMenu.def.name);
 		if (visibleMenu.controller != null)
 		{
 			visibleMenu.controller.TransitionOut(nextMenu, this.DeactivatePopup, visibleMenu);
@@ -1161,7 +1182,6 @@ public class Nav : MonoBehaviour
 	}
 
 	VisibleEnvScene waitingForSceneToBeDeactivated;
-
 	IEnumerator GoToEnvSceneCoroutine(SceneData envScene, string requesterId)
 	{
 		if (!envScene.background)
@@ -1219,6 +1239,9 @@ public class Nav : MonoBehaviour
 					if (!envScene.background)
 					{
 						this.activeEnvScene = visibleEnvScene;
+
+						// NOTE(elliot): this is to activate the lighting settings (skybox, GI, etc.) for the scene
+						SceneManager.SetActiveScene(scene);
 					}
 
 					Nav.SetRootObjectsActive(scene, true);

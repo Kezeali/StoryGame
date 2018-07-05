@@ -201,7 +201,7 @@ public class App : MonoBehaviour
 
 		if (instance != null)
 		{
-			instance.DelayInit();
+			instance.DelayedInit();
 		}
 	}
 
@@ -381,7 +381,7 @@ public class App : MonoBehaviour
 				instance.nav.MakeCurrentMenuTheActiveScene();
 				planExecutor = Object.Instantiate(prefab, instance.transform);
 				planExecutor.SetKey(executorTypeName, planName);
-				planExecutor.controller = controller;
+				planExecutor.controller = null;
 
 				bool added = instance.AddExecutorInternal(planExecutor);
 				if (!added)
@@ -391,8 +391,9 @@ public class App : MonoBehaviour
 				}
 			}
 		}
-		if (planExecutor != null)
+		if (planExecutor != null && planExecutor.controller == null)
 		{
+			planExecutor.controller = controller;
 			controller.ReceiveExecutor(planExecutor);
 		}
 		else
@@ -415,8 +416,7 @@ public class App : MonoBehaviour
 		}
 		if (planExecutor != null)
 		{
-			// instance.RemoveExecutorInternal(planExecutor);
-			// Object.Destroy(planExecutor);
+			planExecutor.controller = null;
 		}
 	}
 
@@ -516,7 +516,7 @@ public class App : MonoBehaviour
 
 	public void Initialise()
 	{
-		Debug.Log("Initialise");
+		Debug.Log("Initialising service users.");
 		this.InitialiseServiceUsers(this.plannerData);
 		this.InitialiseServiceUsers(this.nav);
 		if (this.profileData != null)
@@ -530,17 +530,17 @@ public class App : MonoBehaviour
 		this.CompleteInitialisation();
 	}
 
-	void DelayInit()
+	void DelayedInit()
 	{
 		if (!this.waitingForInit)
 		{
-			this.StartCoroutine(this.DelayInitCoroutine());
+			this.StartCoroutine(this.DelayedInitCoroutine());
 		}
 	}
 
-	IEnumerator DelayInitCoroutine()
+	IEnumerator DelayedInitCoroutine()
 	{
-		Debug.Log("DelayInit Started");
+		Debug.Log("DelayedInit Started.");
 		this.waitingForInit = true;
 		yield return new WaitForEndOfFrame();
 		this.waitingForInit = false;

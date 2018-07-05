@@ -17,9 +17,6 @@ namespace Cloverview
 	{
 		public int totalTimeUnits;
 		public PlanSchemaSlot[] slots = new PlanSchemaSlot[0];
-		// Runtime mapping
-		[System.NonSerialized]
-		public PlanSection section;
 	}
 
 	[System.Serializable]
@@ -28,9 +25,6 @@ namespace Cloverview
 		public int unitIndex;
 		public int unitLength;
 		public SlotType slotType;
-		// Runtime mapping
-		[System.NonSerialized]
-		public PlanSlot slot;
 	}
 
 	public static class SchemaStuff
@@ -50,8 +44,6 @@ namespace Cloverview
 				var planSection = new PlanSection();
 				plan.sections[newSectionIndex] = planSection;
 
-				schemaSection.section = planSection;
-
 				int slotsCount = schemaSection.slots.Length;
 				planSection.slots = new PlanSlot[slotsCount];
 				for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
@@ -62,8 +54,6 @@ namespace Cloverview
 					planSlot.unitIndex = schemaSlot.unitIndex;
 					planSlot.slotType = schemaSlot.slotType;
 					planSection.slots[slotIndex] = planSlot;
-
-					schemaSlot.slot = planSlot;
 				}
 			}
 			return plan;
@@ -71,6 +61,11 @@ namespace Cloverview
 
 		public static void UpgradePlan(PlanSchema schema, Plan schemaMatchingPlan, Plan loadedPlan)
 		{
+			// NOTE(elliot): this doesn't work if they're the same object! (because the matching plan is cleared below)
+			UnityEngine.Debug.Assert(schemaMatchingPlan != loadedPlan);
+			if (schemaMatchingPlan == loadedPlan) {
+				return;
+			}
 			schemaMatchingPlan.ClearSelections();
 
 			int sectionsCount = schema.sections.Length;
@@ -129,6 +124,12 @@ namespace Cloverview
 					}
 				}
 			}
+		}
+
+		public static bool PlanFitsSchema(PlanSchema schema, Plan plan)
+		{
+			// TODO(elliot): implement
+			return true;
 		}
 	}
 }
