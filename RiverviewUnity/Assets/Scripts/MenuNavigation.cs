@@ -44,15 +44,14 @@ public class MenuNavigation : Clickable, IServiceUser<Nav>, INavigator
 	{
 		Debug.Assert(nav);
 		this.nav = nav;
-
-		if (this.destination != null && this.preload && this.destination.allowPreload)
-		{
-			this.nav.Preload(this.destination, this.parentScene);
-		}
 	}
 
 	public void CompleteInitialisation()
 	{
+		if (this.destination != null && this.preload && this.destination.allowPreload)
+		{
+			this.nav.Preload(this.destination, this.parentScene);
+		}
 	}
 
 	public void SetParentScene(string parentScene)

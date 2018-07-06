@@ -34,21 +34,15 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 	bool completedAttemptToPlay;
 	MenuData previousMenu;
 
-#if UNITY_EDITOR
-	// As of 2018.1.4 scene processors run too late when playing in editor so OnEnabled gets called before ProcessSceneToAllowPreload runs on newly loaded scenes
-	bool hasBeenDisabled;
-#endif
-
 	public void OnEnable()
 	{
 		this.state = TransitionState.Uninitialised;
-		// TODO: only do this if the animator is ready
 		this.DetermineTransitionLayerIndex();
 
 		App.Register<SaveData>(this);
 
 	#if UNITY_EDITOR
-		if (this.hasBeenDisabled) {
+		if (InitialisedScenes.IsInitialised(this.gameObject.scene)) {
 	#endif
 		// NOTE(elliot): the scenecontroller script is set to execute late (see the ExecutionOrder attribute above) so all other service users in the scene should be registered by now
 		App.instance.Initialise();
@@ -59,16 +53,13 @@ public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 
 	public void OnDisable()
 	{
+		this.transitionAnimationLayer = -1;
 		App.Deregister<SaveData>(this);
-
-	#if UNITY_EDITOR
-		this.hasBeenDisabled = true;
-	#endif
 	}
 
 	void DetermineTransitionLayerIndex()
 	{
-		if (this.transitionAnimationLayer == -1 && this.transitionAnimator != null)
+		if (this.transitionAnimationLayer == -1 && this.transitionAnimator != null && this.transitionAnimator.runtimeAnimatorController != null)
 		{
 			this.transitionAnimationLayer = this.transitionAnimator.GetLayerIndex(this.transitionAnimationLayerName);
 		}

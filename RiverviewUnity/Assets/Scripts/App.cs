@@ -66,7 +66,7 @@ public class App : MonoBehaviour
 
 		public void Add(IServiceUser<ServiceT> user)
 		{
-			Remove(user);
+			this.Remove(user);
 			this.toInitialise.Add(user);
 		}
 
@@ -89,15 +89,6 @@ public class App : MonoBehaviour
 			for (; i < this.initialised.Count; ++i)
 			{
 			#if UNITY_EDITOR
-				// Due to scene post-processing running a little late in the editor (after OnEnabled has been called for objects in the scene), need to check that the to-initialise object is still enabled!
-				var component = this.initialised[i] as MonoBehaviour;
-				if (component != null)
-				{
-					if (!component.isActiveAndEnabled)
-					{
-						continue;
-					}
-				}
 				Debug.LogFormat("Initialising {0} with {1}", this.initialised[i], data);
 			#endif
 				this.initialised[i].Initialise(data);
@@ -146,17 +137,6 @@ public class App : MonoBehaviour
 
 			for (; i < this.initialised.Count; ++i)
 			{
-			#if UNITY_EDITOR
-				// Due to scene post-processing running a little late in the editor (after OnEnabled has been called for objects in the scene), need to check that the to-initialise object is still enabled!
-				var component = this.initialised[i] as MonoBehaviour;
-				if (component != null)
-				{
-					if (!component.isActiveAndEnabled)
-					{
-						continue;
-					}
-				}
-			#endif
 				this.initialised[i].CompleteInitialisation();
 			}
 		}
@@ -180,6 +160,14 @@ public class App : MonoBehaviour
 
 	public static void Register<ServiceT>(IServiceUser<ServiceT> user)
 	{
+	#if UNITY_EDITOR
+		// Ignore service users being registered by objects in scenes that have just been preloaded
+		var monobehaviour = user as MonoBehaviour;
+		if (monobehaviour && !InitialisedScenes.IsInitialised(monobehaviour.gameObject.scene)) {
+			Debug.LogWarningFormat("App.Register: Ignoring service user: {0}, scene '{1}': The containing scene is not yet initialised.\nIt is normal for this to occur in the editor whenever scenes are preloaded, but may cause unexpected behaviour so keep an eye out!", user, monobehaviour.gameObject.scene.name);
+			return;
+		}
+	#endif
 		{
 			ServiceUserCollection<ServiceT> collection = null;
 			object value;
