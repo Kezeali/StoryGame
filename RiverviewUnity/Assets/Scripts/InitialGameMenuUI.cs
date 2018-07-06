@@ -5,6 +5,7 @@ namespace Cloverview
 
 public class InitialGameMenuUI : MonoBehaviour, IServiceUser<ProfileSaveData>
 {
+	public MenuNavigation newButton;
 	public GameObject continueButton;
 
 	public void OnEnable()
@@ -21,6 +22,8 @@ public class InitialGameMenuUI : MonoBehaviour, IServiceUser<ProfileSaveData>
 	{
 		int savesToLoad = App.instance.saveFilesAvailableForCurrentProfile.Count;
 		this.continueButton.SetActive(savesToLoad > 0);
+		// If only the new-game option is available, might as well preload the next scene:
+		this.newButton.preload = savesToLoad == 0;
 	}
 
 	public void CompleteInitialisation()

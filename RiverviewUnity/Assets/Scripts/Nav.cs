@@ -800,6 +800,9 @@ public class Nav : MonoBehaviour
 		this.processingGoToQueue = false;
 	}
 
+	// Pre-allocated list for storing root objects in the scene
+	List<GameObject> rootObjectsList = new List<GameObject>(128);
+
 	enum ResolvedVia
 	{
 		RequestedMenu,
@@ -1008,10 +1011,14 @@ public class Nav : MonoBehaviour
 						// Find controller
 						MenuSceneController controller = null;
 						// TODO(elliot): FindWithTag("SceneController") ?
-						GameObject[] roots = scene.GetRootGameObjects();
-						for (int rootObjectIndex = 0; rootObjectIndex < roots.Length; ++rootObjectIndex)
+						if (rootObjectsList.Capacity < scene.rootCount) {
+							rootObjectsList = new List<GameObject>(scene.rootCount);
+						}
+						rootObjectsList.Clear();
+						scene.GetRootGameObjects(rootObjectsList);
+						for (int rootObjectIndex = 0; rootObjectIndex < rootObjectsList.Count; ++rootObjectIndex)
 						{
-							controller = roots[rootObjectIndex].GetComponent<MenuSceneController>();
+							controller = rootObjectsList[rootObjectIndex].GetComponent<MenuSceneController>();
 							if (controller != null)
 							{
 								break;

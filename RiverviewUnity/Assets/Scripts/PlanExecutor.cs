@@ -245,6 +245,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	bool DataReadyToBeginExecution()
 	{
 		return
+			this.RequiredServicesAreInitialised() &&
 			this.plan != null && 
 			this.planSchema != null;
 	}

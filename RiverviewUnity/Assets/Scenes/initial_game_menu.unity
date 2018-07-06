@@ -239,6 +239,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4ec8301864a707419da95966824b389, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  newButton: {fileID: 1610394799}
   continueButton: {fileID: 2093306371}
 --- !u!1 &665514555
 GameObject:
@@ -687,7 +688,7 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: Cloverview.Clickable+ButtonClickedEvent, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  preload: 1
+  preload: 0
   destination: {fileID: 11400000, guid: d3a72f4e85283174aab3496559e8a0fb, type: 2}
   parentScene: 
 --- !u!114 &1610394800

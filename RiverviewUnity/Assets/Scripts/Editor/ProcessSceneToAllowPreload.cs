@@ -16,6 +16,8 @@ class ProcessSceneToAllowPreload : IProcessSceneWithReport
 	{
 		Debug.Log("ProcessSceneToAllowPreload.OnProcessScene " + scene.path);
 
+		InitialisedScenes.scenes.Add(scene);
+
 		GameObject[] roots = scene.GetRootGameObjects();
 		if (scene.buildIndex != 0)
 		{
