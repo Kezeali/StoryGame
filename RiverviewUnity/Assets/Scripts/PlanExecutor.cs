@@ -132,7 +132,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		if (!string.IsNullOrEmpty(this.parentScene)) {
 			this.nav.Preload(this.executeMenu, this.parentScene);
 		}
-		
+
 		this.LoadSave();
 		if (!this.ResumeExecutionIfReady()) { this.PreloadIfReady(); }
 	}
@@ -471,10 +471,10 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 				PlanSchemaSlot schemaSlot = schemaSection.slots[slotIndex];
 				PlanSlot slot = planSection.slots[slotIndex];
 
-				// NOTE(elliot): Slot must be completely covered by the instantly-execute range if it is to be instantly executed (because being completely covered indicates that, if the schema hasn't changed, that slot was finished when this save file was created)
-				bool skipSlot = localTimeUnitsElapsed + schemaSlot.unitLength < skipTimeUnits;
+				// NOTE(elliot): Slot must be completely covered by the skip/instantly time units range (because being completely covered indicates that, if the schema hasn't changed, that slot was finished when this save file was created)
+				bool skipSlot = localTimeUnitsElapsed + schemaSlot.unitLength <= skipTimeUnits;
 
-				bool instantSlot = localTimeUnitsElapsed + schemaSlot.unitLength < instantTimeUnits;
+				bool instantSlot = localTimeUnitsElapsed + schemaSlot.unitLength <= instantTimeUnits;
 
 				if (!skipSlot) {
 					// NOTE(elliot): even if the slot itself isn't skipped, skip commute-to events if the skip time is beyond the start of the slot
@@ -527,6 +527,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 				if (localTimeUnitsElapsed > skipTimeUnits) {
 					this.executorSaveData.timeUnitsElapsed = localTimeUnitsElapsed;
+					this.executorSaveData.randomState = Random.state;
 					yield return 0;
 				}
 
