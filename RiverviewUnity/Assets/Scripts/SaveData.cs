@@ -35,11 +35,13 @@ public sealed class NavSaveData
 public sealed class PlanExecutorSaveData
 {
 	public int timeUnitsElapsed;
+	public int commutesFinishedUpToTime;
 	public Random.State randomState;
+	public MenuData backMenu;
 	public Plan livePlan;
 	public PlanSchema liveSchema;
 	public Cast liveCast;
-	public MenuData backMenu;
+	public ActiveEvent activeEvent;
 }
 
 [System.Serializable]

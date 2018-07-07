@@ -14,6 +14,7 @@ namespace Cloverview
 
 		public void Progress()
 		{
+			this.timeUnitsSpent += 1;
 		}
 
 		public void Finish()

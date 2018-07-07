@@ -259,7 +259,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IPlanExecutorContro
 	{
 		if (this.planExecutor != null && this.planExecutor.IsReadyForPlayerToExecute())
 		{
-			this.planExecutor.Execute();
+			this.planExecutor.Execute(0, 0);
 			this.planExecutor = null;
 		}
 	}
