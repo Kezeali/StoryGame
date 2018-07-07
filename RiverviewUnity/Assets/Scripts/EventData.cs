@@ -4,8 +4,6 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
-	// TODO(elliot): narritive editor that loads the ink story and generates / updates EventData for all weaves tagged # event.
-
 	[CreateAssetMenu(fileName="Event.asset", menuName="Cloverview/Event Definition")]
 	public class EventData : ScriptableObject, IDataItem
 	{
@@ -18,12 +16,9 @@ namespace Cloverview
 		public StatBonusData[] statBonuses;
 	}
 
-	// NOTE(elliot): events are sorted as follows:
-	//  1) priority -- Higher priority events which can occur will /always/ occur before lower priority events
-
 	public enum EventPriority
 	{
-		Higest, // Plot events
+		Plot,
 		High,
 		Normal,
 		Low,
@@ -38,11 +33,11 @@ namespace Cloverview
 		public DesiredSlot[] slotConditions;
 	}
 
-	public enum EventSide
+	public enum EventIncidenceTime
 	{
-		Before,
-		During,
-		After
+		BeforeSlot,
+		DuringSlot,
+		AfterSlot
 	}
 
 	[System.Serializable]
@@ -55,7 +50,7 @@ namespace Cloverview
 		public int sectionIndex;
 		// So if sectionIndex is set, but if type is None and time is -1, this matches any slot in the section.
 
-		public EventSide when;
+		public EventIncidenceTime when;
 		[Range(0.0f, 1.0f)]
 		public float chance;
 	}

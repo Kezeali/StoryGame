@@ -26,14 +26,13 @@ public class Nav : MonoBehaviour
 	[SerializeField]
 	private Animator genericTransitionAnimator;
 
-	private enum RequestOp
+	private enum EnvSceneOp
 	{
-		AddPreloadRequest,
-		RemovePreloadRequest,
-		GoTo
+		AddRequest,
+		RemoveRequest
 	}
 
-	private enum GoToOp
+	private enum MenuOp
 	{
 		Open,
 		Close
@@ -44,7 +43,7 @@ public class Nav : MonoBehaviour
 	{
 		public MenuData def;
 		public string preloadRequesterId;
-		public GoToOp operation;
+		public MenuOp operation;
 		public override string ToString()
 		{
 			return Strf.Format("{2} {0}, requested by '{1}'", def, preloadRequesterId, operation);
@@ -55,7 +54,7 @@ public class Nav : MonoBehaviour
 	{
 		public SceneData def;
 		public string preloadRequesterId;
-		public RequestOp operation;
+		public EnvSceneOp operation;
 		public ActiveActivity activeActivity;
 		public ActiveEvent activeEvent;
 		public CommuteSceneData commuteDef;
@@ -312,6 +311,11 @@ public class Nav : MonoBehaviour
 		return this.processingGoToQueue && this.menuToGoToQueue.Count > 0;
 	}
 
+	public bool IsProcessingGoToEnvQueue()
+	{
+		return this.processingGoToQueue && this.envSceneToGoToQueue.Count > 0;
+	}
+
 	public int GoToMenuQueueLength()
 	{
 		return this.menuToGoToQueue.Count;
@@ -323,7 +327,7 @@ public class Nav : MonoBehaviour
 		{
 			def = def,
 			preloadRequesterId = requesterId,
-			operation = GoToOp.Open
+			operation = MenuOp.Open
 		};
 
 		this.menuToGoToQueue.Enqueue(item);
@@ -342,7 +346,7 @@ public class Nav : MonoBehaviour
 			{
 				def = this.activeMenu.def,
 				preloadRequesterId = "",
-				operation = GoToOp.Close
+				operation = MenuOp.Close
 			};
 
 			this.menuToGoToQueue.Enqueue(item);
@@ -363,7 +367,7 @@ public class Nav : MonoBehaviour
 			{
 				def = sceneDef,
 				preloadRequesterId = requesterId,
-				operation = RequestOp.AddPreloadRequest,
+				operation = EnvSceneOp.AddRequest,
 				activeActivity = activity
 			};
 
@@ -376,6 +380,24 @@ public class Nav : MonoBehaviour
 		}
 	}
 
+	public void GoToEvent(ActiveEvent @event, SceneData eventScene, string requesterId)
+	{
+		var item = new EnvSceneToLoad()
+		{
+			def = eventScene,
+			preloadRequesterId = requesterId,
+			operation = EnvSceneOp.AddRequest,
+			activeEvent = @event
+		};
+
+		this.envSceneToGoToQueue.Enqueue(item);
+
+		if (!this.processingGoToQueue)
+		{
+			this.StartCoroutine(this.ProcessGoToQueueCoroutine());
+		}
+	}
+
 	public void GoToCommute(ActiveEvent @event, SceneData destination, string requesterId)
 	{
 		// Leave any current active commute
@@ -385,10 +407,11 @@ public class Nav : MonoBehaviour
 		}
 
 		SceneData origin = null;
-		if (this.activeEnvScene != null || destination != null)
-		{
+		if (this.activeEnvScene != null || destination != null) {
 			origin = this.activeEnvScene != null ? this.activeEnvScene.def : destination;
 			destination = destination != null ? destination : origin;
+		} else {
+			Debug.LogError("No active env scene or destination set for commute!");
 		}
 
 		if (origin != null && destination != null)
@@ -403,7 +426,7 @@ public class Nav : MonoBehaviour
 			}
 			else
 			{
-				// No commute needs to happen if origin & destination are the same scene
+				// No commute needs to happen if origin & destination are the same scene, but the active event needs somewhere to happen: this will put it in the current scene
 				commuteSceneDef = origin;
 			}
 
@@ -411,37 +434,10 @@ public class Nav : MonoBehaviour
 			{
 				def = commuteSceneDef,
 				preloadRequesterId = requesterId,
-				operation = RequestOp.AddPreloadRequest,
+				operation = EnvSceneOp.AddRequest,
 				activeEvent = @event,
 				commuteDef = commuteData,
 				commuteDirection = direction,
-			};
-
-			this.envSceneToGoToQueue.Enqueue(item);
-
-			if (!this.processingGoToQueue)
-			{
-				this.StartCoroutine(this.ProcessGoToQueueCoroutine());
-			}
-		}
-	}
-
-	public void GoToCommute(SceneData destination, string requesterId)
-	{
-		// Leave any current active commute
-		if (this.activeCommuteDef != null)
-		{
-			this.RemovePreloadRequest(this.activeCommuteDef.commuteScene, requesterId);
-		}
-
-		SceneData sceneDef = destination;
-		if (sceneDef != null)
-		{
-			var item = new EnvSceneToLoad()
-			{
-				def = sceneDef,
-				preloadRequesterId = requesterId,
-				operation = RequestOp.AddPreloadRequest,
 			};
 
 			this.envSceneToGoToQueue.Enqueue(item);
@@ -527,7 +523,7 @@ public class Nav : MonoBehaviour
 		{
 			def = def,
 			preloadRequesterId = requesterId,
-			operation = RequestOp.AddPreloadRequest
+			operation = EnvSceneOp.AddRequest
 		};
 
 		this.envSceneToLoadQueue.Enqueue(item);
@@ -544,7 +540,7 @@ public class Nav : MonoBehaviour
 		{
 			def = def,
 			preloadRequesterId = requesterId,
-			operation = RequestOp.RemovePreloadRequest
+			operation = EnvSceneOp.RemoveRequest
 		};
 
 		this.envSceneToLoadQueue.Enqueue(item);
@@ -606,7 +602,7 @@ public class Nav : MonoBehaviour
 
 				if (envSceneRequest.def != null)
 				{
-					if (envSceneRequest.operation == RequestOp.AddPreloadRequest)
+					if (envSceneRequest.operation == EnvSceneOp.AddRequest)
 					{
 						// TODO(elliot): remove this condition here and still add the preload request to the PreloadedScene no matter how many scenes are already loaded, but don't actually load the scene until a GoTo request is received for it, or the loaded scene count drops
 						// TODO(elliot): also, use an actual memory usage limit rather than this semi-arbitary loaded scene count
@@ -619,7 +615,7 @@ public class Nav : MonoBehaviour
 							Debug.LogFormat("Preload requested for {0}. Current load progress: {1}", preloadedScene.scenePath, preloadedScene.loadOp.progress);
 						}
 					}
-					else if (envSceneRequest.operation == RequestOp.RemovePreloadRequest)
+					else if (envSceneRequest.operation == EnvSceneOp.RemoveRequest)
 					{
 						PreloadedScene preloadedScene = this.FindLoadedScene(envSceneRequest.def.scene);
 						if (preloadedScene != null)
@@ -678,7 +674,7 @@ public class Nav : MonoBehaviour
 
 				if (envSceneRequest.def != null)
 				{
-					if (envSceneRequest.operation == RequestOp.AddPreloadRequest)
+					if (envSceneRequest.operation == EnvSceneOp.AddRequest)
 					{
 						IEnumerator op =
 							this.GoToEnvSceneCoroutine(envSceneRequest.def, envSceneRequest.preloadRequesterId);
@@ -731,7 +727,7 @@ public class Nav : MonoBehaviour
 							envSceneRequest.activeActivity.envScene = visibleScene;
 						}
 					}
-					else if (envSceneRequest.operation == RequestOp.RemovePreloadRequest)
+					else if (envSceneRequest.operation == EnvSceneOp.RemoveRequest)
 					{
 						PreloadedScene preloadedScene = this.FindLoadedScene(envSceneRequest.def.scene);
 						if (preloadedScene != null)
@@ -777,7 +773,7 @@ public class Nav : MonoBehaviour
 
 				if (menuRequest.def != null)
 				{
-					if (menuRequest.operation == GoToOp.Open)
+					if (menuRequest.operation == MenuOp.Open)
 					{
 						IEnumerator op = this.GoToCoroutine(menuRequest.def, menuRequest.preloadRequesterId);
 						while (op.MoveNext())
@@ -785,9 +781,9 @@ public class Nav : MonoBehaviour
 							yield return op.Current;
 						}
 					}
-					else if (menuRequest.operation == GoToOp.Close)
+					else if (menuRequest.operation == MenuOp.Close)
 					{
-						Debug.LogError("Not Implemented: GoToOp.Close");
+						Debug.LogError("Not Implemented: MenuOp.Close");
 					}
 				}
 
