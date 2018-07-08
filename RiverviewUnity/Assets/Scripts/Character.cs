@@ -5,6 +5,14 @@ namespace Cloverview
 {
 
 	[System.Serializable]
+	public class CharacterRef
+	{
+		public string characterName;
+		[System.NonSerialized]
+		public Character character;
+	}
+
+	[System.Serializable]
 	public class Character
 	{
 		[System.Serializable]
@@ -146,7 +154,7 @@ namespace Cloverview
 		[System.Serializable]
 		public struct Friendship
 		{
-			public Character friend;
+			public CharacterRef friend;
 			public int level;
 		}
 
@@ -530,7 +538,7 @@ namespace Cloverview
 				Friendship friendship = character.friendships[friendIndex];
 				Debug.Assert(friendship.friend != null);
 				if (friendship.friend != null) {
-					Character friend = friendship.friend;
+					Character friend = friendship.friend.character;
 					for (int bonusIndex = 0; bonusIndex < friend.friendshipBonuses.Length; ++bonusIndex) {
 						StatBonusData bonusData = friend.friendshipBonuses[bonusIndex];
 						float value; int unused;
