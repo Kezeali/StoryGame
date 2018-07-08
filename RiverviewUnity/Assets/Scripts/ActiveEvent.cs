@@ -18,6 +18,20 @@ public class Cast
 			liveCast.leadNpcs[i].UpdateStatBonuses(time);
 		}
 	}
+
+	public Character FindCastMember(RoleData role)
+	{
+		if (role == this.pc.role) {
+			return this.pc;
+		} else {
+			for (int i = 0; i < this.leadNpcs.Count; ++i) {
+				if (this.leadNpcs[i].role == role) {
+					return this.leadNpcs[i];
+				}
+			}
+		}
+		return null;
+	}
 }
 
 public enum EventProgressResult

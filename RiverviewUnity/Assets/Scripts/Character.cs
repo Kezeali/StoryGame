@@ -143,12 +143,23 @@ namespace Cloverview
 			public bool IsValid() { return quality != null; }
 		}
 
+		[System.Serializable]
+		public struct Friendship
+		{
+			public Character friend;
+			public int level;
+		}
+
 		public string name;
 		public RoleData role;
+		public CharacterBody bodyPrefab;
+		public OutfitItemData[] outfitItems = new OutfitItemData[0];
 		public List<ActiveBonus> activeBonuses = new List<ActiveBonus>();
 		public List<ActiveBonus> permanentBonuses = new List<ActiveBonus>();
 		public List<Favourite> favourites = new List<Favourite>();
 		public List<Tag> tags = new List<Tag>();
+		public List<Friendship> friendships = new List<Friendship>();
+		public StatBonusData[] friendshipBonuses = new StatBonusData[0];
 		public BaseStat[] baseStats = new BaseStat[0];
 		[System.NonSerialized]
 		public Status status;
@@ -156,6 +167,8 @@ namespace Cloverview
 		const int MAX_TEMPORARY_BONUSES = 100000;
 		// Try to reduce temporary bonuses to this amount if it exceeded the maximum:
 		const int SAFE_TEMPORARY_BONUSES = MAX_TEMPORARY_BONUSES - (MAX_TEMPORARY_BONUSES / 100);
+		// Value in percent of total active time for the shorter bonus
+		const float MAX_MERGE_MARGIN_FOR_BONUSES = 0.05f;
 
 		public static Character Generate(RoleData role)
 		{
@@ -259,6 +272,7 @@ namespace Cloverview
 			EnsureNotNull(ref this.permanentBonuses);
 			EnsureNotNull(ref this.favourites);
 			EnsureNotNull(ref this.tags);
+			EnsureNotNull(ref this.friendships);
 
 			this.activeBonuses.RemoveAll(InvalidBonus);
 			this.permanentBonuses.RemoveAll(InvalidBonus);
@@ -312,13 +326,23 @@ namespace Cloverview
 							definition = bonuses[i],
 							beginTimeUnit = beginTimeUnit
 						};
-						CalculateBonus(ref activeBonus, bonuses[i], timeSpent);
+						Character.CalculateBonus(out activeBonus.value, out activeBonus.activePeriodTimeUnits, bonuses[i], timeSpent);
 						if (activeBonus.IsPermanent()) {
 							Character.AddOrMergeActiveBonus(this.permanentBonuses, activeBonus, source);
 						} else {
 							// TODO(elliot): handle this list getting too big. do a pass over the list with an increasing margin-of-error to try and merge more similar (but not strictly equal) bonuses. widen the margin up to some maximum allowable amount. if the list still isn't shrunk enough at that point it's time to start spitting out errors.
-							if (this.activeBonuses.Count > MAX_TEMPORARY_BONUSES) {
-							} else {
+							if (this.activeBonuses.Count >= MAX_TEMPORARY_BONUSES) {
+								float margin = 0.001f;
+								while (this.activeBonuses.Count > SAFE_TEMPORARY_BONUSES) {
+									Character.AttempToMergeBonuses(this.activeBonuses, margin);
+									margin *= 2.0f;
+									if (margin > MAX_MERGE_MARGIN_FOR_BONUSES) {
+										break;
+									}
+								}
+							}
+
+							if (this.activeBonuses.Count < MAX_TEMPORARY_BONUSES) {
 								Character.AddOrMergeActiveBonus(this.activeBonuses, activeBonus, source);
 							}
 						}
@@ -326,6 +350,10 @@ namespace Cloverview
 				}
 				this.CalculateStatus();
 			}
+		}
+
+		static void AttempToMergeBonuses(List<ActiveBonus> currentList, float mergeMargin)
+		{
 		}
 
 		static void AddOrMergeActiveBonus(List<ActiveBonus> currentList, ActiveBonus newBonus, StatBonusSource source)
@@ -457,37 +485,62 @@ namespace Cloverview
 			return result;
 		}
 
-		public static void CalculateBonus(ref ActiveBonus activeBonus, StatBonusData definition, int timeSpent)
+		public static void CalculateBonus(out float value, out int activePeriodTimeUnits, StatBonusData definition, int timeSpent)
 		{
-			activeBonus.value = definition.flatBonus + (definition.bonusPerTimeUnit * (float)timeSpent);
-			activeBonus.activePeriodTimeUnits = definition.activePeriodTimeUnits + Mathf.FloorToInt(definition.activePeriodExtensionPerTimeUnit * (float)timeSpent);
+			value = definition.flatBonus + (definition.bonusPerTimeUnit * (float)timeSpent);
+			activePeriodTimeUnits = definition.activePeriodTimeUnits + Mathf.FloorToInt(definition.activePeriodExtensionPerTimeUnit * (float)timeSpent);
 		}
 
 		public static Status CalculateStatus(Character character)
 		{
-			Status result = Status.New();
+			Status status = Status.New();
 
-			for (int i = 0; i < character.baseStats.Length; ++i)
-			{
+			for (int i = 0; i < character.baseStats.Length; ++i) {
 				Stat stat = default(Stat);
 				stat.definition = character.baseStats[i].definition;
 				stat.value = character.baseStats[i].value;
-				result.stats.Add(stat);
+				status.stats.Add(stat);
 			}
 
-			if (character.activeBonuses == null)
-			{
+			if (character.activeBonuses == null) {
 				character.activeBonuses = new List<ActiveBonus>();
 			}
-			if (character.permanentBonuses == null)
-			{
+			if (character.permanentBonuses == null) {
 				character.permanentBonuses = new List<ActiveBonus>();
 			}
 
-			ApplyStatBonuses(result, character.activeBonuses);
-			ApplyStatBonuses(result, character.permanentBonuses);
+			Character.ApplyStatBonuses(status, character.activeBonuses);
+			Character.ApplyStatBonuses(status, character.permanentBonuses);
+
+			for (int tagIndex = 0; tagIndex < character.tags.Count; ++tagIndex) {
+				Tag tag = character.tags[tagIndex];
+				Debug.Assert(tag.quality != null);
+				if (tag.quality != null) {
+					QualityData quality = tag.quality;
+					for (int bonusIndex = 0; bonusIndex < quality.statBonuses.Length; ++bonusIndex) {
+						StatBonusData bonusData = quality.statBonuses[bonusIndex];
+						float value; int unused;
+						Character.CalculateBonus(out value, out unused, bonusData, tag.amount);
+						Character.ApplyStatBonus(status, bonusData, value);
+					}
+				}
+			}
+
+			for (int friendIndex = 0; friendIndex < character.friendships.Count; ++friendIndex) {
+				Friendship friendship = character.friendships[friendIndex];
+				Debug.Assert(friendship.friend != null);
+				if (friendship.friend != null) {
+					Character friend = friendship.friend;
+					for (int bonusIndex = 0; bonusIndex < friend.friendshipBonuses.Length; ++bonusIndex) {
+						StatBonusData bonusData = friend.friendshipBonuses[bonusIndex];
+						float value; int unused;
+						Character.CalculateBonus(out value, out unused, bonusData, friendship.level);
+						Character.ApplyStatBonus(status, bonusData, value);
+					}
+				}
+			}
 			
-			return result;
+			return status;
 		}
 
 		static bool InvalidBonus(ActiveBonus bonus)
@@ -495,24 +548,27 @@ namespace Cloverview
 			return bonus.definition == null;
 		}
 
-		static void ApplyStatBonuses(Status result, List<ActiveBonus> bonuses)
+		static void ApplyStatBonuses(Status status, List<ActiveBonus> bonuses)
 		{
-			for (int activeBonusIndex = 0; activeBonusIndex < bonuses.Count; ++activeBonusIndex)
-			{
+			for (int activeBonusIndex = 0; activeBonusIndex < bonuses.Count; ++activeBonusIndex) {
 				ActiveBonus bonus = bonuses[activeBonusIndex];
-				
-				Debug.Assert(bonus.definition != null);
-				if (bonus.definition != null)
-				{
-					var stat = result.GetAndRemoveStat(bonus.definition.stat);
+				Character.ApplyStatBonus(status, bonus.definition, bonus.value);
+			}
+		}
 
-					// NOTE(elliot): this is adding the bonus value on to the existing stat value retrieved
-					stat.value += bonus.value;
-					stat.valueIncludesBonus += bonus.value;
+		static void ApplyStatBonus(Status status, StatBonusData bonusData, float value)
+		{
+			Debug.Assert(bonusData != null);
+			if (bonusData != null)
+			{
+				var stat = status.GetAndRemoveStat(bonusData.stat);
 
-					// add the updated stat back to the list
-					result.stats.Add(stat);
-				}
+				// NOTE(elliot): this is adding the bonus value on to the existing stat value retrieved
+				stat.value += value;
+				stat.valueIncludesBonus += value;
+
+				// add the updated stat back to the list
+				status.stats.Add(stat);
 			}
 		}
 	}
