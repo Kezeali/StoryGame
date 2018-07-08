@@ -18,9 +18,21 @@ public interface ICheckValid
 public class RoleData : ScriptableObject, IDataItem
 {
 	public NameGenerator nameGenerator;
+	public BodyGenerator bodyGenerator;
+	public OutfitItemGenerator[] outfitItemGenerators;
 	public BaseStatsGenerator[] statGenerators;
 	public FavouriteQualitiesGenerator[] favouritesGenerators;
 	public TagQualitiesGenerator[] tagsGenerators;
+}
+
+[System.Serializable]
+public class BodyGenerator
+{
+}
+
+[System.Serializable]
+public class OutfitItemGenerator
+{
 }
 
 [System.Serializable]

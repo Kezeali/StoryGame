@@ -526,11 +526,11 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 										def = selectedEvent.def,
 										cast = liveCast
 									};
-									// Add the active event to the save data
 									Debug.LogFormat("Spawning event {0}", activeEvent.def);
 								}
 							}
 							if (activeEvent != null) {
+								// Add the active event to the save data
 								this.executorSaveData.activeEvent = activeEvent;
 								
 								this.nav.GoToCommute(activeEvent, destinationScene, this.activityScenePreloadId);
@@ -612,14 +612,17 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 						////////////////////////
 						// Start the activity, assunming timeUnitsBeforeEvent > 0
-						while (activeActivity.timeUnitsSpent < timeUnitsBeforeEvent) {
-							activeActivity.Progress();
+						if (timeUnitsBeforeEvent > 0) {
+							while (activeActivity.timeUnitsSpent < timeUnitsBeforeEvent) {
+								activeActivity.Progress();
 
-							Cast.UpdateStatBonuses(liveCast, beginTimeUnit + activeActivity.timeUnitsSpent);
+								Cast.UpdateStatBonuses(liveCast, beginTimeUnit + activeActivity.timeUnitsSpent);
 
-							if (!instantSlot) {
-								yield return new WaitForSeconds(secondsPerUnitTime);
+								if (!instantSlot) {
+									yield return new WaitForSeconds(secondsPerUnitTime);
+								}
 							}
+							activeActivity.Pause();
 						}
 
 						////////////////////
@@ -633,6 +636,9 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							SceneData activityScene = activityData.scene;
 							
 							this.nav.GoToEvent(activeEvent, activityScene, this.activityScenePreloadId);
+							while (this.nav.IsProcessingGoToEnvQueue() && activeEvent.envScene == null) {
+								yield return 0;
+							}
 
 							EventProgressResult result = EventProgressResult.Continue;
 							while (result == EventProgressResult.Continue) {
@@ -647,6 +653,9 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 						///////////////////
 						// Continue the activity
+						if (timeUnitsBeforeEvent > 0) {
+							activeActivity.Resume();
+						}
 						while (activeActivity.timeUnitsSpent < slotLengthTimeUnits) {
 							activeActivity.Progress();
 
@@ -703,12 +712,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 									def = selectedEvent.def,
 									cast = liveCast
 								};
-								// Add the active event to the save data
-								this.executorSaveData.activeEvent = activeEvent;
 								Debug.LogFormat("Spawning event {0}", activeEvent.def);
 							}
 						}
 						if (activeEvent != null) {
+							// Add the active event to the save data
+							this.executorSaveData.activeEvent = activeEvent;
+
 							this.nav.GoToCommute(activeEvent, destinationScene, this.activityScenePreloadId);
 							while (this.nav.IsProcessingGoToEnvQueue() && activeEvent.envScene == null) {
 								yield return 0;

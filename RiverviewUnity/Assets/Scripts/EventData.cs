@@ -9,8 +9,10 @@ namespace Cloverview
 	{
 		public EventConditions conditions;
 		public string narritiveId;
-		public EventSceneScript[] leadRoles;
+		public SceneData sceneOverride;
+		public SceneRole[] leadRoles;
 		public CastingCharacterDescription[] extrasDescriptions;
+		public EventSceneScript[] leadRoleScripts;
 		// TODO(elliot): would be cool if characters could pick up Set Props as part of event scripts
 		public SetProp[] props;
 		public StatBonusData[] statBonuses;
@@ -59,47 +61,58 @@ namespace Cloverview
 	public struct SetProp
 	{
 		public StageMarkData mark;
-		public GameObject prop;
+		public GameObject prefab;
 	}
 
 	[System.Serializable]
 	public struct CharacterProp
 	{
-		public string slotName;
-		public GameObject prop;
+		public string targetPin;
+		public GameObject prefab;
 	}
 
 	[System.Serializable]
 	public struct EventSceneScript
 	{
 		public RoleData role;
-		public CharacterProp[] props;
+		// TODO: the rest of this
 	}
 
 	[System.Serializable]
 	public struct CastingCharacterDescription : IComparer<Character>
 	{
 		public StageMarkData mark;
-		public DesiredStat[] stats;
+		public DesiredStat[] desiredStats;
+		public DesiredTag[] desiredTags;
+		public DesiredFriendship[] desiredFriendships;
 
 		// returns the index of the first excluded actor
-		public int SortActors(List<Character> actors)
+		public int SortActors(List<Character> actors, int castAvailableCount)
 		{
-			var desiredStats = this.stats;
-			int firstExcluded = 0;
-			for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
+			int firstExcluded = castAvailableCount;
+			for (int requirementIndex = 0; requirementIndex < this.desiredStats.Length; ++requirementIndex)
 			{
-				DesiredStat desiredStat = desiredStats[desiredStatIndex];
+				DesiredStat desiredStat = this.desiredStats[requirementIndex];
 				firstExcluded = actors.ExcludeAll(DesiredStat.DetermineHardNo, desiredStat, 0, firstExcluded);
 			}
+			// TODO: tags and friendsships
+			// for (int requirementIndex = 0; requirementIndex < this.desiredTags.Length; ++requirementIndex)
+			// {
+			// 	DesiredTag desiredTag = this.desiredTags[requirementIndex];
+			// 	firstExcluded = actors.ExcludeAll(DesiredTag.DetermineHardNo, desiredTag, 0, firstExcluded);
+			// }
 			actors.Sort(0, firstExcluded, this);
 			return firstExcluded;
 		}
 
 		public int Compare(Character a, Character b)
 		{
-			float ratingA = DesiredStat.Rate(a.status, this.stats);
-			float ratingB = DesiredStat.Rate(b.status, this.stats);
+			float ratingA = DesiredStat.Rate(a.status, this.desiredStats);
+			float ratingB = DesiredStat.Rate(b.status, this.desiredStats);
+			// ratingA *= DesiredTag.Rate(a.tags, this.desiredTags);
+			// ratingB *= DesiredTag.Rate(b.tags, this.desiredTags);
+			// ratingA *= DesiredFriendship.Rate(a.tags, this.desiredFriendships);
+			// ratingB *= DesiredFriendship.Rate(b.tags, this.desiredFriendships);
 			// Higher ratings come first
 			if (ratingA > ratingB)
 			{
@@ -116,16 +129,16 @@ namespace Cloverview
 		}
 	}
 
+	public enum PreferredValue
+	{
+		HighestInRange,
+		LowestInRange,
+		OutOfRange // Try to exclude any characters with the given stat in the min-max range
+	}
+
 	[System.Serializable]
 	public struct DesiredStat
 	{
-		public enum PreferredValue
-		{
-			Highest,
-			Lowest,
-			Exclude // Try to exclude any characters with the given stat in the min-max range
-		}
-
 		public CharacterStatDefinition stat;
 		public float minValue;
 		public float maxValue;
@@ -191,15 +204,15 @@ namespace Cloverview
 			{
 				switch (desiredStat.prefferedValue)
 				{
-					case PreferredValue.Highest:
+					case PreferredValue.HighestInRange:
 					{
 						rating = scaledValue * desiredStat.importance;
 					} break;
-					case PreferredValue.Lowest:
+					case PreferredValue.LowestInRange:
 					{
 						rating = (1.0f - scaledValue) * desiredStat.importance;
 					} break;
-					case PreferredValue.Exclude:
+					case PreferredValue.OutOfRange:
 					{
 						rating = -desiredStat.importance;
 					} break;
@@ -214,12 +227,12 @@ namespace Cloverview
 			{
 				switch (desiredStat.prefferedValue)
 				{
-					case PreferredValue.Highest:
-					case PreferredValue.Lowest:
+					case PreferredValue.HighestInRange:
+					case PreferredValue.LowestInRange:
 					{
 						rating = -desiredStat.importance;
 					} break;
-					case PreferredValue.Exclude:
+					case PreferredValue.OutOfRange:
 					{
 						rating = desiredStat.importance;
 					} break;
@@ -236,5 +249,27 @@ namespace Cloverview
 			}
 			return rating;
 		}
+	}
+
+	[System.Serializable]
+	public struct DesiredTag
+	{
+		public QualityData tagQuality;
+		public int minAmount;
+		public int maxAmount;
+		[Range(0.0f, 1.0f)]
+		public float importance;
+		public PreferredValue prefferedValue;
+	}
+
+	[System.Serializable]
+	public struct DesiredFriendship
+	{
+		public RoleData friendRole;
+		public int minLevel;
+		public int maxLevel;
+		[Range(0.0f, 1.0f)]
+		public float importance;
+		public PreferredValue prefferedValue;
 	}
 }

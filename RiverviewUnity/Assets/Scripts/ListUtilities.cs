@@ -19,27 +19,34 @@ public static class ListUtilities
 
 	public static int ExcludeAll<T, P1>(this List<T> list, System.Func<T, P1, bool> match, P1 fixedArgument, int firstIndex, int count)
 	{
+		int end = firstIndex + count;
+		end = list.Count < end ? list.Count : end;
 		if (match == null) {
-				return firstIndex + count;
+				return end;
 		}
-		int freeIndex = firstIndex;   // the first free slot in items array
-		int maxSize = (list.Count-firstIndex);
-		int size = maxSize < count ? maxSize : count;
-		// Find the first item which needs to be removed.
-		while (freeIndex < size && !match(list[freeIndex], fixedArgument)) freeIndex++;
-		if (freeIndex >= size) return firstIndex + count;
-		int current = freeIndex + 1;
-		while (current < size)
+		int excludedIndex = firstIndex;
+		// Find the first item which should be excluded
+		while (excludedIndex < end && !match(list[excludedIndex], fixedArgument)) excludedIndex++;
+		if (excludedIndex >= end) {
+			// Everything should be excluded
+			return end;
+		}
+		int current = excludedIndex + 1;
+		while (current < end)
 		{
-			// Find the first item which needs to be kept.
-			while (current < size && match(list[current], fixedArgument)) current++;
-			if( current < size)
+			// Look for the next item which needs to be kept
+			while (current < end && match(list[current], fixedArgument)) current++;
+			if (current < end)
 			{
-				// copy item to the free slot.
-				list[freeIndex++] = list[current++];
+				// if an item was found swap it with the first excluded index and move the exclusion index back
+				T temp = list[excludedIndex];
+				list[excludedIndex++] = list[current];
+				list[current] = temp;
+				// continue from the next item
+				++current;
 			}
 		}
-		return freeIndex;
+		return excludedIndex;
 	}
 
 	public static void Push<T>(this List<T> list, T value)

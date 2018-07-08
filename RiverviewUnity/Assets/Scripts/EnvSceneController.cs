@@ -17,6 +17,14 @@ public class EnvSceneController : MonoBehaviour, IServiceUser<SaveData>
 
 	public Rigidbody[] physicalObjects;
 
+	[System.Serializable]
+	public struct StageMarking
+	{
+		public StageMarkData def;
+		public Transform location;
+	}
+	public StageMarking[] stageMarkings;
+
 	public enum TransitionState
 	{
 		Uninitialised,

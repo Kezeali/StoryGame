@@ -8,6 +8,16 @@ namespace Cloverview
 	{
 		public SceneData scene;
 		public StatBonusData[] statBonuses;
+		public SceneRole[] leadRoles;
+		public CastingCharacterDescription[] extrasDescriptions;
+	}
+
+	[System.Serializable]
+	public struct SceneRole
+	{
+		public StageMarkData mark;
+		public RoleData role;
+		public CharacterProp[] props;
 	}
 
 }
