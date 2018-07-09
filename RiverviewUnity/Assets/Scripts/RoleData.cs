@@ -26,23 +26,108 @@ public class RoleData : ScriptableObject, IDataItem
 }
 
 [System.Serializable]
-public class BodyGenerator
+public struct CharacterName
 {
-}
+	public string first;
+	public string surname;
 
-[System.Serializable]
-public class OutfitItemGenerator
-{
+	public string fullName;
+
+	public static CharacterName Create(string first, string surname)
+	{
+		var characterName = new CharacterName();
+		characterName.first = first;
+		characterName.surname = surname;
+		characterName.UpdateTranslation();
+		return characterName;
+	}
+
+	public void UpdateTranslation()
+	{
+		string fullNameFormat = "{0} {1}";
+		bool hasFirstName = !string.IsNullOrEmpty(this.first);
+		bool hasSurname = !string.IsNullOrEmpty(this.surname);
+		if (hasFirstName && hasSurname) {
+			this.fullName = Strf.Format(fullNameFormat, this.first, this.surname);
+		} else if (hasFirstName) {
+			this.fullName = this.first;
+		} else if (hasSurname) {
+			this.fullName = this.surname;
+		} else {
+			this.fullName = "";
+		}
+	}
+
+	public override string ToString()
+	{
+		return fullName;
+	}
 }
 
 [System.Serializable]
 public class NameGenerator
 {
-	public string name;
-
-	public string Generate()
+	[System.Serializable]
+	public struct Option : IWeightedOption
 	{
-		return name;
+		public float weight;
+		public float GetWeight() { return weight; }
+
+		public string str;
+	}
+
+	public Option[] firstNameOptions;
+	public Option[] surnameOptions;
+
+	public CharacterName Generate()
+	{
+		CharacterName result = default(CharacterName);
+		Option firstName = WeightedRandom.Select(this.firstNameOptions);
+		Option surname = WeightedRandom.Select(this.surnameOptions);
+		result = CharacterName.Create(firstName.str, surname.str);
+		return result;
+	}
+}
+
+[System.Serializable]
+public class BodyGenerator
+{
+	[System.Serializable]
+	public struct Option : IWeightedOption
+	{
+		public float weight;
+		public float GetWeight() { return weight; }
+
+		public CharacterBody prefab;
+	}
+
+	public Option[] options;
+
+	public CharacterBody Generate()
+	{
+		Option selectedOption = WeightedRandom.Select(this.options);
+		return selectedOption.prefab;
+	}
+}
+
+[System.Serializable]
+public class OutfitItemGenerator : IGenerator<OutfitItemData>
+{
+	[System.Serializable]
+	public struct Option : IWeightedOption
+	{
+		public float weight;
+		public float GetWeight() { return weight; }
+
+		public OutfitItemData item;
+	}
+
+	public Option[] options;
+
+	public OutfitItemData Generate()
+	{
+		Option selectedOption = WeightedRandom.Select(this.options);
+		return selectedOption.item;
 	}
 }
 
@@ -89,9 +174,11 @@ public class BaseStatsGenerator : IGenerator<Character.BaseStat>
 [System.Serializable]
 public class FavouriteQualitiesGenerator : IGenerator<Character.Favourite>
 {
-	public struct Option
+	[System.Serializable]
+	public struct Option : IWeightedOption
 	{
 		public float weight;
+		public float GetWeight() { return weight; }
 
 		public QualityData quality;
 		public float minAffinity;
@@ -100,30 +187,11 @@ public class FavouriteQualitiesGenerator : IGenerator<Character.Favourite>
 
 	public Option[] options;
 
-	private bool sorted;
-
 	public Character.Favourite Generate()
 	{
 		var generatedFav = new Character.Favourite();
 
-		float totalWeight = 0;
-		for (int i = 0; i < options.Length; ++i)
-		{
-			totalWeight += options[i].weight;
-		}
-
-		float selectedWeight = Random.Range(0, totalWeight);
-
-		Option selectedOption = new Option();
-		for (int i = 0; i < options.Length; ++i)
-		{
-			selectedOption = options[i];
-			selectedWeight -= selectedOption.weight;
-			if (selectedWeight <= 0)
-			{
-				break;
-			}
-		}
+		Option selectedOption = WeightedRandom.Select(this.options);
 
 		float affinity = Random.Range(selectedOption.minAffinity, selectedOption.maxAffinity);
 		generatedFav.quality = selectedOption.quality;
@@ -136,9 +204,11 @@ public class FavouriteQualitiesGenerator : IGenerator<Character.Favourite>
 [System.Serializable]
 public class TagQualitiesGenerator : IGenerator<Character.Tag>
 {
-	public struct Option
+	[System.Serializable]
+	public struct Option : IWeightedOption
 	{
 		public float weight;
+		public float GetWeight() { return weight; }
 
 		public QualityData quality;
 		public int minAmount;
@@ -151,30 +221,71 @@ public class TagQualitiesGenerator : IGenerator<Character.Tag>
 	{
 		var generatedTag = new Character.Tag();
 
-		float totalWeight = 0;
-		for (int i = 0; i < options.Length; ++i)
-		{
-			totalWeight += options[i].weight;
-		}
-
-		float selectedWeight = Random.Range(0, totalWeight);
-
-		Option selectedOption = new Option();
-		for (int i = 0; i < options.Length; ++i)
-		{
-			selectedOption = options[i];
-			selectedWeight -= selectedOption.weight;
-			if (selectedWeight <= 0)
-			{
-				break;
-			}
-		}
+		Option selectedOption = WeightedRandom.Select(this.options);
 
 		int amount = Random.Range(selectedOption.minAmount, selectedOption.maxAmount);
 		generatedTag.quality = selectedOption.quality;
 		generatedTag.amount = amount;
 
 		return generatedTag;
+	}
+}
+
+public interface IWeightedOption
+{
+	float GetWeight();
+}
+
+public static class WeightedRandom
+{
+	public static T Select<T>(T[] options)
+		where T : IWeightedOption
+	{
+		int selectedIndex = WeightedRandom.SelectIndex(options);
+		if (selectedIndex != -1) {
+			return options[selectedIndex];
+		} else {
+			return default(T);
+		}
+	}
+
+	public static int SelectIndex<T>(T[] options)
+		where T : IWeightedOption
+	{
+		return WeightedRandom.SelectIndex(options, 0, options.Length);
+	}
+
+	public static int SelectIndex<T>(T[] options, int first)
+		where T : IWeightedOption
+	{
+		return WeightedRandom.SelectIndex(options, first, options.Length-first);
+	}
+
+	public static int SelectIndex<T>(T[] options, int first, int count)
+		where T : IWeightedOption
+	{
+		int end = first + count;
+		if (end > options.Length) end = options.Length;
+
+		float totalWeight = 0;
+		for (int i = first; i < end; ++i)
+		{
+			totalWeight += options[i].GetWeight();
+		}
+
+		float selectedWeight = Random.Range(0, totalWeight);
+
+		int selectedIndex = -1;
+		for (int i = first; i < end; ++i)
+		{
+			selectedWeight -= options[i].GetWeight();
+			if (selectedWeight <= 0)
+			{
+				selectedIndex = i;
+				break;
+			}
+		}
+		return selectedIndex;
 	}
 }
 

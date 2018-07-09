@@ -11,6 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8fa0e4c2ee428e46a27337e225beec5, type: 3}
   m_Name: DataIndex
   m_EditorClassIdentifier: 
+  playerRole: {fileID: 11400000, guid: 5fb069ba7dfe3dd43820aad5b37ac85f, type: 2}
   roles:
   - {fileID: 11400000, guid: 5fb069ba7dfe3dd43820aad5b37ac85f, type: 2}
   - {fileID: 11400000, guid: 5182c9e84e198af42b240f8e3b700151, type: 2}

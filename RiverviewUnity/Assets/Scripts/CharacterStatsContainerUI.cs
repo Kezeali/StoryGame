@@ -29,7 +29,7 @@ public class CharacterStatsContainerUI : MonoBehaviour, IServiceUser<SaveData>
 
 	public void Initialise(SaveData loadedData)
 	{
-		this.character = loadedData.pc;
+		this.character = loadedData.cast.pc;
 
 		Debug.Assert(this.character != null);
 		

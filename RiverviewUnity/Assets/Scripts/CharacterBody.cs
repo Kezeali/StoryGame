@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Cloverview
 {
@@ -26,10 +27,10 @@ public class CharacterBody : MonoBehaviour
 		}
 	}
 
-	public void Dress(OutfitItemData[] outfit)
+	public void Dress(List<OutfitItemData> outfit)
 	{
 		this.Undress();
-		for (int outfitItemIndex = 0; outfitItemIndex < outfit.Length; ++outfitItemIndex) {
+		for (int outfitItemIndex = 0; outfitItemIndex < outfit.Count; ++outfitItemIndex) {
 			this.Wear(outfit[outfitItemIndex]);
 		}
 	}
