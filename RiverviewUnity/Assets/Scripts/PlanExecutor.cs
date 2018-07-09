@@ -341,7 +341,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	void FilterAvailableEvents()
 	{
 		if (this.saveData != null) {
-			Character pc = this.saveData.pc;
+			Character pc = this.saveData.cast.pc;
 
 			this.nextFilteredEvents.Clear();
 
@@ -463,12 +463,12 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			liveCast = new Cast();
 		}
 		if (liveCast.pc == null) {
-			liveCast.pc = this.saveData.pc.CreateSimulationClone();
+			liveCast.pc = this.saveData.cast.pc.CreateSimulationClone();
 		}
 		if (liveCast.leadNpcs == null) {
-			liveCast.leadNpcs = new List<Character>(this.saveData.leadNpcs.Count);
-			for (int npcIndex = 0; npcIndex < this.saveData.leadNpcs.Count; ++npcIndex) {
-				Character realNpc = this.saveData.leadNpcs[npcIndex];
+			liveCast.leadNpcs = new List<Character>(this.saveData.cast.leadNpcs.Count);
+			for (int npcIndex = 0; npcIndex < this.saveData.cast.leadNpcs.Count; ++npcIndex) {
+				Character realNpc = this.saveData.cast.leadNpcs[npcIndex];
 				liveCast.leadNpcs.Add(realNpc.CreateSimulationClone());
 			}
 		}
@@ -547,7 +547,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 								this.nav.FinishCommute(this.activityScenePreloadId);
 
 								// The event has completed, commit status back to the primary save data
-								PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
+								Cast.ApplyNewStatuses(this.saveData.cast, liveCast);
 
 								this.executorSaveData.commutesFinishedUpToTime = localTimeUnitsElapsed;
 								this.executorSaveData.activeEvent = null;
@@ -608,7 +608,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							yield return 0;
 						}
 
-						Cast.UpdateStatBonuses(liveCast, beginTimeUnit);
+						liveCast.UpdateStatBonuses(beginTimeUnit);
 
 						////////////////////////
 						// Start the activity, assunming timeUnitsBeforeEvent > 0
@@ -616,7 +616,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							while (activeActivity.timeUnitsSpent < timeUnitsBeforeEvent) {
 								activeActivity.Progress();
 
-								Cast.UpdateStatBonuses(liveCast, beginTimeUnit + activeActivity.timeUnitsSpent);
+								liveCast.UpdateStatBonuses(beginTimeUnit + activeActivity.timeUnitsSpent);
 
 								if (!instantSlot) {
 									yield return new WaitForSeconds(secondsPerUnitTime);
@@ -659,7 +659,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 						while (activeActivity.timeUnitsSpent < slotLengthTimeUnits) {
 							activeActivity.Progress();
 
-							Cast.UpdateStatBonuses(liveCast, beginTimeUnit + activeActivity.timeUnitsSpent);
+							liveCast.UpdateStatBonuses(beginTimeUnit + activeActivity.timeUnitsSpent);
 
 							if (!instantSlot) {
 								yield return new WaitForSeconds(secondsPerUnitTime);
@@ -669,7 +669,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 						activeActivity.Finish();
 
 						// The activty has completed, commit status back to the primary save data
-						PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
+						Cast.ApplyNewStatuses(this.saveData.cast, liveCast);
 					}
 				}
 
@@ -733,7 +733,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							this.nav.FinishCommute(this.activityScenePreloadId);
 
 							// The event has completed, commit status back to the primary save data
-							PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
+							Cast.ApplyNewStatuses(this.saveData.cast, liveCast);
 
 							this.executorSaveData.commutesFinishedUpToTime = localTimeUnitsElapsed;
 							this.executorSaveData.activeEvent = null;
@@ -745,8 +745,8 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 
 		// Update and commit the final statuses
-		Cast.UpdateStatBonuses(liveCast, localTimeUnitsElapsed);
-		PlanExecutor.ApplyNewStatuses(this.saveData, liveCast);
+		liveCast.UpdateStatBonuses(localTimeUnitsElapsed);
+		Cast.ApplyNewStatuses(this.saveData.cast, liveCast);
 
 		this.saveData.time += this.executorSaveData.timeUnitsElapsed;
 
@@ -771,25 +771,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 
 		this.nav.GoTo(nextMenu, this.parentScene);
-	}
-
-	static void ApplyNewStatuses(SaveData saveData, Cast liveCast)
-	{
-		saveData.pc.ApplyStatus(liveCast.pc);
-		for (int simNpcIndex = 0; simNpcIndex < liveCast.leadNpcs.Count; ++simNpcIndex) {
-			Character simNpc = liveCast.leadNpcs[simNpcIndex];
-			Character actualNpc = null;
-			for (int npcIndex = 0; npcIndex < saveData.leadNpcs.Count; ++npcIndex) {
-				if (saveData.leadNpcs[npcIndex].name == simNpc.name) {
-					actualNpc = saveData.leadNpcs[npcIndex];
-				}
-			}
-			if (actualNpc != null) {
-				actualNpc.ApplyStatus(simNpc);
-			} else {
-				Debug.LogWarningFormat("NPC has gone missing: expected NPC with name '{0}'", simNpc.name);
-			}
-		}
 	}
 
 	static PlanActivityData GetActivity(PlanSlot slot)

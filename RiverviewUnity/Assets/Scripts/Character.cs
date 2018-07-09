@@ -159,9 +159,10 @@ namespace Cloverview
 		}
 
 		public string name;
+		public CharacterName characterName;
 		public RoleData role;
 		public CharacterBody bodyPrefab;
-		public OutfitItemData[] outfitItems = new OutfitItemData[0];
+		public List<OutfitItemData> outfitItems = new List<OutfitItemData>();
 		public List<ActiveBonus> activeBonuses = new List<ActiveBonus>();
 		public List<ActiveBonus> permanentBonuses = new List<ActiveBonus>();
 		public List<Favourite> favourites = new List<Favourite>();
@@ -178,13 +179,14 @@ namespace Cloverview
 		// Value in percent of total active time for the shorter bonus
 		const float MAX_MERGE_MARGIN_FOR_BONUSES = 0.05f;
 
-		public static Character Generate(RoleData role)
+		public static Character Generate(RoleData role, Cast cast)
 		{
 			Character character = new Character();
+			character.name = cast.GenId(role);
 			character.role = role;
 			if (character.role != null) {
 				if (role.nameGenerator != null) {
-					character.name = role.nameGenerator.Generate();
+					character.characterName = role.nameGenerator.Generate();
 				}
 				BaseStatsGenerator[] statGenerators = role.statGenerators;
 				if (statGenerators != null) {
@@ -197,13 +199,14 @@ namespace Cloverview
 					}
 					character.baseStats = generatedStats.ToArray();
 				}
-				GenerateItems(character.favourites, role.favouritesGenerators);
-				GenerateItems(character.tags, role.tagsGenerators);
+				Character.GenerateValueTypeItems(character.favourites, role.favouritesGenerators);
+				Character.GenerateValueTypeItems(character.tags, role.tagsGenerators);
+				Character.GenerateItems(character.outfitItems, role.outfitItemGenerators);
 			}
 			return character;
 		}
 
-		static void GenerateItems<T>(List<T> destinationList, IGenerator<T>[] generators)
+		static void GenerateValueTypeItems<T>(List<T> destinationList, IGenerator<T>[] generators)
 			where T : ICheckValid
 		{
 			if (generators != null) {
@@ -211,6 +214,20 @@ namespace Cloverview
 				for (int i = 0; i < generators.Length; ++i) {
 					T item = generators[i].Generate();
 					if (item.IsValid()) {
+						destinationList.Add(item);
+					}
+				}
+			}
+		}
+
+		static void GenerateItems<T>(List<T> destinationList, IGenerator<T>[] generators)
+			where T : class
+		{
+			if (generators != null) {
+				destinationList.Clear();
+				for (int i = 0; i < generators.Length; ++i) {
+					T item = generators[i].Generate();
+					if (item != null) {
 						destinationList.Add(item);
 					}
 				}
@@ -284,6 +301,13 @@ namespace Cloverview
 
 			this.activeBonuses.RemoveAll(InvalidBonus);
 			this.permanentBonuses.RemoveAll(InvalidBonus);
+		}
+
+		public void FixReferences(Cast cast)
+		{
+			for (int i = 0; i < this.friendships.Count; ++i) {
+				this.friendships[i].friend.character = cast.FindCastMember(this.friendships[i].friend);
+			}
 		}
 
 		void EnsureNotNull<T>(ref T field)
@@ -539,11 +563,13 @@ namespace Cloverview
 				Debug.Assert(friendship.friend != null);
 				if (friendship.friend != null) {
 					Character friend = friendship.friend.character;
-					for (int bonusIndex = 0; bonusIndex < friend.friendshipBonuses.Length; ++bonusIndex) {
-						StatBonusData bonusData = friend.friendshipBonuses[bonusIndex];
-						float value; int unused;
-						Character.CalculateBonus(out value, out unused, bonusData, friendship.level);
-						Character.ApplyStatBonus(status, bonusData, value);
+					if (friend != null) {
+						for (int bonusIndex = 0; bonusIndex < friend.friendshipBonuses.Length; ++bonusIndex) {
+							StatBonusData bonusData = friend.friendshipBonuses[bonusIndex];
+							float value; int unused;
+							Character.CalculateBonus(out value, out unused, bonusData, friendship.level);
+							Character.ApplyStatBonus(status, bonusData, value);
+						}
 					}
 				}
 			}

@@ -677,16 +677,8 @@ public class App : MonoBehaviour
 		{
 			this.saveData = this.defaultSaveData.saveData;
 		}
-		if (this.saveData.pc == null)
-		{
-			this.saveData.pc = this.defaultSaveData.saveData.pc;
-		}
-		if (this.saveData.leadNpcs == null)
-		{
-			this.saveData.leadNpcs = new List<Character>();
-		}
-		this.saveData.pc.PostLoadCleanup();
-		this.saveData.pc.CalculateStatus();
+		this.saveData.cast.PostLoadCleanup(this.gameData);
+		this.saveData.cast.FixReferences();
 
 		this.nav.SetSaveData(this.saveData);
 	}
