@@ -3,8 +3,8 @@ using UnityEngine;
 namespace Cloverview
 {
 
-	[System.Serializable]
-	public class StatBonusData
+	[CreateAssetMenu(fileName="StatBonus.asset", menuName="Cloverview/Stat Bonus Definition")]
+	public class StatBonusData : ScriptableObject, IDataItem
 	{
 		public string name;
 		public CharacterStatDefinition stat;
@@ -35,7 +35,6 @@ namespace Cloverview
 			None,
 			Event,
 			Activity,
-			Friendship,
 		}
 		public string name;
 		public SourceType type;

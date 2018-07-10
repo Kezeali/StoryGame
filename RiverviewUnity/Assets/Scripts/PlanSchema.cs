@@ -2,9 +2,9 @@ using System.Collections.Generic;
 
 namespace Cloverview
 {
-	// Could also be called "Calendar Definition", or "Plan Calendar"
+	// A section of a calendar which appears in a planning UI
 	[System.Serializable]
-	public class PlanSchema
+	public class PlanSchema : SerializedObject, IDataItem
 	{
 		public string name;
 

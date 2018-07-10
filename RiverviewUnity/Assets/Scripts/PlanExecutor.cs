@@ -22,9 +22,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	[SerializeField]
 	SceneData homeScene;
 
-	[SerializeField]
-	EventData[] availableEvents;
-
 	[ReadOnly]
 	public string parentScene;
 
@@ -49,8 +46,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
 	Nav nav;
-	Plan plan;
-	PlanSchema planSchema;
 	string activityScenePreloadId;
 	List<PlanActivityData> preloadedActivities = new List<PlanActivityData>();
 	List<PlanActivityData> nextPreloadedActivities = new List<PlanActivityData>();
@@ -132,6 +127,12 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	{
 		this.activityScenePreloadId = this.nav.GeneratePreloadIdForEnvScenes();
 
+		if (this.executing) {
+			// Just stop executing. Assume that all the other systems will handle their own problems fixing the game state (like Nav going to the correct scenes.)
+			this.StopAllCoroutines();
+			this.executing = false;
+		}
+
 		if (!string.IsNullOrEmpty(this.parentScene)) {
 			this.nav.Preload(this.executeMenu, this.parentScene);
 		}
@@ -142,43 +143,14 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	void LoadSave()
 	{
-		// TODO: abort execution whenever service initialisation happens
 		Debug.Assert(!this.executing);
 
-		if (this.saveData != null && !string.IsNullOrEmpty(this.key)) {
+		if (this.saveData != null) {
 			Debug.LogFormat("Loading save data for executor key '{0}'", this.key);
-			if (this.saveData.planExecutors == null) {
-				this.saveData.planExecutors = new Dictionary<string, PlanExecutorSaveData>();
+			if (this.saveData.planExecutor == null) {
+				this.saveData.planExecutor = new PlanExecutorSaveData();
 			}
-			if (!saveData.planExecutors.TryGetValue(this.key, out this.executorSaveData)) {
-				this.executorSaveData = new PlanExecutorSaveData();
-				saveData.planExecutors.Add(this.key, this.executorSaveData);
-			}
-
-			if (this.executorSaveData != null) {
-				// Resuming: try to load the plan in the state execution was saved in
-				if (this.executorSaveData.timeUnitsElapsed > 0 && this.executorSaveData.livePlan != null && this.executorSaveData.liveSchema != null) {
-					this.planSchema = this.executorSaveData.liveSchema;
-					this.plan = this.executorSaveData.livePlan;
-					// TODO(elliot): Make sure the loaded plan actually matches the loaded schema
-					// NOTE(elliot): don't have to worry about PlanUI upgrading the loaded plan to a new, conflicting schema, even if livePlan points to the same object as the PlanUI plan in the saveData, as PlanUI creates a new plan and upgrades the data from loaded object into that
-				} else {
-					// If any of the values required to resume were missing, reset them all
-					this.executorSaveData.livePlan = null;
-					this.executorSaveData.liveSchema = null;
-					this.executorSaveData.timeUnitsElapsed = 0;
-				}
-			}
-		}
-	}
-
-	public void SetPlan(Plan plan, PlanSchema planSchema)
-	{
-		if (!this.executing && !this.IsReadyToResume()) {
-			this.plan = plan;
-			this.planSchema = planSchema;
-
-			this.PreloadIfReady();
+			this.executorSaveData = this.saveData.executorSaveData;
 		}
 	}
 
@@ -245,14 +217,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			this.executorSaveData != null;
 	}
 
-	bool DataReadyToBeginExecution()
-	{
-		return
-			this.RequiredServicesAreInitialised() &&
-			this.plan != null && 
-			this.planSchema != null;
-	}
-
 	public void SetParentScene(string parentScene)
 	{
 		this.parentScene = parentScene;
@@ -260,23 +224,30 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	public void OnOptionSelected(PlanOption selectedOption)
 	{
-		if (this.DataReadyToBeginExecution()) {
+		if (this.RequiredServicesAreInitialised()) {
 			this.PreloadPlanActivities();
 		}
 	}
 
 	public void OnOptionDeselected(PlanOption selectedOption)
 	{
-		if (this.DataReadyToBeginExecution()) {
+		if (this.RequiredServicesAreInitialised()) {
 			this.PreloadPlanActivities();
 		}
 	}
 
-	void PreloadPlanActivities()
+	void PreloadPlanActivities(int fromTime, int toTime)
 	{
-		if (this.plan != null) {
-			this.nextPreloadedActivities.Clear();
+		this.nextPreloadedActivities.Clear();
 
+		for (int planIndex = 0; planIndex < this.saveData.plans.Count; ++planIndex) {
+			Plan plan = this.saveData.plans[planIndex];
+			bool overlap =
+				plan.fromTime >= fromTime && plan.fromTime <= toTime ||
+				plan.toTime >= fromTime && plan.toTime <= toTime;
+			if (!overlap) {
+				continue;
+			}
 			for (int sectionIndex = 0; sectionIndex < this.plan.sections.Length; ++sectionIndex) {
 				PlanSection section = this.plan.sections[sectionIndex];
 				PlanSlot previousSlot = null;
@@ -314,14 +285,12 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 					this.nav.Preload(activity.scene, this.activityScenePreloadId);
 				}
 			}
-			var temp = this.preloadedActivities;
-			this.preloadedActivities = this.nextPreloadedActivities;
-			this.nextPreloadedActivities = temp;
-
-			this.nextPreloadedActivities.Clear();
-		} else {
-			this.UnloadAllPreloadedActivities();
 		}
+		var temp = this.preloadedActivities;
+		this.preloadedActivities = this.nextPreloadedActivities;
+		this.nextPreloadedActivities = temp;
+
+		this.nextPreloadedActivities.Clear();
 	}
 
 	void UnloadAllPreloadedActivities()
@@ -764,11 +733,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		App.ExecutorEnding(this);
 
 		this.UnloadAllPreloadedActivities();
-                 
-		// Allow the controller to pass in a new plan in case it has changed from the live-plan that just finished executing
-		if (this.controller != null) {
-			this.controller.ReceiveExecutor(this);
-		}
 
 		this.nav.GoTo(nextMenu, this.parentScene);
 	}

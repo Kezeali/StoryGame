@@ -4,29 +4,19 @@ using SubjectNerd.Utilities;
 namespace Cloverview
 {
 
-	[System.Serializable]
-	public abstract class DataItem : IDataItem
-	{
-		public string name { get { return m_name; } set { m_name = value; } }
-		[SerializeField]
-		private string m_name;
-	}
-
-	public interface IDataItem
-	{
-		string name { get; set; }
-	}
-
 	[CreateAssetMenu(fileName="PlannerData.asset", menuName="Cloverview/Planner Data")]
 	public class PlannerData : ScriptableObject
 	{
 		[Reorderable]
 		public PlannerItemData[] items;
+		// Ordered list of calendars for each in-game year
+		[Reorderable]
+		public Calendar[] calendars;
 
 		public CharacterStatDefinition[] characterStats;
 		public SubjectData[] subjects;
 		public PlanActivityData[] planActivities;
-		public QualityData[] qualities;
+		public EventData[] events;
 	}
 
 	[System.Serializable]
