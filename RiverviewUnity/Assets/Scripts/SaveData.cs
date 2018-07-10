@@ -16,9 +16,10 @@ public sealed class SaveData
 
 	public int time;
 	public List<Plan> plans;
+	public List<PlanSchema> schemas;
 	public Cast cast;
 	public NavSaveData nav;
-	public Dictionary<string, PlanExecutorSaveData> planExecutors;
+	public PlanExecutorSaveData planExecutor;
 	public Random.State randomState;
 }
 
@@ -38,8 +39,8 @@ public sealed class PlanExecutorSaveData
 	public int commutesFinishedUpToTime;
 	public Random.State randomState;
 	public MenuData backMenu;
-	public Plan livePlan;
-	public PlanSchema liveSchema;
+	public List<Plan> livePlans;
+	public List<PlanSchema> liveSchemas;
 	public Cast liveCast;
 	public ActiveEvent activeEvent;
 }

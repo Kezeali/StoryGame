@@ -41,7 +41,7 @@ public class App : MonoBehaviour
 	DefaultSaveData defaultSaveData;
 
 	[SerializeField]
-	PlanExecutor[] planExecutorPrefabs;
+	PlanExecutor planExecutor;
 
 	[System.NonSerialized]
 	public List<string> saveFilesAvailableForCurrentProfile = new List<string>();
@@ -218,196 +218,7 @@ public class App : MonoBehaviour
 		}
 		return collection;
 	}
-
-	List<PlanExecutor> executingExecutors = new List<PlanExecutor>();
-	struct PlanExecutorUser
-	{
-		public string desiredType;
-		public IServiceUser<PlanExecutor> user;
-	}
-	List<PlanExecutorUser> planExecutorUsers = new List<PlanExecutorUser>();
-
-	public static bool ExecutorBeginning(PlanExecutor executor)
-	{
-		// NOTE(elliot): this was used for verifying that the given executor is the only active instance, but that's not needed anymore
-		return true;
-	}
-
-	public static void ExecutorEnding(PlanExecutor executor)
-	{
-	}
-
-	// Returns true if the executor was added
-	bool AddExecutorInternal(PlanExecutor executor)
-	{
-		if (executor == null)
-		{
-			return false;
-		}
-		bool foundExisting = false;
-		for (int i = 0; i < this.executingExecutors.Count; ++i)
-		{
-			if (this.executingExecutors[i] != null)
-			{
-				if (this.executingExecutors[i].key == executor.key)
-				{
-					foundExisting = true;
-					break;
-				}
-			}
-		}
-		if (!foundExisting)
-		{
-			this.executingExecutors.Add(executor);
-			for (int i = this.planExecutorUsers.Count-1; i >= 0; --i)
-			{
-				if (this.planExecutorUsers[i].user != null)
-				{
-					if (this.planExecutorUsers[i].desiredType == executor.instantiatedFrom)
-					{
-						this.planExecutorUsers[i].user.Initialise(executor);
-						this.planExecutorUsers.RemoveAt(i);
-					}
-				}
-			}
-		}
-		else
-		{
-			Debug.LogErrorFormat("Tried to add plan executor with duplicate ID {0}", executor.key);
-		}
-		return !foundExisting;
-	}
-
-	void RemoveExecutorInternal(PlanExecutor executor)
-	{
-		for (int i = this.executingExecutors.Count-1; i >= 0 ; --i)
-		{
-			if (this.executingExecutors[i] == null || this.executingExecutors[i] == executor)
-			{
-				this.executingExecutors.RemoveAt(i);
-			}
-		}
-	}
-
-	public void GetExecutor(string type, IServiceUser<PlanExecutor> user)
-	{
-		PlanExecutor executor = null;
-		for (int i = 0; i < this.executingExecutors.Count; ++i)
-		{
-			if (this.executingExecutors[i] != null)
-			{
-				if (this.executingExecutors[i].instantiatedFrom == type)
-				{
-					executor = this.executingExecutors[i];
-					break;
-				}
-			}
-		}
-		if (executor != null)
-		{
-			user.Initialise(executor);
-		}
-		else
-		{
-			PlanExecutorUser entry = new PlanExecutorUser()
-			{
-				desiredType = type,
-				user = user
-			};
-			this.planExecutorUsers.Add(entry);
-		}
-	}
-
-	public void CancelRequestForExecutor(string id, IServiceUser<PlanExecutor> user)
-	{
-		for (int i = this.planExecutorUsers.Count-1; i >= 0; --i)
-		{
-			if (this.planExecutorUsers[i].desiredType == id && this.planExecutorUsers[i].user == user)
-			{
-					this.planExecutorUsers.RemoveAt(i);
-			}
-		}
-	}
-
-	void TidyUpExecutors()
-	{
-		for (int i = this.executingExecutors.Count-1; i >= 0 ; --i)
-		{
-			if (this.executingExecutors[i] == null)
-			{
-				this.executingExecutors.RemoveAt(i);
-			}
-		}
-	}
-
-	public static void RegisterPlan(IPlanExecutorController controller, string planName, string executorTypeName)
-	{
-		PlanExecutor planExecutor = null;
-		for (int i = 0; i < instance.executingExecutors.Count; ++i)
-		{
-			PlanExecutor executor = instance.executingExecutors[i];
-			if (executor.instantiatedFrom == executorTypeName && executor.expectedPlanName == planName)
-			{
-				planExecutor = executor;
-				break;
-			}
-		}
-		if (planExecutor == null)
-		{
-			PlanExecutor prefab = null;
-			for (int i = 0; i < instance.planExecutorPrefabs.Length; ++i)
-			{
-				if (instance.planExecutorPrefabs[i].name == executorTypeName)
-				{
-					prefab = instance.planExecutorPrefabs[i];
-					break;
-				}
-			}
-			if (prefab != null)
-			{
-				Debug.LogFormat("Instantiating '{0}' executor for plan '{1}'", executorTypeName, planName);
-				instance.nav.MakeCurrentMenuTheActiveScene();
-				planExecutor = Object.Instantiate(prefab, instance.transform);
-				planExecutor.SetKey(executorTypeName, planName);
-				planExecutor.controller = null;
-
-				bool added = instance.AddExecutorInternal(planExecutor);
-				if (!added)
-				{
-					Object.Destroy(planExecutor);
-					planExecutor = null;
-				}
-			}
-		}
-		if (planExecutor != null && planExecutor.controller == null)
-		{
-			planExecutor.controller = controller;
-			controller.ReceiveExecutor(planExecutor);
-		}
-		else
-		{
-			Debug.LogErrorFormat("Failed to create executor for {0}", controller);
-		}
-	}
-
-	public static void DeregisterPlan(IPlanExecutorController controller, string planName, string executorTypeName)
-	{
-		PlanExecutor planExecutor = null;
-		for (int i = 0; i < instance.executingExecutors.Count; ++i)
-		{
-			PlanExecutor executor = instance.executingExecutors[i];
-			if (executor.instantiatedFrom == executorTypeName && executor.expectedPlanName == planName && executor.controller == controller)
-			{
-				planExecutor = executor;
-				break;
-			}
-		}
-		if (planExecutor != null)
-		{
-			planExecutor.controller = null;
-		}
-	}
-
+	
 	public void Awake()
 	{
 	#if !UNITY_EDITOR
@@ -431,10 +242,13 @@ public class App : MonoBehaviour
 
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
-		this.dataItemConverter.AddDataItemRange(this.plannerData.characterStats);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.subjects);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.planActivities);
+		this.dataItemConverter.AddDataItemRange(this.plannerData.events);
 		this.dataItemConverter.AddDataItemRange(this.gameData.roles);
+		this.dataItemConverter.AddDataItemRange(this.gameData.characterStats);
+		this.dataItemConverter.AddDataItemRange(this.gameData.outfitItems);
+		this.dataItemConverter.AddDataItemRange(this.gameData.qualities);
 		this.dataItemConverter.AddDataItemRange(this.systemData.menus);
 		this.dataItemConverter.AddDataItemRange(this.systemData.envScenes);
 		this.dataItemConverter.AddDataItemRange(this.systemData.commutes);
@@ -505,8 +319,10 @@ public class App : MonoBehaviour
 	public void Initialise()
 	{
 		Debug.Log("Initialising service users.");
-		this.InitialiseServiceUsers(this.plannerData);
 		this.InitialiseServiceUsers(this.nav);
+		this.InitialiseServiceUsers(this.plannerData);
+		this.InitialiseServiceUsers(this.dataIndex);
+		this.InitialiseServiceUsers(this.planExecutor);
 		if (this.profileData != null)
 		{
 			this.InitialiseServiceUsers(this.profileData);

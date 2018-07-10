@@ -3,11 +3,14 @@ using UnityEngine;
 namespace Cloverview
 {
 
-[CreateAssetMenu(fileName="Data.asset", menuName="Cloverview/Data Index")]
-public class GameData : ScriptableObject
+[CreateAssetMenu(fileName="DataIndex.asset", menuName="Cloverview/DataIndex")]
+public class DataIndex : ScriptableObject
 {
 	public RoleData playerRole;
 	public RoleData[] roles;
+	public OutfitItemData[] outfitItems;
+	public CharacterStatDefinition[] characterStats;
+	public QualityData[] qualities;
 
 	public static RoleData FindRole(RoleData[] roles, string roleName)
 	{

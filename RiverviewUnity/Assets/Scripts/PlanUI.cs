@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IPlanExecutorController
+public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 {
 	[SerializeField]
 	private string planName;
@@ -75,12 +75,12 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IPlanExecutorContro
 		this.MapUI();
 
 		App.Register<SaveData>(this);
-		App.RegisterPlan(this, this.planName, this.planExecutorPrefab.name);
+		App.Register<PlanExecutor>(this);
 	}
 
 	public void OnDisable()
 	{
-		App.DeregisterPlan(this, this.planName, this.planExecutorPrefab.name);
+		App.Deregister<PlanExecutor>(this);
 		App.Deregister<SaveData>(this);
 
 		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
@@ -166,7 +166,18 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IPlanExecutorContro
 			if (loadedData.plans[i].name == this.planName)
 			{
 				loadedPlan = loadedData.plans[i];
+				// A new blank plan has already been generated matching the current schema: set the save data's ref to that new plan. The data from loadedPlan will be migrated to this new plan.
 				loadedData.plans[i] = this.plan;
+				break;
+			}
+		}
+
+		for (int i = 0; i <	loadedData.schemas.Count; ++i)
+		{
+			if (loadedData.schemas[i].name == this.planName)
+			{
+				// Update the saved schema
+				loadedData.schemas[i] = this.planSchema;
 				break;
 			}
 		}
@@ -174,15 +185,10 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IPlanExecutorContro
 		SchemaStuff.UpgradePlan(this.planSchema, this.plan, loadedPlan);
 	}
 
-	public void ReceiveExecutor(PlanExecutor executor)
+	public void Initialise(PlanExecutor executor)
 	{
 		Debug.Assert(executor != null);
 		this.planExecutor = executor;
-
-		if (this.planExecutor != null)
-		{
-			this.planExecutor.SetPlan(this.plan, this.planSchema);
-		}
 	}
 
 	public void CompleteInitialisation()
@@ -197,11 +203,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IPlanExecutorContro
 				PlanSlotUI slotUI = uiSection.slots[slotIndex];
 				slotUI.DisplayCurrent(this.defaultFilledSlotPrefab);
 			}
-		}
-
-		if (this.planExecutor != null)
-		{
-			this.planExecutor.SetPlan(this.plan, this.planSchema);
 		}
 	}
 
