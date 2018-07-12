@@ -62,6 +62,7 @@ MonoBehaviour:
     validSlots: 2
     subject: {fileID: 11400000, guid: f67516e0789ce6a48aba1bfeb48a7182, type: 2}
     activity: {fileID: 11400000, guid: 8bf6de05ed8e6504a815c9ce8448d852, type: 2}
+  calendars: []
   subjects:
   - {fileID: 11400000, guid: 88e123a6ab79df94f84a1f5187174cb1, type: 2}
   - {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
@@ -79,3 +80,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 16edde81760140f4d8ebaa5b300d1c28, type: 2}
   - {fileID: 11400000, guid: 67ba0ca3f3a8f264ea937a75eb22a1ca, type: 2}
   - {fileID: 11400000, guid: 4b5753a4cf383ae48a757c0cced078fe, type: 2}
+  events: []
+  stageMarks: []

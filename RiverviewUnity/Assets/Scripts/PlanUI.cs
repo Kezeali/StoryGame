@@ -9,17 +9,14 @@ namespace Cloverview
 public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
 {
 	[SerializeField]
-	private string planName;
+	[UnityEngine.Serialization.FormerlySerializedAs("planName")]
+	private string planSchemaName;
 
 	[SerializeField]
 	private PlanOptionSelectorUI planOptionSelectorUI;
 
 	[SerializeField]
 	private PlanOptionUI defaultFilledSlotPrefab;
-
-	[SerializeField]
-	[UnityEngine.Serialization.FormerlySerializedAs("planExecutor")]
-	private PlanExecutor planExecutorPrefab;
 
 	[SerializeField]
 	private Animator planUiAnimator;
@@ -44,15 +41,38 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 		for (int i = 0; i < others.Length; ++i)
 		{
 			PlanUI other = others[i] as PlanUI;
-			if (other != null && other != this && other.planName == this.planName)
+			if (other != null && other != this && other.planSchemaName == this.planSchemaName)
 			{
 				Debug.LogErrorFormat("PlanUIs with duplicate planName values: {0}, {1}", this, others[i]);
 			}
 		}
 
-		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>(true);
-		System.Array.Sort(uiSections, PlanSectionUI.Compare);
-		PlanUI.GenerateSchema(this);
+		// Update uiSections if necessary (avoid doing so if not chagned so the scene doesn't get marked dirty unnecessarily)
+		PlanSectionUI[] newPlanSections = this.GetComponentsInChildren<PlanSectionUI>(true);
+		System.Array.Sort(newPlanSections, PlanSectionUI.Compare);
+
+		bool changed = false;
+		if (this.uiSections == null || this.uiSections.Length != newPlanSections.Length) {
+			changed = true;
+		} else {
+			for (int i = 0; i < newPlanSections.Length; ++i) {
+				if (this.uiSections[i] != newPlanSections[i]) {
+					changed = true;
+					break;
+				}
+			}
+		}
+		if (changed) {
+			this.uiSections = newPlanSections;
+		}
+
+		// Do the same thing for the plan slots
+		for (int i = 0; i < this.uiSections.Length; ++i) {
+			this.uiSections[i].GatherSlots();
+		}
+
+		// Make sure the schema data matches layout
+		PlanUI.RefreshSchema(this);
 	#endif
 	}
 
@@ -71,7 +91,8 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 			}
 		}
 
-		this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.planName);
+		// TODO(elliot): consider passing a unique name here so that plans can be identified as for a specific planning period
+		this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.planSchemaName);
 		this.MapUI();
 
 		App.Register<SaveData>(this);
@@ -95,19 +116,19 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 		}
 	}
 
-	static void GenerateSchema(PlanUI planUi)
+	public static void GenerateOrRefreshSchema(PlanUI planUi)
 	{
 	#if UNITY_EDITOR
-		if (planUi.planSchema == null || planUi.planSchema.name != planUi.planName) {
+		if (planUi.planSchema == null || planUi.planSchema.name != planUi.planSchemaName) {
 			if (UnityEditor.EditorApplication.isPlaying) {
 				Debug.LogWarning("Wont generate new plan schema while playing.");
 				return;
 			}
 			planUi.planSchema = ScriptableObject.CreateInstance<PlanSchema>();
 
-			string basePath = "Assets/Data/Calendars/PlanSchemas/";
+			string basePath = "Assets/Data/Planner/Calendars/PlanSchemas/";
 			string assetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(
-				basePath + planUi.planName + ".asset"
+				basePath + planUi.planSchemaName + ".asset"
 			);
  
 			UnityEditor.AssetDatabase.CreateAsset(planUi.planSchema, assetPath);
@@ -115,8 +136,15 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 			UnityEditor.AssetDatabase.SaveAssets();
 			UnityEditor.AssetDatabase.Refresh();
 		}
-		planUi.planSchema.name = planUi.planName;
+		planUi.planSchema.name = planUi.planSchemaName;
 
+		PlanUI.RefreshSchema(planUi);
+	#endif
+	}
+
+	public static void RefreshSchema(PlanUI planUi)
+	{
+	#if UNITY_EDITOR
 		int sectionsCount = planUi.uiSections.Length;
 
 		planUi.planSchema.sections = new PlanSchemaSection[sectionsCount];
@@ -131,26 +159,15 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 			int slotsCount = uiSection.slots.Length;
 
 			schemaSection.slots = new PlanSchemaSlot[slotsCount];
-			for (int slotIndex = 0; slotIndex < slotsCount-1; ++slotIndex)
+			for (int slotIndex = 0; slotIndex < slotsCount; ++slotIndex)
 			{
 				PlanSlotUI slotUI = uiSection.slots[slotIndex];
-				PlanSlotUI nextSlotUI = uiSection.slots[slotIndex+1];
 
 				var schemaSlot = new PlanSchemaSlot();
 				schemaSlot.slotType = slotUI.slotType;
-				schemaSlot.unitIndex = slotUI.SlotUnitIndex();
-				schemaSlot.unitLength = nextSlotUI.SlotUnitIndex() - schemaSlot.unitIndex;
+				schemaSlot.start = slotUI.GetStartTime();
+				schemaSlot.duration = slotUI.GetDuration();
 				schemaSection.slots[slotIndex] = schemaSlot;
-			}
-			if (slotsCount > 0)
-			{
-				PlanSlotUI slotUI = uiSection.slots[slotsCount-1];
-
-				var schemaSlot = new PlanSchemaSlot();
-				schemaSlot.slotType = slotUI.slotType;
-				schemaSlot.unitIndex = slotUI.SlotUnitIndex();
-				schemaSlot.unitLength = schemaSection.totalTimeUnits - schemaSlot.unitIndex;
-				schemaSection.slots[slotsCount-1] = schemaSlot;
 			}
 
 			UnityEditor.EditorUtility.SetDirty(planUi.planSchema);
@@ -183,7 +200,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 		Plan loadedPlan = null;
 		for (int i = 0; i <	loadedData.plans.Count; ++i)
 		{
-			if (loadedData.plans[i].name == this.planName)
+			if (loadedData.plans[i].schema.name == this.planSchema.name)
 			{
 				loadedPlan = loadedData.plans[i];
 				// A new blank plan has already been generated matching the current schema: set the save data's ref to that new plan. The data from loadedPlan will be migrated to this new plan.

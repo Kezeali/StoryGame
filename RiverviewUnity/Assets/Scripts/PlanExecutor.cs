@@ -402,11 +402,11 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 				PlanSchemaSlot schemaSlot = schemaSection.slots[slotIndex];
 				PlanSlot slot = planSection.slots[slotIndex];
 
-				localTimeUnitsElapsed = sectionLevelTimeUnitsElapsed + schemaSlot.unitIndex;
+				localTimeUnitsElapsed = sectionLevelTimeUnitsElapsed + schemaSlot.start;
 
 				// NOTE(elliot): Slot must be completely covered by the skip/instantly time units range (because being completely covered indicates that, if the schema hasn't changed, that slot was finished when this save file was created)
-				bool skipSlot = localTimeUnitsElapsed + schemaSlot.unitLength <= skipTimeUnits;
-				bool instantSlot = localTimeUnitsElapsed + schemaSlot.unitLength <= instantTimeUnits;
+				bool skipSlot = localTimeUnitsElapsed + schemaSlot.duration <= skipTimeUnits;
+				bool instantSlot = localTimeUnitsElapsed + schemaSlot.duration <= instantTimeUnits;
 
 				if (!skipSlot) {
 					PlanActivityData activityData = GetActivity(slot);
@@ -468,7 +468,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 					// Execute the activity for this slot
 					if (activityData != null) {
 						int beginTimeUnit = localTimeUnitsElapsed;
-						int slotLengthTimeUnits = schemaSlot.unitLength;
+						int slotLengthTimeUnits = schemaSlot.duration;
 						int timeUnitsBeforeEvent = 0;
 
 						// Determine if there will be event during this activity, and when to run it
@@ -710,7 +710,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 					if (slotCondition.when == when) {
 						if (slotCondition.type == slot.slotType) {
 							conditionPassed = true;
-						} else if (slotCondition.time >= 0 && slotCondition.time > schemaSlot.unitIndex && slotCondition.time < schemaSlot.unitIndex + schemaSlot.unitLength) {
+						} else if (slotCondition.time >= 0 && slotCondition.time > schemaSlot.start && slotCondition.time < schemaSlot.start + schemaSlot.duration) {
 							conditionPassed = true;
 						}
 					}

@@ -22,7 +22,8 @@ namespace Cloverview
 	[System.Serializable]
 	public sealed class PlanSlot
 	{
-		public int unitIndex;
+		// TODO: get rid of start and slotType here and just use the saved shcema values?
+		public int start;
 		public SlotType slotType;
 		public PlanOption selectedOption;
 	}

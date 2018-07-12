@@ -6,9 +6,12 @@ namespace Cloverview
 public class SequentialPlanSlotUI : PlanSlotUI
 {
 	[System.NonSerialized]
-	public int unitIndex;
+	public int start;
+	[System.NonSerialized]
+	public int duration;
 
-	public override int SlotUnitIndex() { return unitIndex; }
+	public override int GetStartTime() { return this.start; }
+	public override int GetDuration() { return this.duration; }
 }
 
 }
