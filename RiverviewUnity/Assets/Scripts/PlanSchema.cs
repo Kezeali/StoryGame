@@ -35,8 +35,8 @@ public class PlanSchemaSection
 [System.Serializable]
 public class PlanSchemaSlot
 {
-	public int unitIndex;
-	public int unitLength;
+	public int start;
+	public int duration;
 	public SlotType slotType;
 }
 
@@ -64,7 +64,7 @@ public static class SchemaStuff
 				PlanSchemaSlot schemaSlot = schemaSection.slots[slotIndex];
 
 				var planSlot = new PlanSlot();
-				planSlot.unitIndex = schemaSlot.unitIndex;
+				planSlot.start = schemaSlot.start;
 				planSlot.slotType = schemaSlot.slotType;
 				planSection.slots[slotIndex] = planSlot;
 			}
@@ -101,7 +101,7 @@ public static class SchemaStuff
 						continue;
 					}
 
-					int loadedSlotUnitBegin = loadedSlot.unitIndex;
+					int loadedSlotUnitBegin = loadedSlot.start;
 					int selectedOptionLength = 0;
 					if (loadedSlot.selectedOption != null && loadedSlot.selectedOption.plannerItem != null)
 					{
@@ -121,8 +121,8 @@ public static class SchemaStuff
 
 						if (actualSlot.slotType == requiredType && actualSlot.selectedOption == null)
 						{
-							int actualUnitLength = schemaSlot.unitLength;
-							int actualBegin = schemaSlot.unitIndex;
+							int actualUnitLength = schemaSlot.duration;
+							int actualBegin = schemaSlot.start;
 							int actualEnd = actualBegin + actualUnitLength;
 
 							// NOTE(elliot): this should check whether both, 1) the loaded slot overlaps the slot currently being checked (called "actualSlot", as it is a slot that is actually in the current schema), and 2) the selected option in the loaded slot will fit in the actual slot

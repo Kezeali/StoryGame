@@ -711,17 +711,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e61ce99ff3c5bfc408794287744a65b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  planName: Weekly
+  planSchemaName: GeneralWeekly
   planOptionSelectorUI: {fileID: 1497837959}
   defaultFilledSlotPrefab: {fileID: 114094483307811976, guid: d09756ecb72f93645844e81150c3b5e5,
     type: 2}
-  planExecutorPrefab: {fileID: 114723216548656092, guid: b3ac209cf68367f4eae5b5a66cc5d07c,
-    type: 2}
   planUiAnimator: {fileID: 343122635}
-  planSchema:
-    name: 
-    sections: []
-  uiSections: []
+  planSchema: {fileID: 11400000, guid: 061787f659d7f2547892dd6b9be87df9, type: 2}
+  uiSections:
+  - {fileID: 1918463775}
+  - {fileID: 1595961475}
+  - {fileID: 926097474}
+  - {fileID: 1102430668}
+  - {fileID: 597266859}
 --- !u!1 &381410790
 GameObject:
   m_ObjectHideFlags: 0
@@ -1555,7 +1556,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 008717a01f8151a43b0f53071d878133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slots: []
+  slots:
+  - {fileID: 2103130921}
+  - {fileID: 1184862133}
+  - {fileID: 2142362310}
   weekday: 4
   totalHours: 24
 --- !u!114 &597266860
@@ -2533,7 +2537,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000055761448, y: 0.00008764051}
+  m_AnchoredPosition: {x: -0.000055761448, y: 0.00002275944}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &902383962
@@ -2619,7 +2623,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 008717a01f8151a43b0f53071d878133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slots: []
+  slots:
+  - {fileID: 148457577}
+  - {fileID: 1198064044}
+  - {fileID: 385067965}
   weekday: 2
   totalHours: 24
 --- !u!114 &926097475
@@ -3332,7 +3339,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 008717a01f8151a43b0f53071d878133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slots: []
+  slots:
+  - {fileID: 796536899}
+  - {fileID: 810449197}
+  - {fileID: 1339204576}
   weekday: 3
   totalHours: 24
 --- !u!114 &1102430669
@@ -3666,8 +3676,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2118207278}
   m_HandleRect: {fileID: 2118207277}
   m_Direction: 2
-  m_Value: 0
-  m_Size: 0.9999999
+  m_Value: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4703,7 +4713,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 008717a01f8151a43b0f53071d878133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slots: []
+  slots:
+  - {fileID: 2132125741}
+  - {fileID: 1334985758}
+  - {fileID: 823177415}
   weekday: 1
   totalHours: 24
 --- !u!114 &1595961476
@@ -5530,7 +5543,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 008717a01f8151a43b0f53071d878133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slots: []
+  slots:
+  - {fileID: 1780029285}
+  - {fileID: 1141021271}
+  - {fileID: 1974251924}
   weekday: 0
   totalHours: 24
 --- !u!114 &1918463776

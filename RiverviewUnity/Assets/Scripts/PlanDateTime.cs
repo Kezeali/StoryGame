@@ -131,11 +131,11 @@ public struct PlanDateTime
 									
 									for (int slotIndex = basis.slotIndex; slotIndex < schemaSection.slots.Length; ++slotIndex) {
 										PlanSchemaSlot schemaSlot = schemaSection.slots[slotIndex];
-										if (offset - schemaSlot.unitLength < 0) {
+										if (offset - schemaSlot.duration < 0) {
 											result.slotIndex = slotIndex;
 											break;
 										}
-										offset -= schemaSlot.unitLength;
+										offset -= schemaSlot.duration;
 									}
 									// There may be no slot at this time, but the search is done regardless
 									offset = -1;

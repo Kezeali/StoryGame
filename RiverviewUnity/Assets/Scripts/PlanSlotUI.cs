@@ -42,9 +42,15 @@ public class PlanSlotUI : MonoBehaviour
 		}
 	}
 
-	public virtual int SlotUnitIndex()
+	// TODO(elliot): make this stuff editor-only, since it is now saved in the schema
+	public virtual int GetStartTime()
 	{
 		return this.transform.GetSiblingIndex();
+	}
+	// TODO(elliot): make this stuff editor-only, since it is now saved in the schema
+	public virtual int GetDuration()
+	{
+		return 1;
 	}
 
 	public void Initialise(PlanSlot dataSlot)
@@ -92,13 +98,14 @@ public class PlanSlotUI : MonoBehaviour
 		}
 	}
 
+	// TODO(elliot): make this method editor only (slot sorting should only need to happen at edit time)
 	public static int Compare(PlanSlotUI a, PlanSlotUI b)
 	{
-		if (a.SlotUnitIndex() < b.SlotUnitIndex())
+		if (a.GetStartTime() < b.GetStartTime())
 		{
 			return -1;
 		}
-		else if (a.SlotUnitIndex() > b.SlotUnitIndex())
+		else if (a.GetStartTime() > b.GetStartTime())
 		{
 			return 1;
 		}
