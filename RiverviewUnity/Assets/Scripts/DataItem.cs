@@ -14,7 +14,6 @@ public abstract class DataItem : IDataItem
 public interface IDataItem
 {
 	string name { get; set; }
-	bool saveFullData { get; }
 }
 
 }

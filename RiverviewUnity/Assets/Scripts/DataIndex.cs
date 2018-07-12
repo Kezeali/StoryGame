@@ -6,11 +6,14 @@ namespace Cloverview
 [CreateAssetMenu(fileName="DataIndex.asset", menuName="Cloverview/DataIndex")]
 public class DataIndex : ScriptableObject
 {
+	[Tooltip("The PC. Should also be included in the 'roles' list.")]
 	public RoleData playerRole;
+
 	public RoleData[] roles;
 	public OutfitItemData[] outfitItems;
-	public CharacterStatDefinition[] characterStats;
 	public QualityData[] qualities;
+	public CharacterStatDefinition[] characterStats;
+	public StatBonusData[] statBonuses;
 
 	public static RoleData FindRole(RoleData[] roles, string roleName)
 	{

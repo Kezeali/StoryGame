@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 public static class ListUtilities
 {
+	public static bool IsNullOrEmpty<T>(this List<T> list)
+	{
+		return list == null || list.Count == 0;
+	}
+
 	public static int RemoveAll<T, P1>(this List<T> list, System.Func<T, P1, bool> match, P1 fixedArgument)
 	{
 		int size = list.Count;
@@ -12,12 +17,12 @@ public static class ListUtilities
 		return result;
 	}
 
-	public static int ExcludeAll<T, P1>(this List<T> list, System.Func<T, P1, bool> match, P1 fixedArgument)
+	public static int ExcludeAll<T, P1>(this IList<T> list, System.Func<T, P1, bool> match, P1 fixedArgument)
 	{
 		return ListUtilities.ExcludeAll(list, match, fixedArgument, 0, list.Count);
 	}
 
-	public static int ExcludeAll<T, P1>(this List<T> list, System.Func<T, P1, bool> match, P1 fixedArgument, int firstIndex, int count)
+	public static int ExcludeAll<T, P1>(this IList<T> list, System.Func<T, P1, bool> match, P1 fixedArgument, int firstIndex, int count)
 	{
 		int end = firstIndex + count;
 		end = list.Count < end ? list.Count : end;

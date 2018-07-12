@@ -7,7 +7,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<Nav>, INavigator
+public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<Nav>, IServiceUser<PlannerDataIndex>, INavigator
 {
 	[SerializeField]
 	float defaultSecondsPerUnitTime;
@@ -46,14 +46,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	SaveData saveData;
 	PlanExecutorSaveData executorSaveData;
 	Nav nav;
+	PlannerDataIndex plannerData;
 	string activityScenePreloadId;
 	List<PlanActivityData> preloadedActivities = new List<PlanActivityData>();
 	List<PlanActivityData> nextPreloadedActivities = new List<PlanActivityData>();
-	List<EventData> filteredEvents = new List<EventData>();
-	List<EventData> nextFilteredEvents = new List<EventData>();
+	List<RatedEvent> sortedEvents;
 
 	bool executing;
-	List<PlanExecutor> others = new List<PlanExecutor>(5);
 
 	public const float MIN_SECONDS_PER_UNIT_TIME =  (1.0f / 120.0f);
 
@@ -64,17 +63,17 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	public void OnEnable()
 	{
-		this.RefreshOthers();
 		App.Register<SaveData>(this);
 		App.Register<Nav>(this);
+		App.Register<PlannerDataIndex>(this);
 	}
 
 	public void OnDisable()
 	{
 		App.Deregister<SaveData>(this);
 		App.Deregister<Nav>(this);
+		App.Deregister<PlannerDataIndex>(this);
 
-		this.others.Clear();
 		if (this.nav != null) {
 			this.UnloadAllPreloadedActivities();
 		}
@@ -83,31 +82,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 	public void OnApplicationQuit()
 	{
 		this.nav = null;
-	}
-
-	void RefreshOthers()
-	{
-		this.others.Clear();
-		GameObject[] existingExecutors = GameObject.FindGameObjectsWithTag("PlanExecutor");
-		for (int i = 0; i < existingExecutors.Length; ++i) {
-			if (existingExecutors[i] != this.gameObject) {
-				PlanExecutor otherExecutor = existingExecutors[i].GetComponent<PlanExecutor>();
-				if (otherExecutor != null) {
-					this.others.Add(otherExecutor);
-				} else {
-					Debug.LogErrorFormat("Non PlanExecutor tagged with PlanExecutor tag: {0}", existingExecutors[i].name);
-				}
-			}
-		}
-	}
-
-	public void SetKey(string instantiatedFrom, string expectedPlanName)
-	{
-		this.instantiatedFrom = instantiatedFrom;
-		this.expectedPlanName = expectedPlanName;
-		this.key = Strf.Format("{0}({1})", this.instantiatedFrom, this.expectedPlanName);
-		Debug.LogFormat("Assigned executor key '{0}'", this.key);
-		this.LoadSave();
 	}
 
 	public void Initialise(SaveData saveData)
@@ -121,6 +95,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		Debug.Assert(nav);
 
 		this.nav = nav;
+	}
+
+	public void Initialise(PlannerDataIndex plannerData)
+	{
+		Debug.Assert(nav);
+
+		this.plannerData = plannerData;
 	}
 
 	public void CompleteInitialisation()
@@ -150,13 +131,13 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			if (this.saveData.planExecutor == null) {
 				this.saveData.planExecutor = new PlanExecutorSaveData();
 			}
-			this.executorSaveData = this.saveData.executorSaveData;
+			this.executorSaveData = this.saveData.planExecutor;
 		}
 	}
 
 	bool IsReadyToResume()
 	{
-		return this.executorSaveData != null && this.executorSaveData.timeUnitsElapsed > 0 && this.executorSaveData.livePlan != null && this.executorSaveData.liveSchema != null;
+		return this.executorSaveData != null && this.executorSaveData.timeUnitsElapsed > 0 && this.executorSaveData.livePlan != null;
 	}
 
 	public string GetExpectedPlanName()
@@ -166,43 +147,18 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 
 	bool PreloadIfReady()
 	{
-		if (this.DataReadyToBeginExecution()) {
+		if (this.RequiredServicesAreInitialised()) {
 			this.PreloadPlanActivities();
 			return true;
 		}
 		return false;
-	}
-
-	bool OthersExecuting()
-	{
-		bool result = false;
-		for (int i = 0; i < this.others.Count; ++i) {
-			if (this.others[i] != null && this.others[i].executing) {
-				result = true;
-				break;
-			}
-		}
-		return result;
-	}
-
-	string FindOtherExecuting()
-	{
-		string result = "";
-		for (int i = 0; i < this.others.Count; ++i) {
-			if (this.others[i] != null && this.others[i].executing) {
-				result = this.others[i].instantiatedFrom;
-				break;
-			}
-		}
-		return result;
 	}
  
 	bool ResumeExecutionIfReady()
 	{
 		if (this.RequiredServicesAreInitialised() &&
 			this.executorSaveData.timeUnitsElapsed > 0 &&
-			this.isActiveAndEnabled &&
-			!this.OthersExecuting())
+			this.isActiveAndEnabled)
 		{
 			this.ExecuteInternal(0);
 			return true;
@@ -236,20 +192,30 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 	}
 
-	void PreloadPlanActivities(int fromTime, int toTime)
+	void PreloadPlanActivities()
 	{
+		UnityEngine.Profiling.Profiler.BeginSample("PlanExecutor.PreloadPlanActivities");
 		this.nextPreloadedActivities.Clear();
+
+		int fromTime = this.saveData.time;
+		PlanDateTime currentDateTime = PlanDateTime.FromTimeUnits(this.plannerData, fromTime);
+
+		PlanSchema currentSchema = currentDateTime.GetSchema();
+		if (currentSchema == null) {
+			UnityEngine.Profiling.Profiler.EndSample();;
+			Debug.LogError("Can't preload activities for current planning period as the schema is missing.");
+			return;
+		}
+		
+		string currentPlanName = currentSchema.name;
 
 		for (int planIndex = 0; planIndex < this.saveData.plans.Count; ++planIndex) {
 			Plan plan = this.saveData.plans[planIndex];
-			bool overlap =
-				plan.fromTime >= fromTime && plan.fromTime <= toTime ||
-				plan.toTime >= fromTime && plan.toTime <= toTime;
-			if (!overlap) {
+			if (plan.name != currentPlanName) {
 				continue;
 			}
-			for (int sectionIndex = 0; sectionIndex < this.plan.sections.Length; ++sectionIndex) {
-				PlanSection section = this.plan.sections[sectionIndex];
+			for (int sectionIndex = 0; sectionIndex < plan.sections.Length; ++sectionIndex) {
+				PlanSection section = plan.sections[sectionIndex];
 				PlanSlot previousSlot = null;
 				for (int slotIndex = 0; slotIndex < section.slots.Length; ++slotIndex) {
 					PlanSlot slot = section.slots[slotIndex];
@@ -291,6 +257,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.nextPreloadedActivities = temp;
 
 		this.nextPreloadedActivities.Clear();
+		UnityEngine.Profiling.Profiler.EndSample();
 	}
 
 	void UnloadAllPreloadedActivities()
@@ -301,103 +268,73 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 	}
 
-	// NOTE(elliot): events are filtered & sorted as follows:
-	//  1) hard-no -- if any desired slot / stat values return a hard-no result, the event is filtered out
-	//  2) priority -- higher priority events which can occur will /always/ occur before lower priority events
-	//  3) desired stats -- events are rated by how well their desired stats are fulfilled. higher rated events occur earlier
-
-	EventDataSorter sorter = new EventDataSorter();
-	void FilterAvailableEvents()
-	{
-		if (this.saveData != null) {
-			Character pc = this.saveData.cast.pc;
-
-			this.nextFilteredEvents.Clear();
-
-			for (int eventDataIndex = 0; eventDataIndex < this.availableEvents.Length; ++eventDataIndex) {
-				EventData eventDef = this.availableEvents[eventDataIndex];
-				Debug.Assert(!this.nextFilteredEvents.Contains(eventDef));
-				EventConditions conditions = eventDef.conditions;
-				if (conditions.requiredPcStats == null || !DesiredStat.DetermineHardNo(pc, conditions.requiredPcStats)) {
-					this.nextFilteredEvents.Add(eventDef);
-				}
-			}
-
-			sorter.pc = pc;
-			this.nextFilteredEvents.Sort(sorter);
-
-			var temp = this.filteredEvents;
-			this.filteredEvents = this.nextFilteredEvents;
-			this.nextFilteredEvents = temp;
-
-			this.nextFilteredEvents.Clear();
-		}
-	}
-
-	public class EventDataSorter : IComparer<EventData>
-	{
-		public Character pc;
-		public int Compare(EventData a, EventData b)
-		{
-			if (a.conditions.priority < b.conditions.priority) {
-				return -1;
-			} else if (a.conditions.priority > b.conditions.priority) {
-				return 1;
-			} else {
-				float ratingA = DesiredStat.Rate(pc.status, a.conditions.requiredPcStats);
-				float ratingB = DesiredStat.Rate(pc.status, b.conditions.requiredPcStats);
-				if (ratingA > ratingB) {
-					return -1;
-				} else if (ratingA < ratingB) {
-					return 1;
-				} else {
-					return 0;
-				}
-			}
-		}
-	}
-
 	public bool IsReadyForPlayerToExecute()
 	{
-		return !this.OthersExecuting() && this.DataReadyToBeginExecution();
+		return this.RequiredServicesAreInitialised() && !this.executing;
 	}
 
-	public void Execute(int skipTimeUnits, int instantTimeUnits)
+	public void BeginExecution()
 	{
-		if (this.DataReadyToBeginExecution() && !this.executing) {
+		this.BeginExecution(0, 0);
+	}
+
+	public void BeginExecution(int skipTimeUnits, int instantTimeUnits)
+	{
+		if (this.RequiredServicesAreInitialised() && !this.executing) {
 			this.executorSaveData.timeUnitsElapsed = skipTimeUnits;
+			if (skipTimeUnits != 0) {
+				this.InitExecution();
+			}
 			this.ExecuteInternal(instantTimeUnits);
 		}
+	}
+
+	void InitExecution()
+	{
+		UnityEngine.Profiling.Profiler.BeginSample("PlanExecutor.InitExecution");
+		this.executorSaveData.livePlan = null;
+
+		// Find the plan at the current time
+		PlanDateTime currentDateTimeInStream = PlanDateTime.FromTimeUnits(this.plannerData, this.saveData.time);
+		PlanSchema currentSchema = currentDateTimeInStream.GetSchema();
+		for (int i = 0; i < this.saveData.plans.Count; ++i) {
+			Plan plan = this.saveData.plans[i];
+			if (plan.schema == currentSchema) {
+				this.executorSaveData.livePlan = plan;
+				break;
+			}
+		}
+
+		if (this.executorSaveData.livePlan == null) {
+			Debug.LogError("Can't execute as there is no plan available for the current planning period.");
+		}
+		UnityEngine.Profiling.Profiler.EndSample();
 	}
 
 	void ExecuteInternal(int instantTimeUnits)
 	{
 		if (!this.executing) {
 			this.gameObject.SetActive(true);
-			if (!this.OthersExecuting()) {
-				this.StartCoroutine(this.ExecuteCoroutine(this.defaultSecondsPerUnitTime, instantTimeUnits));
-			} else {
-				string otherExecutorName = this.FindOtherExecuting();
-				Debug.LogWarningFormat("Tried to execute while another executor ({0}) executing!", otherExecutorName);
-			}
+			this.StartCoroutine(this.ExecuteCoroutine(this.defaultSecondsPerUnitTime, instantTimeUnits));
 		} else {
-			Debug.LogWarningFormat("Tried to execute again while {0} already executing!", this.instantiatedFrom);
+			Debug.LogWarning("Tried to execute plan again while already executing!");
 		}
 	}
 
+	// Begins or resumes execution depending on the contents of executorSaveData
 	IEnumerator ExecuteCoroutine(float secondsPerUnitTime, int instantTimeUnits)
 	{
 		this.executing = true;
+		
+		if (this.executorSaveData.timeUnitsElapsed == 0 || this.executorSaveData.livePlan == null) {
+			// Not resuming, set up to begin executing the current plan
+			this.InitExecution();
 
-		bool success = App.ExecutorBeginning(this);
-		if (!success) {
-			this.executing = false;
-			yield break;
+			if (this.executorSaveData.livePlan == null) {
+				this.executing = false;
+				yield break;
+			}
 		}
-
-		// Save the plan name and schema in use
-		this.executorSaveData.livePlan = this.plan;
-		this.executorSaveData.liveSchema = this.planSchema;
 
 		if (this.executorSaveData.backMenu == null) {
 			// Save the menu to return to
@@ -450,11 +387,14 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 			this.executorSaveData.randomState = Random.state;
 		}
 
+		Plan livePlan = this.executorSaveData.livePlan;
+		PlanSchema liveSchema = livePlan.schema;
+
 		int localTimeUnitsElapsed = 0;
 		int sectionLevelTimeUnitsElapsed = 0;
-		for (int sectionIndex = 0; sectionIndex < this.planSchema.sections.Length; ++sectionIndex) {
-			PlanSchemaSection schemaSection = this.planSchema.sections[sectionIndex];
-			PlanSection planSection = this.plan.sections[sectionIndex];
+		for (int sectionIndex = 0; sectionIndex < liveSchema.sections.Length; ++sectionIndex) {
+			PlanSchemaSection schemaSection = liveSchema.sections[sectionIndex];
+			PlanSection planSection = livePlan.sections[sectionIndex];
 
 			localTimeUnitsElapsed = sectionLevelTimeUnitsElapsed;
 
@@ -488,7 +428,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 								activeEvent.cast = liveCast;
 								Debug.LogFormat("Resuming event {0}", activeEvent.def);
 							} else {
-								SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, incidenceTime);
+								SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, liveCast, incidenceTime);
 								if (selectedEvent.def != null) {
 									activeEvent = new ActiveEvent()
 									{
@@ -540,7 +480,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							timeUnitsBeforeEvent = 0;
 							Debug.LogFormat("Resuming event {0}", activeEvent.def);
 						} else {
-							SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, EventIncidenceTime.DuringSlot);
+							SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, liveCast, EventIncidenceTime.DuringSlot);
 							if (selectedEvent.def != null) {
 								// NOTE(elliot): if a specific time was specified, rather than a slot type, this attempts to make the event occur at that time in the execution
 								if (selectedEvent.triggeredCondition.time >= 0) {
@@ -674,7 +614,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							activeEvent.cast = liveCast;
 							Debug.LogFormat("Resuming event {0}", activeEvent.def);
 						} else {
-							SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, incidenceTime);
+							SelectedEvent selectedEvent = this.SelectEventFor(slot, schemaSlot, liveCast, incidenceTime);
 							if (selectedEvent.def != null) {
 								activeEvent = new ActiveEvent()
 								{
@@ -720,7 +660,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.saveData.time += this.executorSaveData.timeUnitsElapsed;
 
 		this.executorSaveData.livePlan = null;
-		this.executorSaveData.liveSchema = null;
 		this.executorSaveData.liveCast = null;
 		this.executorSaveData.timeUnitsElapsed = 0;
 		// Copy the value before resetting it so it can be used to actually go back!
@@ -730,7 +669,6 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		Debug.Log("Plan done.");
 
 		this.executing = false;
-		App.ExecutorEnding(this);
 
 		this.UnloadAllPreloadedActivities();
 
@@ -752,16 +690,17 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		public DesiredSlot triggeredCondition; 
 	}
 
-	SelectedEvent SelectEventFor(PlanSlot slot, PlanSchemaSlot schemaSlot, EventIncidenceTime when)
+	SelectedEvent SelectEventFor(PlanSlot slot, PlanSchemaSlot schemaSlot, Cast liveCast, EventIncidenceTime when)
 	{
-		this.FilterAvailableEvents();
+		this.SortEvents(liveCast);
 
 		Random.state = this.executorSaveData.randomState;
 
 		// NOTE(elliot): events should be sorted by priority at this point, so higher priority events will get a chance to go first
 		SelectedEvent result = new SelectedEvent();
-		for (int eventDataIndex = 0; eventDataIndex < this.filteredEvents.Count; ++eventDataIndex) {
-			EventData def = this.filteredEvents[eventDataIndex];
+		for (int sortedEventIndex = 0; sortedEventIndex < availableEventCount; ++sortedEventIndex) {
+			RatedEvent ratedEvent = this.sortedEvents[sortedEventIndex];
+			EventData def = ratedEvent.def;
 			EventConditions conditions = def.conditions;
 			DesiredSlot[] slotConditions = conditions.slotConditions;
 			if (slotConditions != null) {
@@ -794,6 +733,69 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		this.executorSaveData.randomState = Random.state;
 
 		return result;
+	}
+
+	// NOTE(elliot): events are filtered & sorted as follows:
+	//  1) hard-no -- if any desired stat values return a hard-no result, the event is filtered out
+	//  2) priority -- higher priority events which can occur will /always/ occur before lower priority events
+	//  3) desired stats -- events are rated by how well their desired stats are fulfilled. higher rated events occur earlier
+
+	class RatedEvent
+	{
+		public float rating;
+		public EventData def;
+	}
+
+	EventDataSorter sorter = new EventDataSorter();
+	int availableEventCount = 0;
+	void SortEvents(Cast liveCast)
+	{
+		if (this.sortedEvents == null) {
+			this.sortedEvents = new List<RatedEvent>(this.plannerData.events.Length);
+		}
+		if (this.sortedEvents.Count == 0) {
+			for (int i = 0; i < this.plannerData.events.Length; ++i) {
+				this.sortedEvents.Add(new RatedEvent() { def = this.plannerData.events[i]});
+			}
+		}
+		this.sorter.cast = liveCast;
+		for (int i = 0; i < this.sortedEvents.Count; i++) {
+			this.sortedEvents[i].rating = PlanExecutor.Rate(this.sortedEvents[i].def, liveCast);
+		}
+		availableEventCount = this.sortedEvents.ExcludeAll(HasHardNo, 0);
+		this.sortedEvents.Sort(0, availableEventCount, this.sorter);
+	}
+
+	static float Rate(EventData def, Cast liveCast)
+	{
+		float rating = DesiredStat.Rate(liveCast.pc.status, def.conditions.requiredPcStats);
+		return rating;
+	}
+
+	static bool HasHardNo(RatedEvent ev, int unused)
+	{
+		return DesiredStat.IsHardNo(ev.rating);
+	}
+
+	class EventDataSorter : IComparer<RatedEvent>
+	{
+		public Cast cast;
+		public int Compare(RatedEvent a, RatedEvent b)
+		{
+			if (a.def.conditions.priority < b.def.conditions.priority) {
+				return -1;
+			} else if (a.def.conditions.priority > b.def.conditions.priority) {
+				return 1;
+			} else {
+				if (a.rating > b.rating) {
+					return -1;
+				} else if (a.rating < b.rating) {
+					return 1;
+				} else {
+					return 0;
+				}
+			}
+		}
 	}
 }
 

@@ -7,6 +7,8 @@ namespace Cloverview
 	{
 		public string name;
 
+		public PlanSchema schema;
+
 		public PlanSection[] sections = new PlanSection[0];
 	}
 

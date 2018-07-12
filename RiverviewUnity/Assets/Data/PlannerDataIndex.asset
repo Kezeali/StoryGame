@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3c4931b3af75eb643b70f6c327b22eca, type: 3}
-  m_Name: PlannerData
+  m_Name: PlannerDataIndex
   m_EditorClassIdentifier: 
   items:
   - m_name: English
