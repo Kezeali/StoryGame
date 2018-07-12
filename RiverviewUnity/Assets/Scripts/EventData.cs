@@ -168,7 +168,7 @@ namespace Cloverview
 			{
 				for (int desiredStatIndex = 0; desiredStatIndex < desiredStats.Length; ++desiredStatIndex)
 				{
-					if (DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex]) == float.NegativeInfinity)
+					if (DesiredStat.IsHardNo(DesiredStat.Rate(actorStatus, desiredStats[desiredStatIndex])))
 					{
 						result = true;
 						break;
@@ -176,6 +176,11 @@ namespace Cloverview
 				}
 			}
 			return result;
+		}
+
+		public static bool IsHardNo(float rating)
+		{
+			return rating == float.NegativeInfinity;
 		}
 
 		public static float Rate(Character.Status actorStatus, DesiredStat[] desiredStats)

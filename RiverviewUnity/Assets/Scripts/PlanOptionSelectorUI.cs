@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Cloverview;
 
-public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerData>
+public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex>
 {
 	[SerializeField]
 	private PlanUI planUI;
@@ -16,7 +16,7 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerData>
 	[SerializeField]
 	private PlanOptionCategoryUI optionCategoryUIPrefab;
 
-	private PlannerData plannerData;
+	private PlannerDataIndex plannerData;
 	private List<PlanOptionUI> optionUis = new List<PlanOptionUI>();
 
 	private List<PlanOptionCategoryUI> optionCategoryUis = new List<PlanOptionCategoryUI>();
@@ -34,7 +34,7 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerData>
 		App.Deregister(this);
 	}
 
-	public void Initialise(PlannerData plannerData)
+	public void Initialise(PlannerDataIndex plannerData)
 	{
 		Debug.Assert(this.planUI != null);
 		Debug.Assert(this.optionsContainer != null);

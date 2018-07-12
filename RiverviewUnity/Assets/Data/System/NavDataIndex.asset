@@ -9,7 +9,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f40833064716a644b8db90a7f7d4a80b, type: 3}
-  m_Name: SystemData
+  m_Name: NavDataIndex
   m_EditorClassIdentifier: 
   menus:
   - {fileID: 11400000, guid: 3db9e5f8f95f1a84d85ab003971a97c5, type: 2}

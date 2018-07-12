@@ -4,7 +4,7 @@ using SubjectNerd.Utilities;
 namespace Cloverview
 {
 
-	[CreateAssetMenu(fileName="DefaultSave.asset", menuName="Cloverview/Default Save")]
+	[CreateAssetMenu(fileName="CustomSave.asset", menuName="Cloverview/Custom Save Game")]
 	public class DefaultSaveData : ScriptableObject
 	{
 		public SaveData saveData;

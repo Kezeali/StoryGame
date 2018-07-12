@@ -16,7 +16,6 @@ public sealed class SaveData
 
 	public int time;
 	public List<Plan> plans;
-	public List<PlanSchema> schemas;
 	public Cast cast;
 	public NavSaveData nav;
 	public PlanExecutorSaveData planExecutor;
@@ -39,8 +38,7 @@ public sealed class PlanExecutorSaveData
 	public int commutesFinishedUpToTime;
 	public Random.State randomState;
 	public MenuData backMenu;
-	public List<Plan> livePlans;
-	public List<PlanSchema> liveSchemas;
+	public Plan livePlan;
 	public Cast liveCast;
 	public ActiveEvent activeEvent;
 }
@@ -71,7 +69,7 @@ public class Cast
 		return Strf.Format("{0}-{1}", role.name, nextId);
 	}
 
-	public void PostLoadCleanup(GameData gameData)
+	public void PostLoadCleanup(DataIndex gameData)
 	{
 		if (this.leadNpcs == null)
 		{

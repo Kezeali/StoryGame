@@ -20,14 +20,13 @@ public class ExecutingActivitiesPanel : MonoBehaviour, IServiceUser<SaveData>, I
 	public void OnEnable()
 	{
 		App.Register<SaveData>(this);
-
-		App.instance.GetExecutor(this.executorToDisplay.name, this);
+		App.Register<PlanExecutor>(this);
 	}
 
 	public void OnDisable()
 	{
 		App.Deregister<SaveData>(this);
-		App.instance.CancelRequestForExecutor(this.executorToDisplay.name, this);
+		App.Deregister<PlanExecutor>(this);
 	}
 
 	public void Initialise(SaveData saveData)

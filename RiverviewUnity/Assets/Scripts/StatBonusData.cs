@@ -6,7 +6,6 @@ namespace Cloverview
 	[CreateAssetMenu(fileName="StatBonus.asset", menuName="Cloverview/Stat Bonus Definition")]
 	public class StatBonusData : ScriptableObject, IDataItem
 	{
-		public string name;
 		public CharacterStatDefinition stat;
 		public float flatBonus;
 		public float bonusPerTimeUnit;

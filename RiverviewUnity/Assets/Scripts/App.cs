@@ -29,16 +29,19 @@ public class App : MonoBehaviour
 	Nav nav;
 
 	[SerializeField]
-	PlannerData plannerData;
+	PlannerDataIndex plannerData;
 
 	[SerializeField]
-	GameData gameData;
+	DataIndex dataIndex;
 
 	[SerializeField]
-	SystemData systemData;
+	NavDataIndex navData;
 
 	[SerializeField]
 	DefaultSaveData defaultSaveData;
+
+	[SerializeField]
+	DefaultSaveData[] editorSaves;
 
 	[SerializeField]
 	PlanExecutor planExecutor;
@@ -218,7 +221,7 @@ public class App : MonoBehaviour
 		}
 		return collection;
 	}
-	
+
 	public void Awake()
 	{
 	#if !UNITY_EDITOR
@@ -242,16 +245,19 @@ public class App : MonoBehaviour
 
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
+		this.dataItemConverter.AddDataItemRange(this.plannerData.calendars);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.subjects);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.planActivities);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.events);
-		this.dataItemConverter.AddDataItemRange(this.gameData.roles);
-		this.dataItemConverter.AddDataItemRange(this.gameData.characterStats);
-		this.dataItemConverter.AddDataItemRange(this.gameData.outfitItems);
-		this.dataItemConverter.AddDataItemRange(this.gameData.qualities);
-		this.dataItemConverter.AddDataItemRange(this.systemData.menus);
-		this.dataItemConverter.AddDataItemRange(this.systemData.envScenes);
-		this.dataItemConverter.AddDataItemRange(this.systemData.commutes);
+		this.dataItemConverter.AddDataItemRange(this.plannerData.stageMarks);
+		this.dataItemConverter.AddDataItemRange(this.dataIndex.roles);
+		this.dataItemConverter.AddDataItemRange(this.dataIndex.outfitItems);
+		this.dataItemConverter.AddDataItemRange(this.dataIndex.qualities);
+		this.dataItemConverter.AddDataItemRange(this.dataIndex.characterStats);
+		this.dataItemConverter.AddDataItemRange(this.dataIndex.statBonuses);
+		this.dataItemConverter.AddDataItemRange(this.navData.menus);
+		this.dataItemConverter.AddDataItemRange(this.navData.envScenes);
+		this.dataItemConverter.AddDataItemRange(this.navData.commutes);
 
 		this.unitySerialisationTypeInspectorConstructor = (inner) => { return new UnitySerialisationTypeInspector(inner); };
 
@@ -493,7 +499,7 @@ public class App : MonoBehaviour
 		{
 			this.saveData = this.defaultSaveData.saveData;
 		}
-		this.saveData.cast.PostLoadCleanup(this.gameData);
+		this.saveData.cast.PostLoadCleanup(this.dataIndex);
 		this.saveData.cast.FixReferences();
 
 		this.nav.SetSaveData(this.saveData);

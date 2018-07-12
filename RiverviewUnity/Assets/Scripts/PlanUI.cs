@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
-public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
+public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
 {
 	[SerializeField]
 	private string planName;
@@ -24,7 +24,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 	[SerializeField]
 	private Animator planUiAnimator;
 
-	[ReadOnly]
+	[SerializeField]
 	public PlanSchema planSchema;
 
 	[ReadOnly]
@@ -49,14 +49,15 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 				Debug.LogErrorFormat("PlanUIs with duplicate planName values: {0}, {1}", this, others[i]);
 			}
 		}
+
+		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>(true);
+		System.Array.Sort(uiSections, PlanSectionUI.Compare);
+		PlanUI.GenerateSchema(this);
 	#endif
 	}
 
 	public void OnEnable()
 	{
-		this.uiSections = this.GetComponentsInChildren<PlanSectionUI>(true);
-		System.Array.Sort(uiSections, PlanSectionUI.Compare);
-
 		for (int sectionIndex = 0; sectionIndex < this.uiSections.Length; ++sectionIndex)
 		{
 			PlanSectionUI uiSection = this.uiSections[sectionIndex];
@@ -70,7 +71,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 			}
 		}
 
-		this.GenerateSchema();
 		this.plan = SchemaStuff.CreateBlankPlan(this.planSchema, this.planName);
 		this.MapUI();
 
@@ -95,21 +95,38 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 		}
 	}
 
-	void GenerateSchema()
+	static void GenerateSchema(PlanUI planUi)
 	{
-		this.planSchema = new PlanSchema();
-		this.planSchema.name = planName;
+	#if UNITY_EDITOR
+		if (planUi.planSchema == null || planUi.planSchema.name != planUi.planName) {
+			if (UnityEditor.EditorApplication.isPlaying) {
+				Debug.LogWarning("Wont generate new plan schema while playing.");
+				return;
+			}
+			planUi.planSchema = ScriptableObject.CreateInstance<PlanSchema>();
 
-		int sectionsCount = this.uiSections.Length;
+			string basePath = "Assets/Data/Calendars/PlanSchemas/";
+			string assetPath = UnityEditor.AssetDatabase.GenerateUniqueAssetPath(
+				basePath + planUi.planName + ".asset"
+			);
+ 
+			UnityEditor.AssetDatabase.CreateAsset(planUi.planSchema, assetPath);
+ 
+			UnityEditor.AssetDatabase.SaveAssets();
+			UnityEditor.AssetDatabase.Refresh();
+		}
+		planUi.planSchema.name = planUi.planName;
 
-		this.planSchema.sections = new PlanSchemaSection[sectionsCount];
+		int sectionsCount = planUi.uiSections.Length;
+
+		planUi.planSchema.sections = new PlanSchemaSection[sectionsCount];
 		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
 		{
-			PlanSectionUI uiSection = uiSections[newSectionIndex];
+			PlanSectionUI uiSection = planUi.uiSections[newSectionIndex];
 
 			var schemaSection = new PlanSchemaSection();
 			schemaSection.totalTimeUnits = uiSection.TotalTimeUnits();
-			this.planSchema.sections[newSectionIndex] = schemaSection;
+			planUi.planSchema.sections[newSectionIndex] = schemaSection;
 
 			int slotsCount = uiSection.slots.Length;
 
@@ -135,7 +152,10 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 				schemaSlot.unitLength = schemaSection.totalTimeUnits - schemaSlot.unitIndex;
 				schemaSection.slots[slotsCount-1] = schemaSlot;
 			}
+
+			UnityEditor.EditorUtility.SetDirty(planUi.planSchema);
 		}
+	#endif
 	}
 
 	void MapUI()
@@ -168,16 +188,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 				loadedPlan = loadedData.plans[i];
 				// A new blank plan has already been generated matching the current schema: set the save data's ref to that new plan. The data from loadedPlan will be migrated to this new plan.
 				loadedData.plans[i] = this.plan;
-				break;
-			}
-		}
-
-		for (int i = 0; i <	loadedData.schemas.Count; ++i)
-		{
-			if (loadedData.schemas[i].name == this.planName)
-			{
-				// Update the saved schema
-				loadedData.schemas[i] = this.planSchema;
 				break;
 			}
 		}
@@ -260,8 +270,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>
 	{
 		if (this.planExecutor != null && this.planExecutor.IsReadyForPlayerToExecute())
 		{
-			this.planExecutor.Execute(0, 0);
-			this.planExecutor = null;
+			this.planExecutor.BeginExecution();
 		}
 	}
 }
