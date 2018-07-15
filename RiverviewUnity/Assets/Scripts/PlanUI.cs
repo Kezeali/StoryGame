@@ -63,6 +63,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 			}
 		}
 		if (changed) {
+			Debug.Log("UI Sections updated for " + this.gameObject.name);
 			this.uiSections = newPlanSections;
 		}
 
