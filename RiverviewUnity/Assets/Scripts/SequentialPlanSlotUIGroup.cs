@@ -27,6 +27,7 @@ public class SequentialPlanSlotUIGroup : MonoBehaviour, IPlanSlotUIGroup
 		for (int i = 0; i < slots.Length; ++i)
 		{
 			slots[i].start = slotDurationUnits * i;
+			slots[i].duration = slotDurationUnits;
 		}
 	}
 
