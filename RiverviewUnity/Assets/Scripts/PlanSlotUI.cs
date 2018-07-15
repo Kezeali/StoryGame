@@ -66,7 +66,7 @@ public class PlanSlotUI : MonoBehaviour
 
 	public void DisplayCurrent(PlanOptionUI defaultFilledSlotPrefab)
 	{
-		Unpopulate();
+		this.Unpopulate();
 
 		if (this.dataSlot != null && this.dataSlot.selectedOption != null)
 		{
@@ -79,7 +79,7 @@ public class PlanSlotUI : MonoBehaviour
 	public void Clear()
 	{
 		this.dataSlot.selectedOption = null;
-		Unpopulate();
+		this.Unpopulate();
 	}
 
 	private void Unpopulate()

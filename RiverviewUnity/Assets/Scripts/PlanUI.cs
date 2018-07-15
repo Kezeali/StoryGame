@@ -250,7 +250,6 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 	{
 		if (this.selectedSlot != null)
 		{
-			optionUi.DisableSelection();
 			this.selectedSlot.Display(optionUi.planOption, this.defaultFilledSlotPrefab);
 			this.selectedSlot = null;
 			this.planUiAnimator.SetBool("options_open", false);
@@ -268,7 +267,7 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 		if (this.selectedSlot != slot)
 		{
 			this.selectedSlot = slot;
-			this.planOptionSelectorUI.Populate(slot);
+			this.planOptionSelectorUI.Populate(this, slot);
 			this.planUiAnimator.SetBool("options_open", true);
 		}
 		else
@@ -277,10 +276,8 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 			{
 				this.planExecutor.OnOptionDeselected(slot.dataSlot.selectedOption);
 			}
-
-			this.planOptionSelectorUI.DeselectOption(slot.dataSlot.selectedOption);
 			this.selectedSlot.Clear();
-			//this.planOptionSelectorUI.Populate(slot);
+			//this.planOptionSelectorUI.Populate(this, slot);
 		}
 	}
 
