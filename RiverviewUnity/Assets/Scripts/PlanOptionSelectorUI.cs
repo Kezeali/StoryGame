@@ -2,11 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using Cloverview;
 
-public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex>
+public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex>, IServiceUser<SaveData>
 {
-	[SerializeField]
-	private PlanUI planUI;
-
 	[SerializeField]
 	private Transform optionsContainer;
 
@@ -16,48 +13,57 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 	[SerializeField]
 	private PlanOptionCategoryUI optionCategoryUIPrefab;
 
-	private PlannerDataIndex plannerData;
-	private List<PlanOptionUI> optionUis = new List<PlanOptionUI>();
+	PlannerDataIndex plannerData;
+	SaveData saveData;
+	List<PlanOptionUI> optionUis = new List<PlanOptionUI>();
 
-	private List<PlanOptionCategoryUI> optionCategoryUis = new List<PlanOptionCategoryUI>();
+	List<PlanOptionCategoryUI> optionCategoryUis = new List<PlanOptionCategoryUI>();
 
-	private PlanOptionsLoadout currentLoadout;
-	private PlanOptionsLoadout rootLoadout;
+	PlanOptionsLoadout currentLoadout;
+	PlanOptionsLoadout rootLoadout;
+
+	PlanUI activePlanUI;
 
 	public void OnEnable()
 	{
-		App.Register(this);
+		App.Register<PlannerDataIndex>(this);
+		App.Register<SaveData>(this);
 	}
 
 	public void OnDisabled()
 	{
-		App.Deregister(this);
+		App.Deregister<PlannerDataIndex>(this);
+		App.Deregister<SaveData>(this);
 	}
 
 	public void Initialise(PlannerDataIndex plannerData)
 	{
-		Debug.Assert(this.planUI != null);
 		Debug.Assert(this.optionsContainer != null);
 
 		Debug.Assert(plannerData != null);
 
 		this.plannerData = plannerData;
+	}
 
-		Clear();
-
-		this.rootLoadout = MakeRootLoadout();
+	public void Initialise(SaveData saveData)
+	{
+		this.saveData = saveData;
 	}
 
 	public void CompleteInitialisation()
 	{
+		this.HideAll();
+
+		this.rootLoadout = this.MakeRootLoadout();
 	}
 
-	public void Populate(PlanSlotUI slot)
+	public void Populate(PlanUI activePlanUI, PlanSlotUI slot)
 	{
+		this.activePlanUI = activePlanUI;
+
+		this.HideAll();
+
 		SlotType type = slot.slotType;
-
-		Clear();
-
 		this.currentLoadout = MakeDerrivedLoadout(this.rootLoadout, type);
 
 		for (int i = 0; i < currentLoadout.planOptions.Count; ++i)
@@ -146,8 +152,9 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 		return newLoadout;
 	}
 
-	public void Clear()
+	public void HideAll()
 	{
+		// TODO: hide rather than destroy
 		for (int i = 0; i < this.optionUis.Count; ++i)
 		{
 			Object.Destroy(this.optionUis[i].gameObject);
@@ -164,18 +171,10 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 
 	public void DeselectOption(PlanOption option)
 	{
-		for (int i = 0; i < this.optionUis.Count; ++i)
-		{
-			PlanOptionUI optionUI = this.optionUis[i];
-			if (optionUI.planOption == option)
-			{
-				optionUI.EnableSelection();
-			}
-		}
 	}
 
 	public void SelectOption(PlanOptionUI option)
 	{
-		planUI.SelectOption(option);
+		activePlanUI.SelectOption(option);
 	}
 }
