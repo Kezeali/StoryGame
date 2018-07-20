@@ -158,6 +158,12 @@ namespace Cloverview
 			public int level;
 		}
 
+		public struct StatChange
+		{
+			public CharacterStatDefinition stat;
+			public float amount;
+		}
+
 		public string name;
 		public CharacterName characterName;
 		public RoleData role;
@@ -165,11 +171,14 @@ namespace Cloverview
 		public List<OutfitItemData> outfitItems = new List<OutfitItemData>();
 		public List<ActiveBonus> activeBonuses = new List<ActiveBonus>();
 		public List<ActiveBonus> permanentBonuses = new List<ActiveBonus>();
+		public List<StatChange> statChanges = new List<StatChange>();
 		public List<Favourite> favourites = new List<Favourite>();
 		public List<Tag> tags = new List<Tag>();
 		public List<Friendship> friendships = new List<Friendship>();
 		public StatBonusData[] friendshipBonuses = new StatBonusData[0];
 		public BaseStat[] baseStats = new BaseStat[0];
+		public int simulatedTime;
+		
 		[System.NonSerialized]
 		public Status status;
 
@@ -295,6 +304,7 @@ namespace Cloverview
 		{
 			EnsureNotNull(ref this.activeBonuses);
 			EnsureNotNull(ref this.permanentBonuses);
+			EnsureNotNull(ref this.statChanges);
 			EnsureNotNull(ref this.favourites);
 			EnsureNotNull(ref this.tags);
 			EnsureNotNull(ref this.friendships);
@@ -481,8 +491,10 @@ namespace Cloverview
 			this.CalculateStatus();
 		}
 
-		public void UpdateStatBonuses(int currentTimeUnit)
+		public void UpdateStats(int currentTimeUnit)
 		{
+			// TODO: apply stat decays for difference between simulated time and current time
+
 			bool removed = false;
 			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex)
 			{
@@ -494,6 +506,7 @@ namespace Cloverview
 					removed = true;
 				}
 			}
+			this.simulatedTime = currentTimeUnit;
 			if (removed)
 			{
 				this.CalculateStatus();

@@ -9,16 +9,32 @@ namespace Cloverview
 		StatsPage = 1 << 0,
 	}
 
+	public enum StatValueDisplay
+	{
+		NumericValue = 1 << 0,
+		IconicValue = 1 << 1,
+	}
+
 	[CreateAssetMenu(fileName="Stat.asset", menuName="Cloverview/Character Stat Definition")]
 	public class CharacterStatDefinition : ScriptableObject, IDataItem
 	{
 		public string title;
+		public Sprite icon;
 		public string valueFormat;
+		public StatIconTable valueIcons;
 		public float baseValue;
 		public float minValue;
 		public float maxValue;
+		public AnimationCurve baseDecayCurve;
 		[EnumFlag]
 		public StatVisibility visibility;
+		[EnumFlag]
+		public StatValueDisplay allowedDisplayMode;
+
+		public void Awake()
+		{
+			this.baseValue = Mathf.Clamp(this.baseValue, this.minValue, this.maxValue);
+		}
 
 		public void Reset()
 		{
@@ -27,6 +43,7 @@ namespace Cloverview
 			this.baseValue = 1;
 			this.minValue = 1;
 			this.maxValue = 100;
+			this.baseDecayCurve = AnimationCurve.Constant(0, 1, 0);
 			this.visibility = StatVisibility.StatsPage;
 		}
 	}

@@ -9,6 +9,7 @@ namespace Cloverview
 	{
 		[Reorderable]
 		public PlannerItemData[] items;
+
 		// Ordered list of calendars. These could be yearly or term-ly calendars, or whatever else is useful in terms of making re-usable sequences of planning periods / plan schemas
 		[Reorderable]
 		public CalendarDefinition[] calendars;
@@ -25,8 +26,11 @@ namespace Cloverview
 		public int timeUnits;
 		[EnumFlag]
 		public SlotType validSlots;
+		public QualityData[] requiredQualityTags;
 		public SubjectData subject;
 		public PlanActivityData activity;
+		public StatBonusData[] statBonuses;
+		public StatAffectorData[] statAffectors;
 
 		public override string ToString()
 		{

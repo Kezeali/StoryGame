@@ -7,9 +7,10 @@ namespace Cloverview
 	public class PlanActivityData : ScriptableObject, IDataItem
 	{
 		public SceneData scene;
-		public StatBonusData[] statBonuses;
 		public SceneRole[] leadRoles;
 		public CastingCharacterDescription[] extrasDescriptions;
+		public StatBonusData[] statBonuses;
+		public StatAffectorData[] statAffectors;
 	}
 
 	[System.Serializable]
