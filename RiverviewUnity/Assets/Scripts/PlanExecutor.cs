@@ -517,7 +517,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							yield return 0;
 						}
 
-						liveCast.UpdateStatBonuses(beginTimeUnit);
+						liveCast.UpdateStats(beginTimeUnit);
 
 						////////////////////////
 						// Start the activity, assunming timeUnitsBeforeEvent > 0
@@ -525,7 +525,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 							while (activeActivity.timeUnitsSpent < timeUnitsBeforeEvent) {
 								activeActivity.Progress();
 
-								liveCast.UpdateStatBonuses(beginTimeUnit + activeActivity.timeUnitsSpent);
+								liveCast.UpdateStats(beginTimeUnit + activeActivity.timeUnitsSpent);
 
 								if (!instantSlot) {
 									yield return new WaitForSeconds(secondsPerUnitTime);
@@ -568,7 +568,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 						while (activeActivity.timeUnitsSpent < slotLengthTimeUnits) {
 							activeActivity.Progress();
 
-							liveCast.UpdateStatBonuses(beginTimeUnit + activeActivity.timeUnitsSpent);
+							liveCast.UpdateStats(beginTimeUnit + activeActivity.timeUnitsSpent);
 
 							if (!instantSlot) {
 								yield return new WaitForSeconds(secondsPerUnitTime);
@@ -654,7 +654,7 @@ public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<
 		}
 
 		// Update and commit the final statuses
-		liveCast.UpdateStatBonuses(localTimeUnitsElapsed);
+		liveCast.UpdateStats(localTimeUnitsElapsed);
 		Cast.ApplyNewStatuses(this.saveData.cast, liveCast);
 
 		this.saveData.time += this.executorSaveData.timeUnitsElapsed;

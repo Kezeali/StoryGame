@@ -38,10 +38,6 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 
 	public void Initialise(PlannerDataIndex plannerData)
 	{
-		Debug.Assert(this.optionsContainer != null);
-
-		Debug.Assert(plannerData != null);
-
 		this.plannerData = plannerData;
 	}
 
@@ -52,6 +48,8 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 
 	public void CompleteInitialisation()
 	{
+		Debug.Assert(this.optionsContainer != null);
+
 		this.HideAll();
 
 		this.rootLoadout = this.MakeRootLoadout();

@@ -8,7 +8,7 @@ namespace Cloverview
 	{
 		public string description;
 		public StatBonusData[] statBonuses;
-		public MonoBehaviour behaviour;
+		public StatAffectorData[] statAffectors;
 	}
 
 }

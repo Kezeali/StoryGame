@@ -90,12 +90,12 @@ public class Cast
 		}
 	}
 
-	public void UpdateStatBonuses(int time)
+	public void UpdateStats(int time)
 	{
-		this.pc.UpdateStatBonuses(time);
+		this.pc.UpdateStats(time);
 		for (int i = 0; i < this.leadNpcs.Count; ++i)
 		{
-			this.leadNpcs[i].UpdateStatBonuses(time);
+			this.leadNpcs[i].UpdateStats(time);
 		}
 	}
 
