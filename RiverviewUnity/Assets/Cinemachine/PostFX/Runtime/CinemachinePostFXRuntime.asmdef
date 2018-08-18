@@ -1,9 +1,0 @@
-{
-    "name": "CinemachinePostFXRuntime",
-    "references": [
-        "CinemachineRuntime",
-        "com.unity.postprocessing.Runtime"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": []
-}
