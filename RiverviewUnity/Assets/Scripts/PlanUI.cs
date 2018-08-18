@@ -199,10 +199,13 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 		this.selectedSlot = null;
 
 		Plan loadedPlan = null;
-		for (int i = 0; i <	loadedData.plans.Count; ++i)
-		{
-			if (loadedData.plans[i].schema.name == this.planSchema.name)
-			{
+		for (int i = 0; i <	loadedData.plans.Count; ++i) {
+			if (loadedData.plans[i].schema == null) {
+				// Schema failed to load
+				Debug.LogErrorFormat("Failed to load schema for plan {0}.", loadedData.plans[i]);
+				continue;
+			}
+			if (loadedData.plans[i].schema.name == this.planSchema.name) {
 				loadedPlan = loadedData.plans[i];
 				// A new blank plan has already been generated matching the current schema: set the save data's ref to that new plan. The data from loadedPlan will be migrated to this new plan.
 				loadedData.plans[i] = this.plan;
@@ -210,7 +213,12 @@ public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanEx
 			}
 		}
 
-		SchemaStuff.UpgradePlan(this.planSchema, this.plan, loadedPlan);
+		if (loadedPlan != null) {
+			SchemaStuff.UpgradePlan(this.planSchema, this.plan, loadedPlan);
+		} else {
+			// This plan hasn't been saved before: add it to the save data
+			loadedData.plans.Add(this.plan);
+		}
 	}
 
 	public void Initialise(PlanExecutor executor)

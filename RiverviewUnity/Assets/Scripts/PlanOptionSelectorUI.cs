@@ -15,8 +15,9 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 
 	PlannerDataIndex plannerData;
 	SaveData saveData;
-	List<PlanOptionUI> optionUis = new List<PlanOptionUI>();
+	//PlanOptionSelectorState selectorSaveData;
 
+	List<PlanOptionUI> optionUis = new List<PlanOptionUI>();
 	List<PlanOptionCategoryUI> optionCategoryUis = new List<PlanOptionCategoryUI>();
 
 	PlanOptionsLoadout currentLoadout;
@@ -62,19 +63,24 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 		this.HideAll();
 
 		SlotType type = slot.slotType;
-		this.currentLoadout = MakeDerrivedLoadout(this.rootLoadout, type);
 
-		for (int i = 0; i < currentLoadout.planOptions.Count; ++i)
-		{
+		for (int i = 0; i < this.saveData.planOptionSelectorStates.Count; ++i) {
+			if (this.saveData.planOptionSelectorStates[i].name == this.activePlanUI.planSchema.name) {
+				//this.selectorSaveData = this.saveData.planOptionSelectorStates[i];
+				break;
+			}
+		}
+
+		this.currentLoadout = this.MakeDerrivedLoadout(this.rootLoadout, type);
+
+		for (int i = 0; i < currentLoadout.planOptions.Count; ++i) {
 			Transform container;
 			List<PlanOptionUI> uiCollection;
 
 			PlanOption option = this.currentLoadout.planOptions[i];
-			if (option.plannerItem.subject != null)
-			{
+			if (option.plannerItem.subject != null) {
 				PlanOptionCategoryUI categoryUi = this.GetCategoryUI(option.plannerItem.subject);
-				if (categoryUi == null)
-				{
+				if (categoryUi == null) {
 					categoryUi = Object.Instantiate(this.optionCategoryUIPrefab, this.optionsContainer);
 
 					categoryUi.subject = option.plannerItem.subject;
@@ -84,9 +90,7 @@ public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex
 				}
 				container = categoryUi.optionsContainer;
 				uiCollection = categoryUi.optionUis;
-			}
-			else
-			{
+			} else {
 				container = this.optionsContainer;
 				uiCollection = this.optionUis;
 			}

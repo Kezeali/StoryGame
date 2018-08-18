@@ -3,7 +3,7 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
@@ -15,54 +15,85 @@ MonoBehaviour:
   - m_name: English
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: 88e123a6ab79df94f84a1f5187174cb1, type: 2}
     activity: {fileID: 11400000, guid: 69859cfa3af76c9458b1c272955254e9, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Algebra
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: f831da691b92200408f510febfd3d458, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Calculus
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 8d03deef8dbb93f41811d05b95dbd345, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Trigonometry
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 4b5753a4cf383ae48a757c0cced078fe, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Statistics
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: 67ba0ca3f3a8f264ea937a75eb22a1ca, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: General Study
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}
     activity: {fileID: 11400000, guid: cc4d40212d18af54b87c643178e6b67c, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Soccer
     timeUnits: 1
     validSlots: 3
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
     activity: {fileID: 11400000, guid: 16edde81760140f4d8ebaa5b300d1c28, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Gym
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
     activity: {fileID: 11400000, guid: 4e8be70e3c4b8964793cd6fd05b4899a, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Track
     timeUnits: 1
     validSlots: 1
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: f6ce994545e93424ea9e738309d172f1, type: 2}
     activity: {fileID: 11400000, guid: be5c5c2420862f74995551c1a61d5fa6, type: 2}
+    statBonuses: []
+    statAffectors: []
   - m_name: Nap
     timeUnits: 1
     validSlots: 2
+    requiredQualityTags: []
     subject: {fileID: 11400000, guid: f67516e0789ce6a48aba1bfeb48a7182, type: 2}
     activity: {fileID: 11400000, guid: 8bf6de05ed8e6504a815c9ce8448d852, type: 2}
-  calendars: []
+    statBonuses: []
+    statAffectors: []
+  calendars:
+  - {fileID: 11400000, guid: 4b1eaec2ae4a72440bed8fd8c5fcf443, type: 2}
   subjects:
   - {fileID: 11400000, guid: 88e123a6ab79df94f84a1f5187174cb1, type: 2}
   - {fileID: 11400000, guid: 33eee99b04248ae49afcb2bdca289d5a, type: 2}

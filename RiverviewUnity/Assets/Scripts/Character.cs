@@ -99,7 +99,7 @@ namespace Cloverview
 		}
 
 		[System.Serializable]
-		public struct BaseStat : ICheckValid
+		public class BaseStat : ICheckValid
 		{
 			public CharacterStatDefinition definition;
 			public float value;
@@ -158,12 +158,6 @@ namespace Cloverview
 			public int level;
 		}
 
-		public struct StatChange
-		{
-			public CharacterStatDefinition stat;
-			public float amount;
-		}
-
 		public string name;
 		public CharacterName characterName;
 		public RoleData role;
@@ -171,7 +165,6 @@ namespace Cloverview
 		public List<OutfitItemData> outfitItems = new List<OutfitItemData>();
 		public List<ActiveBonus> activeBonuses = new List<ActiveBonus>();
 		public List<ActiveBonus> permanentBonuses = new List<ActiveBonus>();
-		public List<StatChange> statChanges = new List<StatChange>();
 		public List<Favourite> favourites = new List<Favourite>();
 		public List<Tag> tags = new List<Tag>();
 		public List<Friendship> friendships = new List<Friendship>();
@@ -302,15 +295,16 @@ namespace Cloverview
 
 		public void PostLoadCleanup()
 		{
-			EnsureNotNull(ref this.activeBonuses);
-			EnsureNotNull(ref this.permanentBonuses);
-			EnsureNotNull(ref this.statChanges);
-			EnsureNotNull(ref this.favourites);
-			EnsureNotNull(ref this.tags);
-			EnsureNotNull(ref this.friendships);
+			Character.EnsureNotNull(ref this.activeBonuses);
+			Character.EnsureNotNull(ref this.permanentBonuses);
+			Character.EnsureNotNull(ref this.favourites);
+			Character.EnsureNotNull(ref this.tags);
+			Character.EnsureNotNull(ref this.friendships);
 
-			this.activeBonuses.RemoveAll(InvalidBonus);
-			this.permanentBonuses.RemoveAll(InvalidBonus);
+			this.activeBonuses.RemoveAll(Invalid);
+			this.permanentBonuses.RemoveAll(Invalid);
+
+			this.CalculateStatus();
 		}
 
 		public void FixReferences(Cast cast)
@@ -320,7 +314,7 @@ namespace Cloverview
 			}
 		}
 
-		void EnsureNotNull<T>(ref T field)
+		static void EnsureNotNull<T>(ref T field)
 			where T : new()
 		{
 			if (field == null) {
@@ -467,19 +461,16 @@ namespace Cloverview
 				existingSources = additions;
 				return;
 			}
-			for (int additionIndex = 0; additionIndex < additions.Count; ++additionIndex)
-			{
+			for (int additionIndex = 0; additionIndex < additions.Count; ++additionIndex) {
 				bool alreadyInList = false;
-				for (int existingSourceIndex = 0; existingSourceIndex < existingSources.Count; ++existingSourceIndex)
-				{
+				for (int existingSourceIndex = 0; existingSourceIndex < existingSources.Count; ++existingSourceIndex) {
 					bool equal = additions[additionIndex].Equals(existingSources[existingSourceIndex]);
 					if (equal) {
 						alreadyInList = true;
 						break;
 					}
 				}
-				if (!alreadyInList)
-				{
+				if (!alreadyInList) {
 					existingSources.Add(additions[additionIndex]);
 				}
 			}
@@ -493,22 +484,22 @@ namespace Cloverview
 
 		public void UpdateStats(int currentTimeUnit)
 		{
-			// TODO: apply stat decays for difference between simulated time and current time
+			int timeSpent = currentTimeUnit - this.simulatedTime;
+			this.simulatedTime = currentTimeUnit;
+
+			// TODO: apply some sort of stat decay over time spent
 
 			bool removed = false;
-			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex)
-			{
+			for (int activeBonusIndex = this.activeBonuses.Count-1; activeBonusIndex >= 0; --activeBonusIndex) {
 				ActiveBonus bonus = this.activeBonuses[activeBonusIndex];
 				Debug.Assert(!bonus.IsPermanent());
-				if (bonus.RemainingTime(currentTimeUnit) <= 0)
-				{
+				if (bonus.RemainingTime(currentTimeUnit) <= 0) {
 					this.activeBonuses.RemoveAt(activeBonusIndex);
 					removed = true;
 				}
 			}
-			this.simulatedTime = currentTimeUnit;
-			if (removed)
-			{
+
+			if (removed) {
 				this.CalculateStatus();
 			}
 		}
@@ -590,9 +581,10 @@ namespace Cloverview
 			return status;
 		}
 
-		static bool InvalidBonus(ActiveBonus bonus)
+		static bool Invalid<T>(T item)
+			where T : ICheckValid
 		{
-			return bonus.definition == null;
+			return !item.IsValid();
 		}
 
 		static void ApplyStatBonuses(Status status, List<ActiveBonus> bonuses)

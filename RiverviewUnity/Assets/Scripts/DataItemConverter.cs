@@ -19,32 +19,38 @@ namespace Cloverview
 		{
 			for (int i = 0; i < items.Length; ++i)
 			{
-				AddDataItem(items[i].name, items[i], typeof(T));
+				AddDataItemExplicit(items[i].name, items[i], typeof(T));
 			}
 		}
 
-		public void AddDataItem(string name, IDataItem item, System.Type typeHint = null)
+		public void AddDataItem<T>(T item)
+			where T : IDataItem
+		{
+			if (item != null) {
+				AddDataItemExplicit(item.name, item, typeof(T));
+			}
+		}
+
+		public void AddDataItemExplicit(string name, IDataItem item, System.Type typeHint)
 		{
 			typeHint = typeHint ?? typeof(IDataItem);
 
 			DataItemCollection dataItems = null;
-			if (!this.dataItemsCollections.TryGetValue(typeHint, out dataItems))
-			{
+			if (!this.dataItemsCollections.TryGetValue(typeHint, out dataItems)) {
 				dataItems = new DataItemCollection();
 				this.dataItemsCollections[typeHint] = dataItems;
 			}
-		#if DEVELOPMENT_BUILD
+		#if UNITY_EDITOR || DEVELOPMENT_BUILD
 			IDataItem existingValue;
-			if (dataItems.TryGetValue(name, out existingValue))
-			{
-				if (existingValue.GetType() != item.GetType())
-				{
+			if (dataItems.TryGetValue(name, out existingValue)) {
+				if (existingValue.GetType() != item.GetType()) {
 					Debug.LogErrorFormat("Two data items of different types have the same name!! {0} ({1}, {2})", existingValue.GetType(), item.GetType(), name);
 				}
-				else
-				{
+				else {
 					Debug.LogWarningFormat("Overwriting value for data item '{0}' ({1} -> {2})", name, existingValue, item);
 				}
+			} else {
+				Debug.LogFormat("Adding new data item '{0}'", name);
 			}
 		#endif
 			dataItems[name] = item;
@@ -106,7 +112,7 @@ namespace Cloverview
 		public void WriteYaml(IEmitter emitter, object value, System.Type type)
 		{
 			var dataItem = value as IDataItem;
-		#if DEVELOPMENT_BUILD
+		#if UNITY_EDITOR || DEVELOPMENT_BUILD
 			if (dataItem != null)
 			{
 				type = type ?? typeof(IDataItem);
