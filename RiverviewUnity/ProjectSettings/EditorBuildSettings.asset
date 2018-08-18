@@ -30,6 +30,6 @@ EditorBuildSettings:
     path: Assets/Scenes/ui_character_status.unity
     guid: e26cce5fd84dfc644b4902a6a3228688
   - enabled: 1
-    path: Assets/Scenes/ui_week.unity
+    path: Assets/Scenes/ui_weekly_planners.unity
     guid: 2e4c35d3c3a5c13498ab12121c1eba99
   m_configObjects: {}
