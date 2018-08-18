@@ -5,7 +5,7 @@ namespace Cloverview
 {
 // A section of a calendar which appears in a planning UI
 [System.Serializable]
-public class PlanSchema : ScriptableObject
+public class PlanSchema : ScriptableObject, IDataItem
 {
 	// TODO: when entering a PlanUI in play mode in the editor, pop up a dialgue asking if the developer wants to update the loaded PlanSchema asset to match it if it's out of date
 
@@ -48,6 +48,7 @@ public static class SchemaStuff
 
 		var plan = new Plan();
 		plan.name = planName;
+		plan.schema = schema;
 
 		plan.sections = new PlanSection[sectionsCount];
 		for (int newSectionIndex = 0; newSectionIndex < sectionsCount; ++newSectionIndex)
@@ -77,6 +78,11 @@ public static class SchemaStuff
 		// NOTE(elliot): this doesn't work if they're the same object! (because the matching plan is cleared below)
 		UnityEngine.Debug.Assert(schemaMatchingPlan != loadedPlan);
 		if (schemaMatchingPlan == loadedPlan) {
+			return;
+		}
+		UnityEngine.Debug.Assert(schemaMatchingPlan.schema == schema);
+		if (schemaMatchingPlan.schema != schema) {
+			UnityEngine.Debug.LogErrorFormat("Can't upgrade plan as the destination plan '{0}' (schema '{1}') doesn't match the destination schema '{2}'!", schemaMatchingPlan, schemaMatchingPlan.schema, schema);
 			return;
 		}
 		schemaMatchingPlan.ClearSelections();

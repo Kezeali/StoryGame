@@ -246,6 +246,14 @@ public class App : MonoBehaviour
 		this.dataItemConverter = new DataItemConverter();
 		this.dataItemConverter.AddDataItemRange(this.plannerData.items);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.calendars);
+		// Add all plan schemas used by calendars
+		for (int calendarIndex = 0; calendarIndex < this.plannerData.calendars.Length; ++calendarIndex) {
+			CalendarDefinition calendar = this.plannerData.calendars[calendarIndex];
+			for (int planningPeriodIndex = 0; planningPeriodIndex < calendar.planningPeriods.Length; ++planningPeriodIndex) {
+				PlanningPeriod planningPeriod = calendar.planningPeriods[planningPeriodIndex];
+				this.dataItemConverter.AddDataItem(planningPeriod.schema);
+			}
+		}
 		this.dataItemConverter.AddDataItemRange(this.plannerData.subjects);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.planActivities);
 		this.dataItemConverter.AddDataItemRange(this.plannerData.events);
