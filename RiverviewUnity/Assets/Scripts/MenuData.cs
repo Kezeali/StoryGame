@@ -22,6 +22,7 @@ namespace Cloverview
 		}
 	}
 
+	// Asset type for defining menu UI scenes. In combination, these define transitions work between any given scenes.
 	[CreateAssetMenu(fileName="Menu.asset", menuName="Cloverview/System/Menu Definition")]
 	public class MenuData : ScriptableObject, IDataItem
 	{

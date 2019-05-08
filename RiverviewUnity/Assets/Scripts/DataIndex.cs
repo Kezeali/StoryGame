@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Asset type which acts as an index of other asset objects for the game.
 [CreateAssetMenu(fileName="DataIndex.asset", menuName="Cloverview/DataIndex")]
 public class DataIndex : ScriptableObject
 {

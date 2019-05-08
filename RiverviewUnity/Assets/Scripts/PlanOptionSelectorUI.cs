@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Cloverview;
 
+// UI script for displaying plan options for a selected slot
 public class PlanOptionSelectorUI : MonoBehaviour, IServiceUser<PlannerDataIndex>, IServiceUser<SaveData>
 {
 	[SerializeField]

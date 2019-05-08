@@ -14,6 +14,7 @@ public interface ICheckValid
 	bool IsValid();
 }
 
+// Asset type defining a character "role"--Used to generate lead characters for the game.
 [CreateAssetMenu(fileName="Role.asset", menuName="Cloverview/Role Definition")]
 public class RoleData : ScriptableObject, IDataItem
 {

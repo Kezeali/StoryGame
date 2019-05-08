@@ -8,6 +8,7 @@ using Cinemachine;
 namespace Cloverview
 {
 
+// App class initialises all the other systems, and allows the game to start in the editor in almost any UI scene.
 public class App : MonoBehaviour
 {
 	[SerializeField]

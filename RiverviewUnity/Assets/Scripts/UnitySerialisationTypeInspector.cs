@@ -9,6 +9,7 @@ using System.Linq;
 namespace Cloverview
 {
 
+// Used to determine how Unity types should be serialized into save games by YamlDotNet.
 public sealed class UnitySerialisationTypeInspector : TypeInspectorSkeleton
 {
 	private readonly ITypeInspector innerTypeDescriptor;

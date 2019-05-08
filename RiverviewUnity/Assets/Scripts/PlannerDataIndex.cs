@@ -4,6 +4,7 @@ using SubjectNerd.Utilities;
 namespace Cloverview
 {
 
+	// Asset type which just lists planner & calendar related assets. See also DataIndex
 	[CreateAssetMenu(fileName="PlannerDataIndex.asset", menuName="Cloverview/Planner Data Index")]
 	public class PlannerDataIndex : ScriptableObject
 	{

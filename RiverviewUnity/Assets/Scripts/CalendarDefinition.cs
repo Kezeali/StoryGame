@@ -4,6 +4,7 @@ using SubjectNerd.Utilities;
 namespace Cloverview
 {
 
+// Asset type defining the "planning periods" of a calendar: e.g. years, months, weeks, days, hours.
 [CreateAssetMenu(fileName="CalendarDefinition.asset", menuName="Cloverview/Calendar Definition")]
 public class CalendarDefinition : ScriptableObject, IDataItem 
 {

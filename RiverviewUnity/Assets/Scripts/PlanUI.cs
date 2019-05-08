@@ -6,6 +6,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
+// UI script for displaying a plan.
 public class PlanUI : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<PlanExecutor>
 {
 	[SerializeField]

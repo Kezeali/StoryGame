@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Defines a group of plan slots where each individual slot has a specified duration. See also SpecifiedDurationPlanSlotUI.
 public class SpecifiedDurationPlanSlotUIGroup : MonoBehaviour, IPlanSlotUIGroup
 {
 	[System.NonSerialized]

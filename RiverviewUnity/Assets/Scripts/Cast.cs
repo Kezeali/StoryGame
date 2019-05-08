@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+// A cast of characters--for example in a scene, or the main game cast. Serialized into save games.
 [System.Serializable]
 public class Cast
 {

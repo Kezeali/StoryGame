@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// UI script for displaying a "section" of a plan. See also PlanSchemaSection.
 public class PlanSectionUI : MonoBehaviour
 {
 	[ReadOnly]

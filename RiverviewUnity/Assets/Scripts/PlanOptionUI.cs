@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cloverview;
 
+// UI script for displaying a single plan option.
 public class PlanOptionUI : MonoBehaviour
 {
 	[SerializeField]

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace Cloverview
 {
-    // Button that's meant to work with mouse or touch-based devices.
+    // Clone of Unity's UI.Button, with an added virtual OnPress method to make extension easier (don't have to tie implicit stuff to onClick).
     [AddComponentMenu("Cloverview/UI/Clickable", 30)]
     public class Clickable : Selectable, IPointerClickHandler, ISubmitHandler
     {

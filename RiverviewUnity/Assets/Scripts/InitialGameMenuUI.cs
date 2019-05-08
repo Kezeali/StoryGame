@@ -3,6 +3,7 @@
 namespace Cloverview
 {
 
+// UI script for the Start / Continue screen.
 public class InitialGameMenuUI : MonoBehaviour, IServiceUser<ProfileSaveData>
 {
 	public MenuNavigation newButton;

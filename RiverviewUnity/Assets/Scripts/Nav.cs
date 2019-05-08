@@ -8,6 +8,7 @@ using Cinemachine;
 namespace Cloverview
 {
 
+// Handles navigation between menu scenes, their accompanying environment scenes when applicable, and event / activity scenes when calendars are being executed.
 public class Nav : MonoBehaviour
 {
 	[SerializeField]

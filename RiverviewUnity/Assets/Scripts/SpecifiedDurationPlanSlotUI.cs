@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Defines a plan slot UI which has a specified duration.
 public class SpecifiedDurationPlanSlotUI : PlanSlotUI
 {
 	public int firstUnitOffset;

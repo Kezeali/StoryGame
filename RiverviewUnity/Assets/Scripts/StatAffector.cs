@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Asset type to define a stat affector: things are applied to characters and modify their stats over time.
 [CreateAssetMenu(fileName="StatAffector.asset", menuName="Cloverview/Stat Affector Definition")]
 public class StatAffectorData : ScriptableObject, IDataItem
 {

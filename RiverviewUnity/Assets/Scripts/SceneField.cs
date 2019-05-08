@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Used to reference a scene which can be loaded at runtime in other assets. See also SceneFieldPropertyDrawer.
 [System.Serializable]
 public struct SceneField
 {

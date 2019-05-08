@@ -15,6 +15,7 @@ namespace Cloverview
 		IconicValue = 1 << 1,
 	}
 
+	// Data asset type for character stats. Has information about parameters of the stat, and how it can be displayed.
 	[CreateAssetMenu(fileName="Stat.asset", menuName="Cloverview/Character Stat Definition")]
 	public class CharacterStatDefinition : ScriptableObject, IDataItem
 	{

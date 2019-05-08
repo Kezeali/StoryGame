@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Used to define / look up times in a plan.
 [System.Serializable]
 public struct PlanDateTime
 {

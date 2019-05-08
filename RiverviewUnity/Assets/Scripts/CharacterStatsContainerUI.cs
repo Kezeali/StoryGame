@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+// A UI script for displaying character stats.
 public class CharacterStatsContainerUI : MonoBehaviour, IServiceUser<SaveData>
 {
 	[SerializeField]

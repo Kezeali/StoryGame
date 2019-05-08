@@ -15,6 +15,7 @@ public enum SlotType
 	Holiday = 1 << 2,
 }
 
+// UI script for displaying a slot that can be filled in a plan.
 public class PlanSlotUI : MonoBehaviour
 {
 	public SlotType slotType;

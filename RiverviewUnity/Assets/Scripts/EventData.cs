@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+	// Asset type for event definitions (see also ActiveEvent)
 	[CreateAssetMenu(fileName="Event.asset", menuName="Cloverview/Event Definition")]
 	public class EventData : ScriptableObject, IDataItem
 	{
@@ -27,6 +28,7 @@ namespace Cloverview
 		Lowest
 	}
 
+	// Conditions required for an event to execute
 	[System.Serializable]
 	public struct EventConditions
 	{
@@ -42,6 +44,7 @@ namespace Cloverview
 		AfterSlot
 	}
 
+	// Defines the sorting priorities for selecting a slot in a plan where things can occur.
 	[System.Serializable]
 	public struct DesiredSlot
 	{
@@ -78,6 +81,7 @@ namespace Cloverview
 		// TODO: the rest of this
 	}
 
+	// Used by the casting process to generate extras for event / activity scenes.
 	[System.Serializable]
 	public struct CastingCharacterDescription : IComparer<Character>
 	{
@@ -136,6 +140,7 @@ namespace Cloverview
 		OutOfRange // Try to exclude any characters with the given stat in the min-max range
 	}
 
+	// Defines the parameters for character stat generation
 	[System.Serializable]
 	public struct DesiredStat
 	{

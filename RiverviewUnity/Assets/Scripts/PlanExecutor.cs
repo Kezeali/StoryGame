@@ -7,6 +7,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
+// Executes a calendar plan in a game. Can save and load the state of execution.
 public class PlanExecutor : MonoBehaviour, IServiceUser<SaveData>, IServiceUser<Nav>, IServiceUser<PlannerDataIndex>, INavigator
 {
 	[SerializeField]

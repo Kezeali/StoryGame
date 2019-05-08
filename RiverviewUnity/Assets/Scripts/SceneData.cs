@@ -19,6 +19,7 @@ namespace Cloverview
 		Generic,
 	}
 
+	// Asset type for defining "environment" scenes (EnvScenes). See also MenuData.
 	[CreateAssetMenu(fileName="Scene.asset", menuName="Cloverview/System/Scene Definition")]
 	public class SceneData : ScriptableObject, IDataItem
 	{

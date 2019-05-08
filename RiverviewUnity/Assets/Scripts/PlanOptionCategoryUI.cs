@@ -6,6 +6,7 @@ using Cloverview;
 namespace Cloverview
 {
 
+// UI script for displaying plan options that are valid for a given category
 public class PlanOptionCategoryUI : MonoBehaviour
 {
 	[SerializeField]

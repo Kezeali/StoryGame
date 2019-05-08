@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 namespace Cloverview
 {
 
+// Useful on loading screens, to navigate to a new screen as soon as it loads.
 public class AutoNavigate : MonoBehaviour, IServiceUser<Nav>, INavigator
 {
 	public bool immediate;

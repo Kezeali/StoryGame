@@ -1,5 +1,6 @@
 using System.Text;
 
+// String formatting utils that don't allocate a new StringBuilder every time you call them.
 public static class Strf
 {
 	public static StringBuilder stringBuilder = new StringBuilder(1000);

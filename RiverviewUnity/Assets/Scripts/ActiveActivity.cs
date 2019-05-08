@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+	// A calendar activity that is currently running. Has an active cast and references to scene information. Handles the progress & results of the activity.
 	public class ActiveActivity
 	{
 		public PlanActivityData def;

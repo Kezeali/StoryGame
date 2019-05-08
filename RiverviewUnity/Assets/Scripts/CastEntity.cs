@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Cast character with information about their position & representation in the current scene. Can be serialised to save files.
 [System.Serializable]
 public struct CastEntity
 {

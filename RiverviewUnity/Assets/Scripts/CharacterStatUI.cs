@@ -5,6 +5,7 @@ using UnityEngine.UI;
 namespace Cloverview
 {
 
+// A UI script for containing an individual player stat.
 public class CharacterStatUI : MonoBehaviour
 {
 	[SerializeField]

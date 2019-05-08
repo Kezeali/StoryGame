@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
-// These are like moodlets in The Sims 3/4
+// Asset type which defines a stat bonus. These are like moodlets in The Sims 3/4
 [CreateAssetMenu(fileName="StatBonus.asset", menuName="Cloverview/Stat Bonus Definition")]
 public class StatBonusData : ScriptableObject, IDataItem
 {

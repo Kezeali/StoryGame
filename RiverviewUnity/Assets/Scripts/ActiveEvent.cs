@@ -10,6 +10,7 @@ public enum EventProgressResult
 	Done
 }
 
+// An active calendar event. Events are scripted story sequences that happen in between or interrupt calendar activities. Has an active cast and references to the scene that the event is taking place in.
 [System.Serializable]
 public class ActiveEvent
 {

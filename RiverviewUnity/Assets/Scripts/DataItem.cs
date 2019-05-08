@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Interface for serializable data. Used in assets, and used to reference assets in save games.
 [System.Serializable]
 public abstract class DataItem : IDataItem
 {

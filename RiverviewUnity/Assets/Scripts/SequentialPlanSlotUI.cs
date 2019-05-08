@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Defines a PlanSlotUI that uses a sequential layout.
 public class SequentialPlanSlotUI : PlanSlotUI
 {
 	[System.NonSerialized]

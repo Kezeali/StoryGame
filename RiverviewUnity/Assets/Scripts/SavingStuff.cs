@@ -5,6 +5,7 @@ using YamlDotNet.Serialization;
 
 namespace Cloverview
 {
+// Utilities for handling save game files.
 public static class SavingStuff
 {
 	public static void SetDefault<T>(ref T field, T value)

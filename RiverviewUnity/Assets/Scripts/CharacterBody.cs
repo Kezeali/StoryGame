@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+// A representation of a character in a game scene.
 public class CharacterBody : MonoBehaviour
 {
 	[System.Serializable]

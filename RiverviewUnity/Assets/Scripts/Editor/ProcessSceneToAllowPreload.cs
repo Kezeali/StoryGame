@@ -8,6 +8,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+// Runs when building scenes or running in editor (just after the scene finishes loading) to make sure there are no active game objects in scenes that are being pre-loaded in the background.
 class ProcessSceneToAllowPreload : IProcessSceneWithReport
 {
 	public int callbackOrder { get { return 1; } }

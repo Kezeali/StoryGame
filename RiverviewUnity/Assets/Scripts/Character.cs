@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+	// Serializable reference to another character. The other character will be looked up by id on load.
 	[System.Serializable]
 	public class CharacterRef
 	{
@@ -12,6 +13,7 @@ namespace Cloverview
 		public Character character;
 	}
 
+	// Character data. Used in game scenes, and serialized to save files.
 	[System.Serializable]
 	public class Character
 	{

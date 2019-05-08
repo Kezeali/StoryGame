@@ -8,6 +8,7 @@ public enum Weekday
 	Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 }
 
+// UI script displaying a seciton of weekly plans.
 public class WeeklyPlanSectionUI : PlanSectionUI
 {
 	public Weekday weekday;

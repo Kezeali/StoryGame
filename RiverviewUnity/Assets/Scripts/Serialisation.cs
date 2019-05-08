@@ -3,6 +3,9 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 
+// Things to serialize save games.
+// This is no longer used (replace with YamlDotNet).
+
 namespace Cloverview
 {
 

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+// Should be added to menu scenes to set them up when they are navigated to. See also EnvSceneController.
 [ExecutionOrder(10)]
 public class MenuSceneController : MonoBehaviour, IServiceUser<SaveData>
 {

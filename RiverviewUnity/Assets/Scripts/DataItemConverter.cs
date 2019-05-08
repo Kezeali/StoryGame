@@ -7,6 +7,7 @@ using YamlDotNet.Serialization;
 namespace Cloverview
 {
 
+	// Used to save / load things implimenting DataItem from save games.
 	public sealed class DataItemConverter : IYamlTypeConverter
 	{
 		private class DataItemCollection : Dictionary<string, IDataItem>

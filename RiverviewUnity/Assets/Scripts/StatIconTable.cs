@@ -3,6 +3,7 @@ using UnityEngine;
 namespace Cloverview
 {
 
+// Asset type for defining the icons used to indicate the the current value of a given stat.
 [CreateAssetMenu(fileName="StatIconTable.asset", menuName="Cloverview/Stat Value Icon Table")]
 public class StatIconTable : ScriptableObject
 {

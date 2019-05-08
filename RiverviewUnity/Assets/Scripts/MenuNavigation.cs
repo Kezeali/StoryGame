@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 namespace Cloverview
 {
 
+// UI script for making buttons that transition between menu scenes.
 public class MenuNavigation : Clickable, IServiceUser<Nav>, INavigator
 {
 	[Header("Menu Navigation")]

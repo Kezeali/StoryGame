@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Cloverview
 {
 
+// Save data. Serialized to / from YAML in save games.
 [System.Serializable]
 public sealed class SaveData
 {
